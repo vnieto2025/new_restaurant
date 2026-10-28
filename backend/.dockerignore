@@ -1,0 +1,13 @@
+# Entorno virtual, secretos y archivos que no van en la imagen
+env/
+.venv/
+venv/
+.env
+_legacy/
+__pycache__/
+*.py[cod]
+*.log
+.git/
+.gitignore
+Dockerfile
+.dockerignore

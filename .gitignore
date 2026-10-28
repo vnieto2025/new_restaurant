@@ -1,0 +1,2 @@
+# Variables de docker-compose con claves: nunca al repositorio (sí .env.example)
+.env

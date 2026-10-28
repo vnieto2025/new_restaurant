@@ -1,0 +1,50 @@
+# RestaurantERP: base de datos, backend y frontend.
+# Uso: copie .env.example a .env, complete las claves y ejecute:  docker compose up -d --build
+# La app queda en http://<servidor>:${APP_PORT}. Solo el frontend publica un puerto;
+# el backend y Postgres quedan en la red interna.
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      # Postgres 18 guarda los datos en un subdirectorio de versión dentro de /var/lib/postgresql
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME}
+      MY_SECRET_KEY: ${MY_SECRET_KEY}
+      PUBLIC_URL: ${PUBLIC_URL}
+      # La app corre con un rol sin privilegios para que RLS la limite; seed.py lo crea
+      DB_APP_USER: ${DB_APP_USER}
+      DB_APP_PASS: ${DB_APP_PASS}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
