@@ -76,7 +76,8 @@ onMounted(load)
         <h1>Dispositivos</h1>
         <p>Tablets de zona y pantallas de cocina. En ellas cada persona entra con su PIN (se asigna en Personal).</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Autorizar dispositivo</button>
+      <!-- Hasta que lleguen zonas y puntos, el formulario quedaría sin destino -->
+      <button class="btn" type="button" :disabled="!cargado" @click="nuevo">Autorizar dispositivo</button>
     </header>
 
     <p v-if="!cargado" class="empty">Cargando…</p>

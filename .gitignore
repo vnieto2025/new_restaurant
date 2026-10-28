@@ -1,2 +1,6 @@
 # Variables de docker-compose con claves: nunca al repositorio (sí .env.example)
 .env
+
+# Recorridos en el navegador: capturas y entorno local
+e2e/capturas/
+e2e/.venv/
