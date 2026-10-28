@@ -4,3 +4,4 @@
 # Recorridos en el navegador: capturas y entorno local
 e2e/capturas/
 e2e/.venv/
+__pycache__/
