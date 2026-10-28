@@ -7,19 +7,21 @@ from Utils.tools import now
 
 
 class QrQuerys(Querys):
+    """ QR de mesas y de la mesa externa. El de domicilios vive en la misma mesa externa que el de
+        "para llevar", pero se administra aparte: sin tipo, estas consultas no lo tocan. """
 
-    def get_active_by_mesa(self, mesa_id):
-        return self.scoped(QrAccesoModel).filter(
-            QrAccesoModel.mesa_id == mesa_id,
-            QrAccesoModel.activo.is_(True),
-        ).first()
+    def by_mesa(self, mesa_id, tipo=None):
+        query = self.scoped(QrAccesoModel).filter(QrAccesoModel.mesa_id == mesa_id, QrAccesoModel.activo.is_(True))
+        if tipo:
+            return query.filter(QrAccesoModel.tipo == tipo)
+        return query.filter(QrAccesoModel.tipo != "domicilio")
+
+    def get_active_by_mesa(self, mesa_id, tipo=None):
+        return self.by_mesa(mesa_id, tipo).first()
 
     # Revoca el QR vigente de una mesa: el token deja de funcionar al instante (doc 10A, sección 3)
-    def revoke_by_mesa(self, mesa_id):
-        self.scoped(QrAccesoModel).filter(
-            QrAccesoModel.mesa_id == mesa_id,
-            QrAccesoModel.activo.is_(True),
-        ).update({"activo": False, "revocado_en": now()}, synchronize_session=False)
+    def revoke_by_mesa(self, mesa_id, tipo=None):
+        self.by_mesa(mesa_id, tipo).update({"activo": False, "revocado_en": now()}, synchronize_session=False)
         self.db.flush()
 
     def list_qr(self, zona_id=None):
@@ -29,6 +31,7 @@ class QrQuerys(Querys):
             ZonaModel, ZonaModel.id == QrAccesoModel.zona_id
         ).filter(
             QrAccesoModel.activo.is_(True),
+            QrAccesoModel.tipo != "domicilio",
             MesaModel.eliminado_en.is_(None),
             ZonaModel.eliminado_en.is_(None),
         ).add_columns(MesaModel, ZonaModel)

@@ -323,7 +323,7 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:**
   - La liquidación del pago a domiciliarios usa el pago por zona guardado en cada entrega y los faltantes de las rendiciones. Se implementa en el paso de propinas y liquidaciones (doc 26A).
   - El aviso "salió a domicilio" por WhatsApp queda para el paso de WhatsApp (doc 31B).
-  - El pedido de domicilio hecho por el propio cliente desde la web queda pendiente.
+  - El pedido de domicilio hecho por el propio cliente desde la web quedó pendiente; se resolvió en el ADR-040.
 - **Cuándo revisar:** si se necesita tarifa por distancia o polígonos, seguimiento en mapa, o pagos con datáfono contra entrega.
 
 ## ADR-035: Avisos por WhatsApp manuales por defecto, automáticos con adaptador
@@ -492,6 +492,34 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Al validar paquetes y precios con los primeros clientes (doc 42, sección 10).
   - Al automatizar el cobro de suscripciones con una pasarela recurrente.
   - Si se necesita cuenta por cobrar (fiado, doc 20 sección 10).
+
+## ADR-040: Domicilio pedido por el cliente en la web
+
+- **Estado:** Aprobada (2026-10-28). Cierra el pendiente de domicilios del ADR-034 y el de "retener pedidos pendientes de pago" del ADR-036.
+- **Contexto:**
+  - El doc 17A (sección 2.6) pide que el cliente llegue por un enlace o QR de domicilios, vea la carta y deje nombre, dirección, teléfono y zona de envío.
+  - El canal tiene riesgo de spam y datos falsos (doc 17A, sección 5): límites, validación de teléfono y aprobación opcional.
+  - No hay proveedor de SMS para verificar el celular.
+- **Opciones evaluadas:**
+  - A) Un sitio de domicilios aparte con su propia carta y registro de clientes.
+  - B) Reutilizar la carta pública (`/q/<token>`) con un QR de tipo "domicilio" sobre la mesa externa.
+- **Decisión: B.**
+  - **Enlace:** un `qr_acceso` de tipo `domicilio` en la mesa externa, junto al de "para llevar". Los listados y la regeneración de QR de mesas no lo tocan; se administra en Domicilios (copiar enlace, imprimir QR, generar uno nuevo que anula el anterior).
+  - **Configuración** (`domicilio_web`): activo, aprobación (por defecto sí) y un aviso visible en la carta (horario, tiempo estimado). Sin zonas de envío activas el enlace no recibe pedidos.
+  - **Pedido:** misma carta y precios del mostrador; el cliente elige su zona (ve la tarifa y el pedido mínimo), escribe dirección, nombre y celular y acepta el aviso de datos (obligatorio). Se crea con `Orden.create_order(canal="domicilio", entrega=...)`; la dirección queda en la ficha del cliente.
+  - **Confirmación:** con aprobación activa la orden queda por aprobar y no va a cocina. Quien despacha (`domicilios.despachar`) la confirma o rechaza en Entregas con `/orden/aprobar` y `/orden/rechazar`; ese permiso solo alcanza para órdenes de canal domicilio. Rechazar cierra la entrega como cancelada y no cobra el envío. Mientras espera confirmación no se puede asignar domiciliario.
+  - **Pago:** el cliente indica si paga al recibir o en línea (`entrega.forma_pago`, informativo). El pago en línea solo se habilita cuando el pedido ya está confirmado, para no cobrar algo que el restaurante puede rechazar. No se retiene la producción hasta el pago.
+  - **Anti-spam:** celular de 7 a 15 dígitos; máximo 3 domicilios por celular cada 30 minutos, contados en la base sobre los pedidos creados (no los intentos rechazados, y un reintento con la misma clave no cuenta); el tope por token del QR de mesa (6 cada 10 minutos) sería un bloqueo para un enlace compartido, así que el de domicilios tiene un freno general de 60 cada 10 minutos. Se mantienen los límites por IP.
+  - **Seguimiento:** el cliente ve recibido → en preparación → en camino → entregado, la dirección, el valor del domicilio y el total.
+  - El celular del cliente recuerda sus datos de entrega (almacenamiento local) para el siguiente pedido.
+- **Consecuencias:**
+  - No hay cuentas de cliente con contraseña: la identidad es el celular, como en el resto del sistema (doc 32A).
+  - El celular no se verifica con un código; la aprobación manual es la defensa principal contra pedidos falsos.
+  - Corregido de paso: las validaciones de "fecha futura" de compras y pagos del servicio comparaban contra la jornada; pasada la medianoche (antes del inicio de jornada) rechazaban la fecha de hoy. Ahora comparan contra la fecha del calendario local (`fecha_local`).
+- **Cuándo revisar:**
+  - Al tener un proveedor de SMS o WhatsApp para verificar el celular con un código.
+  - Si los restaurantes piden retener la cocina hasta recibir el pago en línea.
+  - Si se necesita cobertura por mapa en vez de lista de barrios (doc 15B).
 
 ## ADR-005 (avance): impresión desde el navegador
 

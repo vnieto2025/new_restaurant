@@ -31,6 +31,8 @@ class EntregaModel(DeRestaurante, BASE):
     # Lo que el domiciliario debía cobrar al salir (saldo de la cuenta)
     monto_a_cobrar = Column(BigInteger, nullable=False, default=0)
     contra_entrega = Column(Boolean, nullable=False, default=False)
+    # Cómo dijo el cliente que pagaría al pedir por la web: contra_entrega o en_linea (informativo)
+    forma_pago = Column(String(15), nullable=True)
     # Tiempos para métricas (RN-DOM-05)
     asignada_en = Column(DateTime(timezone=True), nullable=True)
     salida_en = Column(DateTime(timezone=True), nullable=True)

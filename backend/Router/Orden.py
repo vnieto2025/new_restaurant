@@ -42,14 +42,14 @@ def list_orders(request: Request, db: Session = Depends(get_db)):
     response = Orden(db, request.state.user).list(data)
     return response
 
-@orden_router.post('/orden/aprobar', tags=["Orden"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["ordenes.aprobar_qr"], modulo="pedidos"))])
+@orden_router.post('/orden/aprobar', tags=["Orden"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["ordenes.aprobar_qr", "domicilios.despachar"], modulo="pedidos"))])
 @http_decorator
 def approve(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Orden(db, request.state.user).approve(data)
     return response
 
-@orden_router.post('/orden/rechazar', tags=["Orden"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["ordenes.aprobar_qr"], modulo="pedidos"))])
+@orden_router.post('/orden/rechazar', tags=["Orden"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["ordenes.aprobar_qr", "domicilios.despachar"], modulo="pedidos"))])
 @http_decorator
 def reject(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})

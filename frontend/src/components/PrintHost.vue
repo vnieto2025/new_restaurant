@@ -200,8 +200,8 @@ const documento = computed(() => {
       <article v-for="qr in ticket.data" :key="qr.id" class="qr">
         <p class="qr-restaurante">{{ qr.restaurante }}</p>
         <div class="qr-imagen" v-html="qr.svg"></div>
-        <p class="qr-mesa">{{ qr.tipo === 'rapido' ? 'Para llevar' : qr.mesa }}</p>
-        <p class="qr-zona">{{ qr.tipo === 'rapido' ? 'Pide desde tu celular' : qr.zona }}</p>
+        <p class="qr-mesa">{{ qr.tipo === 'rapido' ? 'Para llevar' : qr.tipo === 'domicilio' ? 'Domicilios' : qr.mesa }}</p>
+        <p class="qr-zona">{{ qr.tipo === 'rapido' ? 'Pide desde tu celular' : qr.tipo === 'domicilio' ? 'Te lo llevamos a casa' : qr.zona }}</p>
         <p class="qr-instruccion">Escanea para pedir</p>
       </article>
     </section>

@@ -40,6 +40,15 @@ def datos_entrega(entrega):
         campo("string", "barrio", entrega.get("barrio"), False, limite={"min": 2, "max": 80}),
         campo("string", "indicaciones", entrega.get("indicaciones"), False, limite={"min": 1, "max": 250}),
         campo("bool", "guardar dirección", entrega.get("guardar_direccion"), False),
+        campo("opcion", "forma de pago", entrega.get("forma_pago"), False, opciones=["contra_entrega", "en_linea"]),
+    ]
+
+
+def val_web(params):
+    return [
+        campo("bool", "activo", params["activo"]),
+        campo("bool", "aprobación", params.get("aprobacion"), False),
+        campo("string", "mensaje", params.get("mensaje"), False, limite={"min": 2, "max": 200}),
     ]
 
 
@@ -47,6 +56,7 @@ RULES = {
     "/domicilio/zona/save": val_zona,
     "/domicilio/zona/list": lambda p: [campo("bool", "todas", p.get("todos"), False)],
     "/domicilio/domiciliario/save": val_domiciliario,
+    "/domicilio/web/save": val_web,
     "/domicilio/domiciliario/list": lambda p: [campo("bool", "todos", p.get("todos"), False)],
     "/domicilio/domiciliario/change_status": lambda p: [campo("int", "domiciliario", p["domiciliario_id"]),
                                                         campo("bool", "activo", p["activo"])],

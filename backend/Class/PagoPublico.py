@@ -1,5 +1,6 @@
 from Utils.tools import Tools, CustomException
 from Utils.limiter import limiter
+from Utils.estados import PENDIENTE
 from Utils.contexto import modulos_activos
 from Utils.cifrado import descifrar
 from Utils.pasarelas import PasarelaSimulada
@@ -47,10 +48,12 @@ class PagoPublico:
         cupones = Cupon(self.db, pagos.ctx).for_account(cuenta)["cupones"] if cuenta else []
         ultimo = pagos.querys.scoped(IntentoPagoModel).filter(IntentoPagoModel.cuenta_id == cuenta.id).order_by(
             IntentoPagoModel.id.desc()).first() if cuenta else None
+        por_confirmar = self.awaiting_confirmation(data)
         return {
             "restaurante": restaurante.nombre,
-            "disponible": disponible and bool(cuenta) and cuenta.estado == "abierta",
-            "mensaje": None if disponible else "Este restaurante no recibe pagos en línea. Paga en caja.",
+            "disponible": disponible and bool(cuenta) and cuenta.estado == "abierta" and not por_confirmar,
+            "mensaje": "El restaurante aún no confirma tu pedido. Podrás pagar cuando lo confirme." if por_confirmar
+            else None if disponible else "Este restaurante no recibe pagos en línea. Paga en caja.",
             "estado": cuenta.estado if cuenta else "sin_cuenta",
             "titulo": (detalle["cliente_nombre"] if detalle and detalle["mesa_tipo"] == "externa" else detalle["mesa"]) if detalle else None,
             "lineas": [{"nombre": l["nombre"], "cantidad": l["cantidad"], "total": l["total"],
@@ -85,6 +88,8 @@ class PagoPublico:
         limiter.check(f"publico:pago:{self.ip}", INTENTOS_POR_IP, VENTANA,
                       "Se intentaron demasiados pagos desde este dispositivo. Paga en caja o espera unos minutos.")
         sesion, _, pagos = self.resolve(data)
+        if self.awaiting_confirmation(data):
+            raise CustomException("El restaurante aún no confirma tu pedido. Podrás pagar cuando lo confirme.", 409)
         propina = int(data.get("propina") or 0)
         intento = pagos.create_attempt(sesion, propina, str(data["clave_idempotencia"]).strip(),
                                        "qr" if data.get("token") else "enlace")
@@ -151,6 +156,14 @@ class PagoPublico:
         else:
             raise CustomException("Indica la mesa o el pedido.")
         return sesion, restaurante, PagoLinea(self.db, self.ctx_of(restaurante))
+
+    def awaiting_confirmation(self, data: dict):
+        """ Un pedido por enlace de seguimiento que espera confirmación no se cobra todavía """
+        if not data.get("seguimiento"):
+            return False
+        orden = OrdenQuerys(self.db).get_orden_by_seguimiento(data["seguimiento"])
+        return bool(orden) and any(i.estado == PENDIENTE for i in OrdenQuerys(
+            self.db, {"empresa_id": orden.empresa_id, "restaurante_id": orden.restaurante_id}).items_of(orden.id))
 
     def attempt_by(self, condicion):
         intento = self.db.query(IntentoPagoModel).filter(condicion).first()

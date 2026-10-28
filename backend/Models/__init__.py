@@ -81,3 +81,4 @@ from Models.liquidacion_model import LiquidacionModel  # noqa: F401
 from Models.liquidacion_linea_model import LiquidacionLineaModel  # noqa: F401
 from Models.liquidacion_ajuste_model import LiquidacionAjusteModel  # noqa: F401
 from Models.pago_suscripcion_model import PagoSuscripcionModel  # noqa: F401
+from Models.domicilio_web_model import DomicilioWebModel  # noqa: F401

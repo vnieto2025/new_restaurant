@@ -225,6 +225,8 @@ def demo_domicilios(db, ctx, config):
         if datos.get("usuario"):
             datos["usuario_id"] = db.query(UsuarioModel).filter(UsuarioModel.usuario == datos.pop("usuario")).first().id
         Domicilio(db, ctx).save_courier(datos)
+    if config.get("web"):
+        Domicilio(db, ctx).save_web(config["web"])
 
 
 def demo_facturacion(db, ctx, config):
@@ -330,6 +332,8 @@ def seed_demo(db):
                 {"nombre": "Julián Moto", "codigo": "D01", "telefono": "3201112233", "vinculo": "propio", "usuario": "domi.esquina"},
                 {"nombre": "Andrés Bici", "codigo": "D02", "telefono": "3204445566", "vinculo": "independiente"},
             ],
+            # Pedidos del cliente por enlace o QR de domicilios, confirmados por quien despacha (doc 17A)
+            "web": {"activo": True, "aprobacion": True, "mensaje": "Domicilios de 11:00 a. m. a 9:00 p. m. Tiempo estimado: 40 minutos."},
         },
         inventario={
             # nombre, categoría, unidad, costo por unidad base, existencia inicial, mínimo, presentaciones, preparación

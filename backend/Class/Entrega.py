@@ -1,5 +1,5 @@
 from Utils.tools import Tools, CustomException, clean_text, now, to_local
-from Utils.estados import DESPACHADO, ENTREGADO, CANCELADO
+from Utils.estados import PENDIENTE, DESPACHADO, ENTREGADO, CANCELADO
 from Utils.realtime import realtime, channels_for
 from Querys.entrega import EntregaQuerys
 from Querys.orden import OrdenQuerys
@@ -61,6 +61,7 @@ class Entrega:
             "pago_domiciliario": zona.pago_domiciliario,
             "impuesto_id": defecto.id if defecto and porcentaje is not None else None, "impuesto_porcentaje": porcentaje,
             "guardar_direccion": datos.get("guardar_direccion") is True,
+            "forma_pago": datos.get("forma_pago") if datos.get("forma_pago") in ("contra_entrega", "en_linea") else None,
         }
 
     def attach(self, orden, preparada: dict, cliente=None):
@@ -75,6 +76,15 @@ class Entrega:
                 self.querys.insert_data(ClienteDireccionModel, {
                     "cliente_id": cliente.id, "direccion": preparada["direccion"], "barrio": preparada["barrio"],
                     "indicaciones": preparada["indicaciones"]}, commit=False)
+
+    def cancel_unconfirmed(self, orden, motivo):
+        """ Pedido web de domicilio rechazado antes de ir a cocina: la entrega se cierra sin cobrar el envío """
+        entrega = self.querys.scoped(EntregaModel).filter(EntregaModel.orden_id == orden.id).with_for_update().first()
+        if not entrega or entrega.estado not in ACTIVAS:
+            return
+        entrega.estado, entrega.decision, entrega.fallida_en = "fallida", "cancelacion", now()
+        entrega.motivo_fallo = f"No confirmado: {motivo}"[:200]
+        self.close_failed(entrega, motivo)
 
     # ---- Seguimiento ----
 
@@ -106,6 +116,8 @@ class Entrega:
         domiciliario = self.querys.get_own(DomiciliarioModel, data["domiciliario_id"], "domiciliario")
         if not domiciliario.activo:
             raise CustomException(f"{domiciliario.nombre} está inactivo.")
+        if self.awaiting_confirmation(entrega):
+            raise CustomException("Confirma el pedido antes de asignarlo.", 409)
         entrega.domiciliario_id, entrega.estado, entrega.asignada_en = domiciliario.id, "asignada", now()
         self.db.commit()
         self.notify(entrega, "entrega.asignada")
@@ -327,6 +339,9 @@ class Entrega:
             MesaQuerys(self.db, self.ctx).close_session(sesion, self.ctx.get("usuario_id"))
         return "Domicilio cerrado. No se cobra."
 
+    def awaiting_confirmation(self, entrega):
+        return any(i.estado == PENDIENTE for i in self.ordenes.items_of(entrega.orden_id))
+
     def order_label(self, entrega):
         orden = self.db.get(OrdenModel, entrega.orden_id)
         return f"#{orden.numero:03d}"
@@ -342,6 +357,9 @@ class Entrega:
             "id": entrega.id, "orden_id": orden.id, "orden": f"#{orden.numero:03d}", "estado": entrega.estado,
             "estado_texto": ESTADOS_TEXTO[entrega.estado],
             "lista": bool(items) and all(i.estado in (DESPACHADO, ENTREGADO) for i in items),
+            # Pedido hecho por el cliente en la web: puede esperar la confirmación de quien despacha
+            "web": orden.creado_por is None, "por_confirmar": any(i.estado == PENDIENTE for i in items),
+            "forma_pago": entrega.forma_pago,
             "items": [{"nombre": i.nombre_producto, "cantidad": i.cantidad, "estado": i.estado} for i in items],
             "cliente_nombre": entrega.cliente_nombre, "telefono": entrega.telefono, "direccion": entrega.direccion,
             "barrio": entrega.barrio, "indicaciones": entrega.indicaciones,

@@ -9,7 +9,8 @@ import OpcionesProducto from '@/components/OpcionesProducto.vue'
 
 /*
   Carta digital del cliente (doc 11 y 10A): ligera, cero registro, contexto fijado por el token.
-  Pide nombre solo en "para llevar".
+  Pide nombre solo en "para llevar". Con el enlace de domicilios (doc 17A, sección 2.6) pide además celular,
+  zona de envío y dirección, y muestra el valor del domicilio antes de enviar.
 */
 const props = defineProps({ token: { type: String, required: true } })
 
@@ -17,6 +18,8 @@ const router = useRouter()
 const { busy, attempt } = useAction()
 const draft = useDraft(`qr:${props.token}`)
 const STORAGE = `carta.${props.token}`
+// Los datos de entrega se recuerdan en el celular del cliente (solo si aceptó el aviso de datos)
+const STORAGE_ENTREGA = 'domicilio.entrega'
 
 const carta = ref(null)
 const error = ref('')
@@ -26,12 +29,24 @@ const conOpciones = ref(null)
 const piezas = computed(() => draft.lineas.value.reduce((s, l) => s + l.cantidad, 0))
 const total = computed(() => draft.lineas.value.reduce((s, l) => s + l.precio * l.cantidad, 0))
 const misPedidos = ref([])
+const entrega = ref({ zona_envio_id: '', direccion: '', barrio: '', indicaciones: '', forma_pago: 'contra_entrega' })
+
+const esDomicilio = computed(() => carta.value?.tipo === 'domicilio')
+const zonaEnvio = computed(() => carta.value?.domicilio?.zonas.find((z) => z.id === Number(entrega.value.zona_envio_id)))
+const faltaMinimo = computed(() => (zonaEnvio.value ? Math.max(zonaEnvio.value.pedido_minimo - total.value, 0) : 0))
+const totalConEnvio = computed(() => total.value + (zonaEnvio.value?.tarifa || 0))
 
 function restore() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE) || 'null')
     if (saved?.draft) Object.assign(draft.draft.value, saved.draft)
     misPedidos.value = saved?.pedidos || []
+    const guardada = JSON.parse(localStorage.getItem(STORAGE_ENTREGA) || 'null')
+    if (guardada) {
+      Object.assign(entrega.value, guardada.entrega)
+      if (!draft.draft.value.cliente_nombre) draft.draft.value.cliente_nombre = guardada.nombre || ''
+      if (!draft.draft.value.cliente_telefono) draft.draft.value.cliente_telefono = guardada.telefono || ''
+    }
   } catch {
     // Sin almacenamiento el carrito dura mientras la página esté abierta
   }
@@ -81,7 +96,33 @@ function saltar(categoria) {
   document.getElementById(`cat-${categoria.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+function recordarEntrega() {
+  try {
+    const { forma_pago: _, ...datos } = entrega.value
+    localStorage.setItem(STORAGE_ENTREGA, JSON.stringify({
+      nombre: draft.draft.value.cliente_nombre.trim(), telefono: draft.draft.value.cliente_telefono.trim(), entrega: datos,
+    }))
+  } catch {
+    // Sin almacenamiento se vuelven a escribir la próxima vez
+  }
+}
+
+function faltanDatosEntrega() {
+  const d = draft.draft.value
+  if (!d.cliente_nombre.trim()) return 'Escribe tu nombre para la entrega.'
+  if ((d.cliente_telefono || '').replace(/\D/g, '').length < 7) return 'Escribe tu celular: lo usamos para confirmar el pedido.'
+  if (!zonaEnvio.value) return 'Elige tu zona de entrega.'
+  if (entrega.value.direccion.trim().length < 5) return 'Escribe la dirección completa.'
+  if (faltaMinimo.value) return `El pedido mínimo para ${zonaEnvio.value.nombre} es ${formatMoney(zonaEnvio.value.pedido_minimo)}.`
+  if (!d.acepta_datos) return 'Para llevarte el pedido debes aceptar el aviso de datos.'
+  return ''
+}
+
 async function enviar() {
+  if (esDomicilio.value) {
+    error.value = faltanDatosEntrega()
+    if (error.value) return
+  }
   if (draft.draft.value.cliente_telefono?.trim() && !draft.draft.value.acepta_datos) {
     error.value = 'Para dejar tu celular debes aceptar el aviso de datos, o déjalo vacío.'
     return
@@ -99,14 +140,27 @@ async function enviar() {
     acepta_datos: !!draft.draft.value.acepta_datos,
     notas: draft.draft.value.notas.trim() || null,
     items: draft.items(),
+    entrega: esDomicilio.value ? {
+      zona_envio_id: zonaEnvio.value.id,
+      direccion: entrega.value.direccion.trim(),
+      barrio: entrega.value.barrio.trim() || null,
+      indicaciones: entrega.value.indicaciones.trim() || null,
+      forma_pago: carta.value.pago_en_linea ? entrega.value.forma_pago : 'contra_entrega',
+    } : undefined,
   }))
   if (!pedido) {
     load()
     return
   }
+  if (esDomicilio.value) recordarEntrega()
   misPedidos.value = [...misPedidos.value, pedido.seguimiento]
   draft.clear()
   persist()
+  // Pago en línea: si no espera confirmación, se paga de una vez; si espera, el seguimiento lo ofrece al confirmar
+  if (esDomicilio.value && entrega.value.forma_pago === 'en_linea' && pedido.estado !== 'pendiente_aprobacion') {
+    router.push({ name: 'pagar', query: { seguimiento: pedido.seguimiento } })
+    return
+  }
   router.push({ name: 'seguimiento', params: { seguimiento: pedido.seguimiento }, query: { q: props.token } })
 }
 
@@ -119,13 +173,14 @@ onMounted(() => {
 <template>
   <div class="carta">
     <header class="cabecera">
-      <p v-if="carta" class="lugar">{{ carta.tipo === 'mesa' ? `${carta.zona} · ${carta.mesa}` : carta.mesa }}</p>
+      <p v-if="carta" class="lugar">{{ carta.tipo === 'mesa' ? `${carta.zona} · ${carta.mesa}` : carta.tipo === 'domicilio' ? 'Domicilios' : carta.mesa }}</p>
       <h1>{{ carta?.restaurante || 'Carta' }}</h1>
+      <p v-if="carta?.domicilio?.mensaje" class="aviso-domicilio">{{ carta.domicilio.mensaje }}</p>
       <RouterLink v-if="misPedidos.length" class="mis-pedidos"
                   :to="{ name: 'seguimiento', params: { seguimiento: misPedidos[misPedidos.length - 1] }, query: { q: token } }">
         Ver mi último pedido
       </RouterLink>
-      <RouterLink v-if="carta?.pago_en_linea" class="mis-pedidos" :to="{ name: 'pagar', query: { token } }">Pagar la cuenta</RouterLink>
+      <RouterLink v-if="carta?.pago_en_linea && !esDomicilio" class="mis-pedidos" :to="{ name: 'pagar', query: { token } }">Pagar la cuenta</RouterLink>
     </header>
 
     <p v-if="error && !carta" class="cerrado">{{ error }}</p>
@@ -186,7 +241,53 @@ onMounted(() => {
                      @input="draft.change({ ...linea, nota: $event.target.value })">
             </li>
           </ul>
-          <template v-if="carta.pide_nombre">
+          <template v-if="esDomicilio">
+            <fieldset class="entrega">
+              <legend>¿A dónde lo llevamos?</legend>
+              <div class="field">
+                <label for="zona-envio">Zona</label>
+                <select id="zona-envio" v-model="entrega.zona_envio_id" class="select">
+                  <option value="" disabled>Elige tu zona</option>
+                  <option v-for="z in carta.domicilio.zonas" :key="z.id" :value="z.id">
+                    {{ z.nombre }} · domicilio {{ formatMoney(z.tarifa) }}</option>
+                </select>
+                <small v-if="zonaEnvio?.barrios" class="ayuda">Incluye: {{ zonaEnvio.barrios }}</small>
+              </div>
+              <div class="field">
+                <label for="direccion">Dirección</label>
+                <input id="direccion" v-model="entrega.direccion" class="input" maxlength="200" autocomplete="street-address"
+                       placeholder="Calle 12 # 4-56, apto 201">
+              </div>
+              <div class="field">
+                <label for="barrio">Barrio (opcional)</label>
+                <input id="barrio" v-model="entrega.barrio" class="input" maxlength="80">
+              </div>
+              <div class="field">
+                <label for="indicaciones">Indicaciones para llegar (opcional)</label>
+                <input id="indicaciones" v-model="entrega.indicaciones" class="input" maxlength="250" placeholder="Portería, color de la casa…">
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="nombre">Tu nombre</label>
+              <input id="nombre" v-model="draft.draft.value.cliente_nombre" class="input" maxlength="100" autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="telefono">Tu celular</label>
+              <input id="telefono" v-model="draft.draft.value.cliente_telefono" class="input" type="tel" inputmode="tel" autocomplete="tel">
+            </div>
+            <div class="aviso-datos">
+              <p>{{ carta.aviso_datos }} <a v-if="carta.politica_url" :href="carta.politica_url" target="_blank" rel="noopener">Política de datos</a></p>
+              <label class="check"><input v-model="draft.draft.value.acepta_datos" type="checkbox"> Acepto</label>
+            </div>
+            <fieldset v-if="carta.pago_en_linea" class="pago">
+              <legend>¿Cómo pagas?</legend>
+              <label class="check"><input v-model="entrega.forma_pago" type="radio" value="contra_entrega"> Al recibir, en efectivo</label>
+              <label class="check"><input v-model="entrega.forma_pago" type="radio" value="en_linea"> En línea, con tarjeta o transferencia</label>
+              <small v-if="entrega.forma_pago === 'en_linea' && carta.con_aprobacion" class="ayuda">
+                Podrás pagar cuando el restaurante confirme tu pedido.</small>
+            </fieldset>
+          </template>
+          <template v-else-if="carta.pide_nombre">
             <div class="field">
               <label for="nombre">Tu nombre</label>
               <input id="nombre" v-model="draft.draft.value.cliente_nombre" class="input" maxlength="100" autocomplete="given-name">
@@ -200,11 +301,20 @@ onMounted(() => {
               <label class="check"><input v-model="draft.draft.value.acepta_datos" type="checkbox"> Acepto</label>
             </div>
           </template>
-          <p class="total"><span>Total</span><strong>{{ formatMoney(total) }}</strong></p>
-          <p v-if="carta.con_aprobacion" class="muted nota">El mesero confirmará tu pedido antes de prepararlo.</p>
+          <template v-if="esDomicilio">
+            <p class="subtotal"><span>Productos</span><span>{{ formatMoney(total) }}</span></p>
+            <p class="subtotal"><span>Domicilio</span><span>{{ zonaEnvio ? formatMoney(zonaEnvio.tarifa) : 'Elige tu zona' }}</span></p>
+            <p class="total"><span>Total</span><strong>{{ formatMoney(totalConEnvio) }}</strong></p>
+            <p v-if="faltaMinimo" class="aviso-minimo">Te faltan {{ formatMoney(faltaMinimo) }} para el pedido mínimo de {{ zonaEnvio.nombre }}.</p>
+            <p v-if="carta.con_aprobacion" class="muted nota">El restaurante confirmará tu pedido antes de prepararlo.</p>
+          </template>
+          <template v-else>
+            <p class="total"><span>Total</span><strong>{{ formatMoney(total) }}</strong></p>
+            <p v-if="carta.con_aprobacion" class="muted nota">El mesero confirmará tu pedido antes de prepararlo.</p>
+          </template>
           <p v-if="error" class="error" role="alert">{{ error }}</p>
           <button class="btn btn-grande btn-bloque" type="button" :disabled="busy" :aria-busy="busy" @click="enviar">
-            {{ busy ? 'Enviando…' : 'Enviar pedido' }}
+            {{ busy ? 'Enviando…' : esDomicilio ? 'Pedir domicilio' : 'Enviar pedido' }}
           </button>
         </section>
       </div>
@@ -235,6 +345,11 @@ onMounted(() => {
   font-stretch: 68%;
   line-height: 1;
   margin-top: var(--space-1);
+}
+
+.aviso-domicilio {
+  margin-top: var(--space-2);
+  color: #dfe5e8;
 }
 
 .mis-pedidos {
@@ -461,6 +576,41 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: var(--text-lg);
+}
+
+.subtotal {
+  display: flex;
+  justify-content: space-between;
+  color: var(--acero);
+}
+
+.entrega,
+.pago {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-sm);
+}
+
+.entrega legend,
+.pago legend {
+  padding: 0 var(--space-1);
+  font-weight: 700;
+}
+
+.ayuda {
+  color: var(--acero);
+  font-size: var(--text-sm);
+}
+
+.aviso-minimo {
+  padding: var(--space-3);
+  border-radius: var(--radio-sm);
+  background: var(--estado-proceso-suave);
+  font-size: var(--text-sm);
 }
 
 .nota {

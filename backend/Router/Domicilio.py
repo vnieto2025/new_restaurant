@@ -41,3 +41,22 @@ def change_courier_status(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Domicilio(db, request.state.user).change_courier_status(data)
     return response
+
+@domicilio_router.post('/domicilio/web/get', tags=["Domicilios"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["domicilios.gestionar"], modulo="domicilios"))])
+@http_decorator
+def get_web(request: Request, db: Session = Depends(get_db)):
+    response = Domicilio(db, request.state.user).get_web()
+    return response
+
+@domicilio_router.post('/domicilio/web/save', tags=["Domicilios"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["domicilios.gestionar"], modulo="domicilios"))])
+@http_decorator
+def save_web(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Domicilio(db, request.state.user).save_web(data)
+    return response
+
+@domicilio_router.post('/domicilio/web/regenerar', tags=["Domicilios"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["domicilios.gestionar"], modulo="domicilios"))])
+@http_decorator
+def regenerate_web(request: Request, db: Session = Depends(get_db)):
+    response = Domicilio(db, request.state.user).regenerate_web()
+    return response

@@ -1,6 +1,6 @@
 import calendar
 from datetime import date, timedelta
-from Utils.tools import Tools, CustomException, clean_text, jornada
+from Utils.tools import Tools, CustomException, clean_text, jornada, fecha_local
 from Utils.catalogo import PLANES, COMPLEMENTOS, plan_de
 from Querys.restaurante import RestauranteQuerys
 from Models.contrato_model import ContratoModel
@@ -81,7 +81,7 @@ class Suscripcion:
             raise CustomException(f"Se pueden pagar de 1 a {MAX_MESES} meses.")
         hoy = self.today(restaurante)
         fecha = date.fromisoformat(data["fecha"]) if data.get("fecha") else hoy
-        if fecha > hoy:
+        if fecha > fecha_local(restaurante.zona_horaria):
             raise CustomException("La fecha del pago no puede ser futura.")
         desde = contrato.proximo_vencimiento or fecha
         hasta = sumar_meses(desde, meses)

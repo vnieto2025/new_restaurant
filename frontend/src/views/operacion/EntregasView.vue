@@ -14,7 +14,8 @@ import AvisosPendientes from '@/components/AvisosPendientes.vue'
 /*
   Entregas a domicilio (doc 15B, sección 3): quien despacha asigna el domiciliario por su código y sigue
   cada pedido; el domiciliario ve solo lo suyo y marca la salida, la entrega o el fallo. El efectivo
-  contra entrega se rinde en caja con su diferencia (sección 6).
+  contra entrega se rinde en caja con su diferencia (sección 6). Los pedidos que el cliente hace en la web
+  llegan "por confirmar": quien despacha revisa la dirección y los confirma o rechaza (doc 17A, sección 2.6).
 */
 const auth = useAuthStore()
 const printer = usePrintStore()
@@ -27,17 +28,21 @@ const datos = ref({ activas: [], cerradas: [], domiciliarios: [], propio: null, 
 const vista = ref('salir')
 const efectivo = ref({ pendientes: [], rendiciones: [] })
 const fallo = ref(null)
+const rechazo = ref(null)
 const rendicion = ref(null)
 const asignando = ref({})
 const refresco = ref(0)
 const avisa = computed(() => auth.can(['notificaciones.enviar', 'notificaciones.configurar']))
 
-const porSalir = computed(() => datos.value.activas.filter((e) => e.estado !== 'en_camino'))
+const porConfirmar = computed(() => datos.value.activas.filter((e) => e.por_confirmar))
+// Los que esperan confirmación van primero: el cliente está pendiente de la respuesta
+const porSalir = computed(() => datos.value.activas.filter((e) => e.estado !== 'en_camino')
+  .sort((a, b) => Number(b.por_confirmar) - Number(a.por_confirmar)))
 const enCamino = computed(() => datos.value.activas.filter((e) => e.estado === 'en_camino'))
 const porRendir = computed(() => efectivo.value.pendientes.reduce((s, g) => s + g.esperado, 0))
 
 const vistas = computed(() => [
-  { id: 'salir', label: 'Por salir', cuenta: porSalir.value.length },
+  { id: 'salir', label: porConfirmar.value.length ? `Por salir · ${porConfirmar.value.length} por confirmar` : 'Por salir', cuenta: porSalir.value.length },
   { id: 'camino', label: 'En camino', cuenta: enCamino.value.length },
   { id: 'cerradas', label: 'Cerradas hoy', cuenta: datos.value.cerradas.length },
   rinde.value && { id: 'efectivo', label: 'Efectivo', cuenta: efectivo.value.pendientes.length },
@@ -66,6 +71,22 @@ async function asignar(entrega) {
 async function accion(ruta, entrega) {
   const json = await attempt(() => post(ruta, { entrega_id: entrega.id }), { success: (r) => r?.message })
   if (json) load()
+}
+
+async function confirmar(entrega) {
+  const json = await attempt(() => post('/orden/aprobar', { orden_id: entrega.orden_id }),
+    { success: `${entrega.orden} confirmado y enviado a cocina.` })
+  if (json) load()
+}
+
+async function rechazar() {
+  const r = rechazo.value
+  const json = await attempt(() => post('/orden/rechazar', { orden_id: r.entrega.orden_id, motivo: r.motivo.trim() }),
+    { success: `${r.entrega.orden} rechazado. No se cobra.` })
+  if (json) {
+    rechazo.value = null
+    load()
+  }
 }
 
 function abrirFallo(entrega) {
@@ -126,16 +147,16 @@ onMounted(load)
         {{ vista === 'salir' ? (datos.propio ? 'No tienes entregas asignadas.' : 'No hay domicilios por salir.')
           : vista === 'camino' ? 'Nadie está en camino.' : 'Aún no hay entregas cerradas hoy.' }}
       </p>
-      <article v-for="e in lista" :key="e.id" class="entrega" :class="{ lista: e.lista && vista === 'salir' }">
+      <article v-for="e in lista" :key="e.id" class="entrega" :class="{ lista: e.lista && vista === 'salir', confirmar: e.por_confirmar }">
         <header class="cabeza">
           <span class="numero">{{ e.orden }}</span>
           <div class="quien">
-            <strong>{{ e.cliente_nombre }}</strong>
+            <strong>{{ e.cliente_nombre }} <span v-if="e.web" class="origen">Web</span></strong>
             <span class="muted">{{ e.zona_envio }} · pedido {{ formatTime(e.hora_pedido || e.creado_en) }}
               <template v-if="vista === 'camino' && e.salida_en"> · salió {{ minutesAgo(e.salida_en) }}</template></span>
           </div>
           <span class="estado" :class="`estado-${e.estado}`">
-            {{ e.estado === 'pendiente_asignacion' || e.estado === 'asignada' ? (e.lista ? 'Lista para salir' : 'En cocina') : e.estado_texto }}
+            {{ e.por_confirmar ? 'Por confirmar' : e.estado === 'pendiente_asignacion' || e.estado === 'asignada' ? (e.lista ? 'Lista para salir' : 'En cocina') : e.estado_texto }}
           </span>
         </header>
 
@@ -153,12 +174,20 @@ onMounted(load)
         <p class="cobro">
           <template v-if="e.estado === 'fallida'">{{ e.decision_texto }}: {{ e.motivo_fallo }}</template>
           <template v-else-if="e.pagada">Pagada</template>
+          <template v-else-if="e.forma_pago === 'en_linea' && e.estado !== 'entregada'">Pagará en línea · {{ formatMoney(e.por_cobrar) }} pendiente</template>
           <template v-else-if="e.por_cobrar">{{ e.estado === 'entregada' ? 'Cobró' : 'Cobrar' }} <strong>{{ formatMoney(e.por_cobrar) }}</strong> en efectivo</template>
           <template v-if="e.estado === 'entregada' && e.contra_entrega"> · {{ e.rendida ? 'rendido en caja' : 'por rendir en caja' }}</template>
         </p>
         <p v-if="e.intentos && e.estado !== 'fallida'" class="aviso">Reintento: antes {{ e.motivo_fallo }}</p>
 
-        <footer class="pie">
+        <footer v-if="e.por_confirmar" class="pie">
+          <span class="muted">Revisa la dirección y la zona antes de confirmar.</span>
+          <div v-if="despacha" class="actions">
+            <button class="btn btn-secundario" type="button" :disabled="busy" @click="rechazo = { entrega: e, motivo: '' }">Rechazar</button>
+            <button class="btn" type="button" :disabled="busy" @click="confirmar(e)">Confirmar y enviar a cocina</button>
+          </div>
+        </footer>
+        <footer v-else class="pie">
           <template v-if="despacha && (e.estado === 'pendiente_asignacion' || e.estado === 'asignada')">
             <label class="visually-hidden" :for="`dom-${e.id}`">Domiciliario</label>
             <select :id="`dom-${e.id}`" v-model="asignando[e.id]" class="select">
@@ -241,6 +270,24 @@ onMounted(load)
           <button class="btn btn-secundario" type="button" @click="fallo = null">Volver</button>
           <button class="btn" :class="{ 'btn-peligro': fallo.decision !== 'reintento' }" type="submit"
                   :disabled="busy || fallo.motivo.trim().length < 3">Registrar</button>
+        </div>
+      </form>
+    </AppModal>
+
+    <AppModal :open="!!rechazo" :title="rechazo ? `Rechazar ${rechazo.entrega.orden}` : ''" width="30rem" @close="rechazo = null">
+      <form v-if="rechazo" @submit.prevent="rechazar">
+        <p>El cliente verá el motivo en el seguimiento de su pedido. No se cobra nada.</p>
+        <div class="motivos espacio" role="group" aria-label="Motivos frecuentes">
+          <button v-for="m in ['Dirección fuera de cobertura', 'No contesta el celular', 'Producto agotado', 'Pedido duplicado']" :key="m"
+                  type="button" class="opcion" :aria-pressed="rechazo.motivo === m" @click="rechazo.motivo = m">{{ m }}</button>
+        </div>
+        <div class="field espacio">
+          <label for="rz-motivo">Motivo</label>
+          <input id="rz-motivo" v-model="rechazo.motivo" class="input" maxlength="200" required minlength="3">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secundario" type="button" @click="rechazo = null">Volver</button>
+          <button class="btn btn-peligro" type="submit" :disabled="busy || rechazo.motivo.trim().length < 3">Rechazar pedido</button>
         </div>
       </form>
     </AppModal>
@@ -335,6 +382,22 @@ onMounted(load)
 
 .entrega.lista {
   border: 2px solid var(--estado-despachado);
+}
+
+/* Pedido web que espera confirmación: lo primero que debe atender quien despacha */
+.entrega.confirmar {
+  border: 2px solid var(--estado-proceso);
+  background: var(--estado-proceso-suave);
+}
+
+.origen {
+  margin-left: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--tinta);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .cabeza {

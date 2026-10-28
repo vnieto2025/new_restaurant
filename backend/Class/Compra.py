@@ -1,6 +1,6 @@
 import math
 from decimal import Decimal
-from Utils.tools import Tools, CustomException, clean_text, now, to_local
+from Utils.tools import Tools, CustomException, clean_text, now, to_local, fecha_local
 from Querys.compra import CompraQuerys
 from Querys.inventario import InventarioQuerys, dec, pesos
 from Querys.caja import CajaQuerys
@@ -357,7 +357,7 @@ class Compra:
             raise CustomException("La forma de pago debe ser contado, crédito o caja.")
         hoy = dia_actual(self.ctx)
         fecha = Impuesto.parse_date(data.get("fecha")) or hoy
-        if fecha > hoy:
+        if fecha > fecha_local(self.ctx.get("zona_horaria")):
             raise CustomException("La fecha de la compra no puede ser futura.")
         return {
             "proveedor_id": proveedor.id if proveedor else None,

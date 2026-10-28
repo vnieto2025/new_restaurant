@@ -21,6 +21,12 @@ def to_local(value: datetime, tz_name: str = DEFAULT_TIMEZONE):
     return value.astimezone(ZoneInfo(tz_name or DEFAULT_TIMEZONE))
 
 
+# Fecha del calendario en el restaurante. Para validar fechas que escribe una persona ("no puede ser futura"):
+# pasada la medianoche la jornada sigue siendo la de ayer, pero la fecha de hoy ya es válida
+def fecha_local(tz_name: str = DEFAULT_TIMEZONE):
+    return to_local(now(), tz_name).date()
+
+
 # Jornada operativa (RG-09): el "día" del restaurante empieza a su hora de inicio de jornada.
 # Con inicio a las 06:00, una orden de las 2:00 a.m. del sábado pertenece a la jornada del viernes.
 def jornada(value: datetime = None, tz_name: str = DEFAULT_TIMEZONE, inicio: time = None):

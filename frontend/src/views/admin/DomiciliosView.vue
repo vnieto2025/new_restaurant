@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { postData } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
+import { usePrintStore } from '@/stores/print'
 import { useAction } from '@/composables/useAction'
 import { formatMoney } from '@/utils/format'
 import AppModal from '@/components/AppModal.vue'
@@ -9,8 +10,10 @@ import AppModal from '@/components/AppModal.vue'
 /*
   Configuración de domicilios (doc 15B): zonas de envío con tarifa fija por barrios y domiciliarios
   identificados por código. Un domiciliario con usuario ve sus entregas desde el celular.
+  El enlace y el QR de domicilios dejan que el cliente pida desde su celular (doc 17A, sección 2.6).
 */
 const auth = useAuthStore()
+const printer = usePrintStore()
 const { busy, attempt, quiet } = useAction()
 
 const zonas = ref([])
@@ -18,18 +21,58 @@ const domiciliarios = ref([])
 const usuarios = ref([])
 const zona = ref(null)
 const domiciliario = ref(null)
+const web = ref(null)
+const webForm = ref(null)
+const copiado = ref(false)
+const cambiarEnlace = ref(false)
 
 const candidatos = computed(() => usuarios.value.filter((u) => u.activo && u.roles.includes('domiciliario')))
 
 async function load() {
-  const [z, d, u] = await Promise.all([
+  const [z, d, u, w] = await Promise.all([
     quiet(() => postData('/domicilio/zona/list', { todos: true })),
     quiet(() => postData('/domicilio/domiciliario/list', { todos: true })),
     auth.can('usuarios.gestionar') ? quiet(() => postData('/usuario/list')) : Promise.resolve([]),
+    quiet(() => postData('/domicilio/web/get')),
   ])
   zonas.value = z || []
   domiciliarios.value = d || []
   usuarios.value = u || []
+  if (w) web.value = w
+}
+
+function editarWeb() {
+  webForm.value = { activo: web.value.activo, aprobacion: web.value.aprobacion, mensaje: web.value.mensaje || '' }
+}
+
+async function guardarWeb(cambios = {}) {
+  const body = { ...(webForm.value || { activo: web.value.activo, aprobacion: web.value.aprobacion, mensaje: web.value.mensaje || '' }), ...cambios }
+  const data = await attempt(() => postData('/domicilio/web/save', { ...body, mensaje: body.mensaje?.trim() || null }),
+    { success: body.activo ? 'Pedidos por la web activos.' : 'Pedidos por la web pausados.' })
+  if (data) {
+    web.value = data
+    webForm.value = null
+  }
+}
+
+async function nuevoEnlace() {
+  const data = await attempt(() => postData('/domicilio/web/regenerar'), { success: 'Enlace nuevo listo. Cambia el que publicaste.' })
+  if (data) web.value = data
+  cambiarEnlace.value = false
+}
+
+async function copiar() {
+  try {
+    await navigator.clipboard.writeText(web.value.url)
+    copiado.value = true
+    setTimeout(() => (copiado.value = false), 2000)
+  } catch {
+    // Sin permiso de portapapeles el enlace queda visible para copiarlo a mano
+  }
+}
+
+function imprimirQr() {
+  printer.print('qr', [{ id: 'domicilio', tipo: 'domicilio', restaurante: web.value.restaurante, svg: web.value.svg }])
 }
 
 function nuevaZona() {
@@ -84,6 +127,35 @@ onMounted(load)
         <RouterLink v-if="auth.can('domicilios.despachar')" class="btn btn-secundario" :to="{ name: 'entregas' }">Ver entregas</RouterLink>
       </div>
     </header>
+
+    <section v-if="web" class="bloque">
+      <div class="titulo">
+        <h2>Pedidos por la web</h2>
+        <button class="btn btn-secundario btn-sm" type="button" @click="editarWeb">Configurar</button>
+      </div>
+      <div class="panel web">
+        <div class="web-qr" v-html="web.svg"></div>
+        <div class="web-datos">
+          <p class="web-estado" :class="{ activo: web.activo }">
+            <strong>{{ web.activo ? 'Recibiendo pedidos' : 'Pausado' }}</strong>
+            · {{ web.aprobacion ? 'cada pedido se confirma en Entregas antes de ir a cocina' : 'los pedidos van directo a cocina' }}
+          </p>
+          <p class="muted">Publica este enlace en tus redes o en WhatsApp, o imprime el QR para volantes y empaques.
+            El cliente ve la carta, elige su zona y deja su dirección.</p>
+          <p class="enlace"><a :href="web.url" target="_blank" rel="noopener">{{ web.url }}</a></p>
+          <p v-if="web.mensaje" class="muted">Aviso en la carta: «{{ web.mensaje }}»</p>
+          <p v-if="!web.zonas" class="aviso">Crea una zona de envío activa para poder recibir pedidos.</p>
+          <p v-if="web.pago_en_linea" class="muted">El cliente puede pagar en línea o al recibir.</p>
+          <div class="actions">
+            <button class="btn btn-secundario btn-sm" type="button" @click="copiar">{{ copiado ? 'Copiado' : 'Copiar enlace' }}</button>
+            <button class="btn btn-secundario btn-sm" type="button" @click="imprimirQr">Imprimir QR</button>
+            <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEnlace = true">Generar enlace nuevo</button>
+            <button class="btn btn-sm" type="button" :disabled="busy || (!web.activo && !web.zonas)"
+                    @click="guardarWeb({ activo: !web.activo })">{{ web.activo ? 'Pausar' : 'Activar' }}</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="bloque">
       <div class="titulo">
@@ -187,6 +259,31 @@ onMounted(load)
         </div>
       </form>
     </AppModal>
+
+    <AppModal :open="!!webForm" title="Pedidos por la web" width="32rem" @close="webForm = null">
+      <form v-if="webForm" @submit.prevent="guardarWeb()">
+        <label class="check"><input v-model="webForm.activo" type="checkbox"> Recibir pedidos por el enlace y el QR</label>
+        <label class="check espacio"><input v-model="webForm.aprobacion" type="checkbox"> Confirmar cada pedido antes de enviarlo a cocina</label>
+        <p class="hint">Recomendado: así revisas la dirección y evitas pedidos falsos. Se confirman en Entregas.</p>
+        <div class="field espacio">
+          <label for="web-mensaje">Aviso en la carta</label>
+          <input id="web-mensaje" v-model="webForm.mensaje" class="input" maxlength="200"
+                 placeholder="Domicilios de 11:00 a. m. a 9:00 p. m. Tiempo estimado: 40 minutos.">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secundario" type="button" @click="webForm = null">Cancelar</button>
+          <button class="btn" type="submit" :disabled="busy">Guardar</button>
+        </div>
+      </form>
+    </AppModal>
+
+    <AppModal :open="cambiarEnlace" title="Generar enlace nuevo" width="28rem" @close="cambiarEnlace = false">
+      <p>El enlace y el QR que ya publicaste dejarán de funcionar al instante. Úsalo si alguien está enviando pedidos falsos.</p>
+      <div class="form-actions">
+        <button class="btn btn-secundario" type="button" @click="cambiarEnlace = false">Volver</button>
+        <button class="btn btn-peligro" type="button" :disabled="busy" @click="nuevoEnlace">Generar enlace nuevo</button>
+      </div>
+    </AppModal>
   </div>
 </template>
 
@@ -217,5 +314,49 @@ onMounted(load)
 
 .nota {
   margin-top: var(--space-2);
+}
+
+.web {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  padding: var(--space-4);
+}
+
+.web-qr {
+  flex: none;
+  width: 9rem;
+}
+
+.web-qr :deep(svg) {
+  width: 100%;
+  height: auto;
+}
+
+.web-datos {
+  flex: 1 1 18rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.web-estado strong {
+  color: var(--acero);
+}
+
+.web-estado.activo strong {
+  color: var(--estado-entregado);
+}
+
+.aviso {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radio-sm);
+  background: var(--estado-proceso-suave);
+}
+
+.enlace {
+  overflow-wrap: anywhere;
+  font-family: var(--font-papel);
 }
 </style>

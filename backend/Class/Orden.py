@@ -82,9 +82,11 @@ class Orden:
         return self.tools.output(201, f"Orden {detalle['numero_texto']} enviada.", detalle)
 
     def create_order(self, mesa, canal: str, items: list, clave: str, notas=None,
-                     cliente_nombre=None, cliente_telefono=None, mesero_id=None, acepta_datos=False, entrega=None):
+                     cliente_nombre=None, cliente_telefono=None, mesero_id=None, acepta_datos=False, entrega=None,
+                     aprobacion=None):
         """ Crea una orden por cualquier canal (doc 15, sección 4). La mesa debe venir bloqueada
             (SELECT ... FOR UPDATE) para que dos envíos simultáneos a la misma mesa se ordenen.
+            aprobacion: si la orden espera confirmación; sin indicarla, la decide el modo QR de la zona.
             Devuelve (orden, creada). Un reintento con la misma clave devuelve la orden original. """
 
         clave = str(clave).strip()
@@ -96,7 +98,9 @@ class Orden:
         restaurante = self.querys.restaurante()
         if restaurante.estado in ["cerrado", "inactivo"]:
             raise CustomException(restaurante.mensaje_carta or "El restaurante está cerrado y no recibe órdenes.", 409)
-        if restaurante.estado == "pausado" and canal in CANALES_QR:
+        # Lo que pide el cliente por su cuenta (QR o domicilio web) respeta la pausa; el personal no
+        por_cliente = canal in CANALES_QR or bool(self.ctx.get("publico"))
+        if restaurante.estado == "pausado" and por_cliente:
             raise CustomException(restaurante.mensaje_carta or "El restaurante pausó la recepción de órdenes. Intenta en unos minutos.", 409)
 
         zona = self.querys.get_own(ZonaModel, mesa.zona_id, "zona")
@@ -116,7 +120,7 @@ class Orden:
             from Class.Entrega import Entrega
             preparada = Entrega(self.db, self.ctx).prepare(entrega, sum(l["total"] for l in lineas), cliente_nombre, cliente_telefono)
             cliente_telefono = cliente_telefono or preparada["telefono"]
-        canal_datos = "carta" if canal in CANALES_QR else "mostrador"
+        canal_datos = "carta" if por_cliente else "mostrador"
         cliente = Cliente(self.db, self.ctx).for_order(clean_text(cliente_nombre), cliente_telefono, acepta_datos, canal_datos)
 
         if mesa.tipo == "externa":
@@ -129,7 +133,7 @@ class Orden:
         dia = jornada(tz_name=restaurante.zona_horaria, inicio=restaurante.hora_inicio_jornada)
         if self.querys.scoped(CierreJornadaModel).filter(CierreJornadaModel.jornada == dia).first():
             raise CustomException("La jornada de hoy ya se cerró. Las órdenes se reciben desde la próxima jornada.", 409)
-        pendiente = canal in CANALES_QR and zona.modo_qr == "aprobacion"
+        pendiente = aprobacion if aprobacion is not None else (canal in CANALES_QR and zona.modo_qr == "aprobacion")
 
         try:
             orden_id = self.querys.insert_data(OrdenModel, {
@@ -246,12 +250,13 @@ class Orden:
 
         orden = self.querys.get_own(OrdenModel, data["orden_id"], "orden", lock=True)
         check_zone_scope(self.ctx, orden.zona_id)
+        self.check_approver(orden)
         pendientes = [i for i in self.querys.items_of(orden.id, lock=True) if i.estado == PENDIENTE]
         if not pendientes:
             raise CustomException("La orden no está pendiente de aprobación.", 409)
 
         for item in pendientes:
-            self.querys.transition(item, NUEVO, "Aprobada por el mesero")
+            self.querys.transition(item, NUEVO, "Aprobada por el mesero" if orden.canal != "domicilio" else "Domicilio confirmado")
         puntos = self.split_into_commands(orden, pendientes, es_adicion=False)
 
         orden.aprobada_por = self.ctx["usuario_id"]
@@ -270,6 +275,7 @@ class Orden:
 
         orden = self.querys.get_own(OrdenModel, data["orden_id"], "orden", lock=True)
         check_zone_scope(self.ctx, orden.zona_id)
+        self.check_approver(orden)
         pendientes = [i for i in self.querys.items_of(orden.id, lock=True) if i.estado == PENDIENTE]
         if not pendientes:
             raise CustomException("La orden no está pendiente de aprobación.", 409)
@@ -281,6 +287,9 @@ class Orden:
             item.tipo_cancelacion = "cancelacion"
         self.querys.recalc_total(orden)
         self.querys.audit("orden_rechazada", "orden", orden.id, motivo=motivo, commit=False)
+        if orden.canal == "domicilio":
+            from Class.Entrega import Entrega
+            Entrega(self.db, self.ctx).cancel_unconfirmed(orden, motivo)
         self.close_external_session(orden)
         self.db.commit()
 
@@ -516,6 +525,11 @@ class Orden:
         return list(grupos)
 
     # Cada orden externa tiene su propia sesión: se cierra cuando ya no queda nada pendiente
+    def check_approver(self, orden):
+        """ Quien despacha domicilios confirma los pedidos web de domicilio, no las órdenes de las mesas """
+        if "ordenes.aprobar_qr" not in self.ctx["permisos"] and orden.canal != "domicilio":
+            raise CustomException("Solo el mesero o el administrador aprueban las órdenes de QR.", 403)
+
     def close_external_session(self, orden):
         sesion = self.db.get(SesionMesaModel, orden.sesion_mesa_id)
         if not sesion.es_externa or sesion.estado != "abierta" or self.caja_activa():

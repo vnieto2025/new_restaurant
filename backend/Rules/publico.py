@@ -1,4 +1,5 @@
 from Rules.campo import campo, items_orden
+from Rules.domicilio import datos_entrega
 
 
 def val_token(params):
@@ -12,7 +13,7 @@ def val_create(params):
         campo("string", "teléfono", params.get("cliente_telefono"), False, limite={"min": 7, "max": 30}),
         campo("string", "notas", params.get("notas"), False, limite={"min": 1, "max": 300}),
         campo("bool", "acepta tratamiento de datos", params.get("acepta_datos"), False),
-    ] + items_orden(params["items"])
+    ] + items_orden(params["items"]) + datos_entrega(params.get("entrega"))
 
 
 def val_status(params):

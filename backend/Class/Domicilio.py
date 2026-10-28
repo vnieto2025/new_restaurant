@@ -3,7 +3,13 @@ from Querys.entrega import EntregaQuerys
 from Models.zona_envio_model import ZonaEnvioModel
 from Models.domiciliario_model import DomiciliarioModel, VINCULOS
 from Models.usuario_model import UsuarioModel
+from Models.domicilio_web_model import DomicilioWebModel
+from Models.qr_acceso_model import QrAccesoModel
+from Models.pago_linea_config_model import PagoLineaConfigModel
+from Querys.mesa import MesaQuerys
+from Querys.qr import QrQuerys
 from Class.Caja import validar_monto
+from Class.Qr import new_token, qr_url, qr_svg
 
 
 class Domicilio:
@@ -81,6 +87,72 @@ class Domicilio:
             raise CustomException(f"{domiciliario.nombre} tiene entregas en camino. Ciérralas antes de desactivarlo.", 409)
         self.querys.update_data(DomiciliarioModel, domiciliario.id, {"activo": activo}, "domiciliario")
         return self.tools.output(200, "Domiciliario activado." if activo else "Domiciliario desactivado.")
+
+    # ---- Pedidos por la web (doc 17A, sección 2.6) ----
+
+    def get_web(self):
+        """ Enlace y QR de domicilios con su configuración. El enlace se crea la primera vez que se pide. """
+        config = self.web_config()
+        qr = self.web_qr()
+        self.db.commit()
+        return self.tools.output(200, "Pedidos por la web.", self.format_web(config, qr))
+
+    def save_web(self, data: dict):
+        config = self.web_config()
+        if data["activo"] is True and not self.querys.zonas():
+            raise CustomException("Crea al menos una zona de envío activa antes de recibir pedidos por la web.", 409)
+        antes = {"activo": config.activo, "aprobacion": config.aprobacion}
+        config.activo, config.aprobacion = data["activo"] is True, data.get("aprobacion") is not False
+        config.mensaje = clean_text(data.get("mensaje"))
+        self.querys.audit("domicilio_web_configurado", "domicilio_web", config.id, antes=antes,
+                          despues={"activo": config.activo, "aprobacion": config.aprobacion}, commit=False)
+        qr = self.web_qr()
+        self.db.commit()
+        mensaje = "Pedidos por la web activos." if config.activo else "Pedidos por la web pausados: el enlace muestra que no se reciben."
+        return self.tools.output(200, mensaje, self.format_web(config, qr))
+
+    def regenerate_web(self):
+        """ Un enlace nuevo: el anterior deja de funcionar al instante (por ejemplo, si lo están usando para spam) """
+        qr_querys = QrQuerys(self.db, self.ctx)
+        mesa = self.external_table()
+        anterior = qr_querys.get_active_by_mesa(mesa.id, "domicilio")
+        qr_querys.revoke_by_mesa(mesa.id, "domicilio")
+        qr = self.web_qr()
+        self.querys.audit("qr_regenerado", "mesa", mesa.id, antes={"qr_id": anterior.id if anterior else None},
+                          despues={"qr_id": qr.id, "tipo": "domicilio"}, commit=False)
+        self.db.commit()
+        return self.tools.output(200, "Enlace nuevo listo. El anterior ya no funciona: cambia el que publicaste.",
+                                 self.format_web(self.web_config(), qr))
+
+    def web_config(self):
+        config = self.querys.scoped(DomicilioWebModel).first()
+        if not config:
+            self.querys.insert_data(DomicilioWebModel, {"activo": False, "aprobacion": True}, commit=False)
+            config = self.querys.scoped(DomicilioWebModel).first()
+        return config
+
+    def web_qr(self):
+        mesa = self.external_table()
+        qr_querys = QrQuerys(self.db, self.ctx)
+        qr = qr_querys.get_active_by_mesa(mesa.id, "domicilio")
+        if not qr:
+            self.querys.insert_data(QrAccesoModel, {"tipo": "domicilio", "zona_id": mesa.zona_id, "mesa_id": mesa.id,
+                                                    "token": new_token()}, commit=False)
+            qr = qr_querys.get_active_by_mesa(mesa.id, "domicilio")
+        return qr
+
+    def external_table(self):
+        mesa = MesaQuerys(self.db, self.ctx).get_mesa_externa()
+        if not mesa:
+            raise CustomException("El restaurante no tiene mesa externa para recibir pedidos.", 409)
+        return mesa
+
+    def format_web(self, config, qr):
+        url = qr_url(qr.token)
+        pagos = self.querys.scoped(PagoLineaConfigModel).first()
+        return {"activo": config.activo, "aprobacion": config.aprobacion, "mensaje": config.mensaje, "url": url,
+                "svg": qr_svg(url), "zonas": len(self.querys.zonas()), "restaurante": QrQuerys(self.db, self.ctx).get_restaurante_nombre(),
+                "pago_en_linea": "pagos_linea" in self.ctx.get("modulos", set()) and bool(pagos and pagos.activo)}
 
     # ---- Apoyo ----
 

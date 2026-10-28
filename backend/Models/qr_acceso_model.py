@@ -2,7 +2,7 @@ from Config.db import BASE
 from Models.base import DeRestaurante
 from sqlalchemy import Column, String, Boolean, BigInteger, ForeignKey, DateTime
 
-TIPOS_QR = ["mesa", "rapido"]
+TIPOS_QR = ["mesa", "rapido", "domicilio"]
 
 # Token opaco que va dentro del QR: /q/<token> (doc 10A)
 class QrAccesoModel(DeRestaurante, BASE):
