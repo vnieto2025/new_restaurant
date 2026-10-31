@@ -1,8 +1,10 @@
+from fastapi import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 from Utils.tools import Tools, CustomException
 from Utils.jwt_manager import create_token
 from Utils.limiter import limiter
 from Utils.contexto import cargar_contexto, roles_de_usuario, restaurantes_de_usuario
+from Utils.acceso import COMPLETO, MENSAJES
 from Querys.auth import AuthQuerys
 from Models.dispositivo_model import DispositivoModel
 from Class.TurnoMesero import TurnoMesero
@@ -52,16 +54,26 @@ class Auth:
         limiter.reset(key)
 
         roles = roles_de_usuario(self.db, user.id)
-        restaurante_id = None
+        candidatos = [None]
         if not any(rol.alcance == "plataforma" for rol in roles):
             restaurantes = restaurantes_de_usuario(self.db, user, roles)
             if not restaurantes:
                 raise CustomException("Su usuario no tiene restaurantes asignados.")
             ids = [r.id for r in restaurantes]
             requested = data.get("restaurante_id")
-            restaurante_id = int(requested) if requested and int(requested) in ids else ids[0]
+            # Un restaurante sin acceso (plazo vencido) no le cierra la puerta a los demás de la empresa
+            preferido = int(requested) if requested and int(requested) in ids else ids[0]
+            candidatos = [preferido] + [i for i in ids if i != preferido]
 
-        response = self.issue(user.id, restaurante_id, ip, dispositivo)
+        response, error = None, None
+        for restaurante_id in candidatos:
+            try:
+                response = self.issue(user.id, restaurante_id, ip, dispositivo)
+                break
+            except CustomException as e:
+                error = e
+        if not response:
+            raise error
         self.querys.touch_ultimo_acceso(user.id)
         return self.tools.output(200, "Ingreso exitoso.", response)
 
@@ -96,10 +108,10 @@ class Auth:
             token_data["dispositivo_id"] = dispositivo_id
         try:
             ctx = cargar_contexto(token_data, ip, dispositivo, db=self.db)
-        except Exception:
-            raise CustomException("No tiene acceso a este restaurante.", 403)
-        # Al identificarse, el mesero abre su turno de la jornada (doc 08A)
-        if "mesero" in ctx["roles"] and ctx.get("restaurante_id"):
+        except HTTPException as e:
+            raise CustomException(e.detail if isinstance(e.detail, str) else "No tiene acceso a este restaurante.", 403)
+        # Al identificarse, el mesero abre su turno de la jornada (doc 08A); consultar un restaurante suspendido no es trabajar
+        if "mesero" in ctx["roles"] and ctx.get("restaurante_id") and ctx.get("acceso") == COMPLETO:
             TurnoMesero(self.db, ctx).ensure_open(dispositivo_id)
         return {"token": create_token(token_data), **self.summary(ctx)}
 
@@ -131,6 +143,7 @@ class Auth:
                 "moneda": restaurante.moneda,
                 "contrato_estado": ctx.get("contrato_estado"),
             },
+            "acceso": {"modo": ctx["acceso"], "mensaje": MENSAJES.get(ctx["acceso"]), "hasta": ctx.get("acceso_hasta")},
             "restaurantes": [
                 {"id": r.id, "nombre": r.nombre} for r in restaurantes_de_usuario(self.db, user, roles)
             ],

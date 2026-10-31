@@ -1,5 +1,5 @@
 from datetime import date
-from Utils.tools import Tools, CustomException, clean_text, to_local
+from Utils.tools import now, Tools, CustomException, clean_text, to_local
 from Querys.plataforma import PlataformaQuerys
 from Querys.restaurante import RestauranteQuerys
 from Models.empresa_model import EmpresaModel, ESTADOS_EMPRESA
@@ -89,6 +89,10 @@ class Plataforma:
 
         empresa = self.querys.get_empresa(data["empresa_id"])
         antes = empresa.estado
+        if estado == "cancelada" and antes != "cancelada":
+            empresa.cancelada_en = now()
+        elif estado != "cancelada":
+            empresa.cancelada_en = None
         empresa.estado = estado
         self.db.flush()
         self.querys.audit("empresa_estado", "empresa", empresa.id, antes={"estado": antes},
@@ -109,6 +113,10 @@ class Plataforma:
                  "modulos": querys.get_modulos_contrato(contrato.id)}
 
         modulos = resolve_modules(querys, data.get("modulos") or [])
+        if estado == "cancelado" and contrato.estado != "cancelado":
+            contrato.cancelado_en = now()
+        elif estado != "cancelado":
+            contrato.cancelado_en = None
         contrato.estado = estado
         contrato.fecha_fin = self.tools_date(data.get("fecha_fin"))
         querys.set_modulos_contrato(contrato, modulos)

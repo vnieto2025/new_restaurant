@@ -2,7 +2,7 @@ from fastapi.security import HTTPBearer
 from fastapi import Request
 from starlette.concurrency import run_in_threadpool
 from Utils.jwt_manager import validate_token
-from Utils.contexto import cargar_contexto, exigir, sesion_invalida
+from Utils.contexto import cargar_contexto, exigir, exigir_acceso, sesion_invalida
 
 
 class JWTBearer(HTTPBearer):
@@ -29,6 +29,7 @@ class JWTBearer(HTTPBearer):
             request.headers.get("user-agent"),
         )
         exigir(ctx, self.permisos, self.modulo)
+        exigir_acceso(ctx, request.url.path)
 
         # Deja los datos del usuario autenticado disponibles para la clase
         request.state.user = ctx

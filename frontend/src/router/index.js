@@ -30,7 +30,7 @@ const router = createRouter({
     {
       path: '/admin',
       component: () => import('@/layouts/AdminLayout.vue'),
-      meta: { permiso: ['catalogo.gestionar', 'estructura.gestionar', 'usuarios.gestionar'] },
+      meta: { permiso: ['catalogo.gestionar', 'estructura.gestionar', 'usuarios.gestionar', 'datos.exportar'] },
       children: [
         { path: '', name: 'admin', component: () => import('@/views/admin/HoyView.vue') },
         { path: 'zonas', name: 'admin-zonas', component: () => import('@/views/admin/ZonasView.vue'), meta: { permiso: 'estructura.gestionar' } },
@@ -84,6 +84,8 @@ router.beforeEach((to) => {
     if (auth.deviceToken) return { name: 'dispositivo' }
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} }
   }
+  // Contrato cancelado: lo único que queda es descargar los datos
+  if (auth.acceso?.modo === 'exportacion' && to.name !== 'admin-exportar') return { name: 'admin-exportar' }
   // Cada ruta exige su permiso; la del padre y la de la hija
   const required = to.matched.map((record) => record.meta.permiso).filter(Boolean)
   if (required.some((permiso) => !auth.can(permiso))) {

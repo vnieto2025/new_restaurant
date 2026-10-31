@@ -547,6 +547,32 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Si las descargas empiezan a tardar: pasarlas a segundo plano.
   - Al integrar un software contable o de nómina (fase 3).
 
+## ADR-042: Solo lectura al suspender y solo exportación al cancelar
+
+- **Estado:** Aprobada (2026-10-30). Reemplaza lo que el ADR-039 y el ADR-041 dejaron pendiente sobre los restaurantes suspendidos.
+- **Contexto:**
+  - Los docs 02A y 06 dicen: suspendido es solo lectura y nunca se pierden datos; cancelado es acceso solo para exportar durante un plazo. El doc 41 (RN-ONB-04) exige entregar los datos completos al terminar.
+  - El sistema dejaba al suspendido solo con el módulo base: no veía sus ventas ni sus órdenes. Una empresa cancelada no podía entrar y no podía bajar nada.
+  - Todas las rutas son POST: el método no distingue leer de escribir.
+- **Opciones evaluadas:**
+  - A) Quitar permisos de escritura: no sirve, porque muchas pantallas de consulta usan los mismos permisos que las de gestión.
+  - B) Marcar las rutas que escriben: una ruta nueva sin marcar quedaría abierta en un restaurante suspendido.
+  - C) Lista cerrada de las rutas que sí se permiten.
+- **Decisión: C** (`Utils/acceso.py`), revisada en `JWTBearer` después de módulo y permiso.
+  - **Modos:** `completo`, `lectura` (empresa o contrato suspendidos, o vigencia vencida, incluida la prueba) y `exportacion` (empresa o contrato cancelados). El servidor lo calcula en cada petición y lo devuelve en la sesión.
+  - **Lectura:** se conservan los módulos contratados y los permisos; pasan las rutas de consulta, las descargas y las de sesión. Lo demás responde 403 `solo_lectura` con un mensaje claro. Entrar no abre turno de mesero.
+  - **Exportación:** solo pasan las descargas y las rutas de sesión, con los permisos de exportar. Quien no los tiene no entra. El plazo es de **90 días** desde la cancelación (`contrato.cancelado_en`, `empresa.cancelada_en`); al terminar nadie entra a ese restaurante. Reactivar borra la fecha.
+  - **Lo público:** `modulos_activos` ahora también mira la empresa, así el QR, el domicilio web y el pago en línea tampoco reciben nada de una empresa suspendida (antes el pago en línea sí podía). Los avisos de la pasarela siguen entrando para no perder un pago ya hecho.
+  - **Interfaz:** aviso permanente arriba en todas las pantallas. Con contrato cancelado la navegación lleva siempre a Exportar datos.
+  - Una prueba recorre todas las rutas con sesión y exige 403 a las que no están en la lista.
+- **Consecuencias:**
+  - Los botones de guardar siguen visibles en solo lectura: al usarlos se recibe el mensaje que explica la suspensión. Ocultarlos pantalla por pantalla queda para cuando un cliente lo pida.
+  - Toda ruta de consulta nueva debe agregarse a la lista; si no, un restaurante suspendido no la verá.
+  - Suspender corta el cobro de las cuentas abiertas. El aviso de mora y los 10 días de gracia son el aviso previo, y suspender sigue siendo una decisión manual de soporte.
+- **Cuándo revisar:**
+  - Al definir el plazo real de conservación en el contrato (docs 32A y 42): los 90 días son una hipótesis.
+  - Si soporte necesita cerrar las cuentas abiertas antes de suspender.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

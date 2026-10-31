@@ -97,13 +97,14 @@ def test_modulo_no_contratado_y_contrato_suspendido(client, napoli):
         soporte.data("/plataforma/contrato/update", {"restaurante_id": restaurante_id, "estado": "activo",
                                                      "modulos": ["pedidos"]})
 
-    # Contrato suspendido: no se crean órdenes y el QR deja de recibir pedidos
+    # Contrato suspendido: se consulta, pero no se crean órdenes (el detalle está en test_solo_lectura)
     soporte.data("/plataforma/contrato/update", {"restaurante_id": restaurante_id, "estado": "suspendido",
                                                  "modulos": ["pedidos"]})
     try:
-        assert mesero.post("/mesa/list").status_code == 403
+        assert mesero.post("/mesa/list").status_code == 200
+        assert mesero.post("/orden/create").json()["detail"]["codigo"] == "solo_lectura"
         admin, _ = napoli["napoli"]
-        assert admin.post("/zona/list").status_code == 403
+        assert admin.post("/zona/create").json()["detail"]["codigo"] == "solo_lectura"
     finally:
         soporte.data("/plataforma/contrato/update", {"restaurante_id": restaurante_id, "estado": "activo",
                                                      "modulos": ["pedidos"]})

@@ -12,11 +12,13 @@ export class ApiError extends Error {
 
 let getToken = () => null
 let onUnauthorized = () => {}
+let onAccessChanged = () => {}
 
 // El store de sesión registra aquí cómo obtener el token y qué hacer si expira
 export function configureApi(options) {
   getToken = options.getToken
   onUnauthorized = options.onUnauthorized
+  onAccessChanged = options.onAccessChanged
 }
 
 async function send(path, body) {
@@ -53,6 +55,8 @@ function checkErrors(response, json) {
   // 403 del middleware: permiso o módulo no contratado (RN-API-03)
   if (response.status === 403 && json.detail) {
     const detail = typeof json.detail === 'object' ? json.detail : { mensaje: json.detail }
+    // Suspendieron el servicio con la sesión abierta: se actualiza para que aparezca el aviso
+    if (['solo_lectura', 'solo_exportacion'].includes(detail.codigo)) onAccessChanged()
     throw new ApiError(detail.mensaje || 'No tienes permiso para esto.', 403, null, detail.codigo)
   }
 

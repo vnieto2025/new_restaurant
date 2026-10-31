@@ -41,7 +41,7 @@ export const APPS = [
   { name: 'cocina', label: 'Producción', permiso: 'cocina.operar' },
   { name: 'entregas', label: 'Domicilios', permiso: ['domicilios.despachar', 'domicilios.entregar'] },
   { name: 'bodega', label: 'Inventario', permiso: ['inventario.movimientos', 'inventario.contar', 'compras.recibir'] },
-  { name: 'admin', label: 'Administración', permiso: ['catalogo.gestionar', 'estructura.gestionar', 'usuarios.gestionar'] },
+  { name: 'admin', label: 'Administración', permiso: ['catalogo.gestionar', 'estructura.gestionar', 'usuarios.gestionar', 'datos.exportar'] },
   { name: 'mi-informe', label: 'Mi informe del día', permiso: 'reportes.propio' },
   { name: 'mis-liquidaciones', label: 'Mis propinas y pagos', permiso: 'liquidaciones.ver_propia' },
 ]
@@ -57,6 +57,8 @@ export const useAuthStore = defineStore('auth', () => {
   const restaurantes = computed(() => session.value?.restaurantes || [])
   const zonas = computed(() => session.value?.zonas || [])
   const dispositivo = computed(() => session.value?.dispositivo || null)
+  // completo, lectura (suspendido) o exportacion (cancelado), con su mensaje
+  const acceso = computed(() => session.value?.acceso || null)
   const roles = computed(() => session.value?.roles || [])
   const puntos = computed(() => session.value?.puntos || [])
   const isAuthenticated = computed(() => !!token.value && tokenExpiration(token.value) > Date.now())
@@ -123,10 +125,11 @@ export const useAuthStore = defineStore('auth', () => {
   configureApi({
     getToken: () => token.value,
     onUnauthorized: logout,
+    onAccessChanged: () => refresh().catch(() => {}),
   })
 
   return {
-    token, user, restaurante, restaurantes, zonas, puntos, isAuthenticated, apps, modulos, dispositivo, deviceToken, roles,
+    token, user, restaurante, restaurantes, zonas, puntos, isAuthenticated, apps, modulos, dispositivo, deviceToken, roles, acceso,
     can, login, loginWithPin, setDeviceToken, refresh, changeRestaurant, logout,
   }
 })

@@ -15,6 +15,7 @@ from Models.contrato_modulo_model import ContratoModuloModel
 from Models.modulo_model import ModuloModel
 from Models.dispositivo_model import DispositivoModel
 from Utils.tools import jornada
+from Utils.acceso import acceso_de, COMPLETO, LECTURA, EXPORTACION, MENSAJES, PERMISOS_EXPORTACION, RUTAS_POR_MODO
 
 # Estados de contrato con los que el restaurante opera (doc 02A, sección 3)
 CONTRATO_OPERATIVO = ["prueba", "activo"]
@@ -62,7 +63,8 @@ def modulos_activos(db, restaurante):
     if not contrato:
         return obligatorios, None
 
-    vigente = contrato.estado in CONTRATO_OPERATIVO
+    empresa = db.get(EmpresaModel, restaurante.empresa_id)
+    vigente = contrato.estado in CONTRATO_OPERATIVO and empresa.estado not in ["suspendida", "cancelada"]
     hoy = jornada(tz_name=restaurante.zona_horaria, inicio=restaurante.hora_inicio_jornada)
     if contrato.fecha_fin and contrato.fecha_fin < hoy:
         vigente = False
@@ -70,10 +72,17 @@ def modulos_activos(db, restaurante):
     if not vigente:
         return obligatorios, contrato.estado
 
+    return obligatorios | modulos_contratados(db, contrato), contrato.estado
+
+
+def modulos_contratados(db, contrato):
+    if not contrato:
+        return {m.codigo for m in db.query(ModuloModel).filter(ModuloModel.obligatorio.is_(True)).all()}
+    obligatorios = {m.codigo for m in db.query(ModuloModel).filter(ModuloModel.obligatorio.is_(True)).all()}
     contratados = db.query(ModuloModel.codigo).join(
         ContratoModuloModel, ContratoModuloModel.modulo_id == ModuloModel.id
     ).filter(ContratoModuloModel.contrato_id == contrato.id).all()
-    return obligatorios | {codigo for (codigo,) in contratados}, contrato.estado
+    return obligatorios | {codigo for (codigo,) in contratados}
 
 
 def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, db=None):
@@ -115,7 +124,7 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
             return ctx
 
         empresa = db.query(EmpresaModel).filter(EmpresaModel.id == usuario.empresa_id).first()
-        if not empresa or empresa.estado == "cancelada":
+        if not empresa:
             raise sesion_invalida("La empresa no tiene acceso a la plataforma.")
 
         restaurante_id = token_data.get("restaurante_id")
@@ -136,8 +145,14 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
                 raise sesion_invalida("Este dispositivo ya no está autorizado.")
 
         modulos, contrato_estado = modulos_activos(db, restaurante)
-        if empresa.estado == "suspendida":
-            modulos = {m for m in modulos if m == "base"}
+        contrato = db.query(ContratoModel).filter(ContratoModel.restaurante_id == restaurante.id).first()
+        hoy = jornada(tz_name=restaurante.zona_horaria, inicio=restaurante.hora_inicio_jornada)
+        modo, acceso_hasta = acceso_de(empresa, contrato, hoy)
+        if modo is None:
+            raise sesion_invalida("Terminó el plazo para descargar los datos de este restaurante. Comunícate con soporte.")
+        # Suspendido o cancelado conserva sus módulos para consultarlos o descargarlos: lo que bloquea es la ruta
+        if modo != COMPLETO:
+            modulos = modulos_contratados(db, contrato)
 
         ctx.update({
             "restaurante_id": restaurante.id,
@@ -149,7 +164,13 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
             "dispositivo_id": dispositivo.id if dispositivo else None,
             # Un permiso solo es efectivo si su módulo está contratado (RN-PER-04)
             "permisos": {p.codigo for p in permisos if p.modulo in modulos},
+            "acceso": modo,
+            "acceso_hasta": acceso_hasta,
         })
+        if modo == EXPORTACION:
+            ctx["permisos"] &= PERMISOS_EXPORTACION
+            if "datos.exportar" not in ctx["permisos"]:
+                raise sesion_invalida("El contrato de este restaurante está cancelado.")
 
         alcance_total = any(rol.alcance in ["empresa", "restaurante"] for rol in roles)
         if not alcance_total:
@@ -166,6 +187,13 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
     finally:
         if own_session:
             db.close()
+
+
+def exigir_acceso(ctx: dict, ruta: str):
+    """ Suspendido o cancelado: solo pasan las rutas de su lista (doc 02A, sección 3) """
+    modo = ctx.get("acceso", COMPLETO)
+    if modo != COMPLETO and ruta not in RUTAS_POR_MODO[modo]:
+        raise prohibido("solo_lectura" if modo == LECTURA else "solo_exportacion", MENSAJES[modo])
 
 
 def exigir(ctx: dict, permisos: list = None, modulo: str = None):

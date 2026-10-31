@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import Registro
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, DateTime
 
 ESTADOS_EMPRESA = ["prueba", "activa", "suspendida", "cancelada"]
 
@@ -19,3 +19,4 @@ class EmpresaModel(Registro, BASE):
     contacto_telefono = Column(String(30), nullable=True)
     # prueba, activa, suspendida, cancelada (doc 06)
     estado = Column(String(15), nullable=False, default="prueba")
+    cancelada_en = Column(DateTime(timezone=True), nullable=True)
