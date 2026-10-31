@@ -1,6 +1,8 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
+from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 import Models  # noqa: F401 (registra todas las tablas; el esquema lo crean las migraciones con seed.py)
 from Middleware.get_json import JSONMiddleware
@@ -45,6 +47,7 @@ from Router.Pos import pos_router
 from Router.Receta import receta_router
 from Router.Inventario import inventario_router
 from Router.Conteo import conteo_router
+from Config.db import engine
 from Utils.emision import cola_emision
 from Utils.mensajeria import cola_mensajes
 from Router.Realtime import realtime_router
@@ -62,14 +65,21 @@ async def lifespan(app: FastAPI):
     await cola_mensajes.stop()
 
 
-app = FastAPI(lifespan=lifespan)
+# Sin APP_ENV es producción: la documentación no queda pública y se exige una clave de firma de verdad
+EN_PRODUCCION = os.getenv("APP_ENV", "production") == "production"
+if EN_PRODUCCION and len(os.getenv("MY_SECRET_KEY") or "") < 32:
+    raise SystemExit("MY_SECRET_KEY debe tener mínimo 32 caracteres en producción.")
+
+app = FastAPI(lifespan=lifespan, docs_url=None if EN_PRODUCCION else "/docs", redoc_url=None,
+              openapi_url=None if EN_PRODUCCION else "/openapi.json")
 app.title = "RestaurantERP"
 app.version = "0.1.0"
 
 app.add_middleware(JSONMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # En producción el frontend va en el mismo dominio; fuera de ahí, solo su dirección pública
+    allow_origins=[os.getenv("PUBLIC_URL", "").rstrip("/")] if EN_PRODUCCION else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -117,6 +127,18 @@ app.include_router(cupon_router)
 app.include_router(liquidacion_router)
 app.include_router(pos_router)
 app.include_router(realtime_router)
+
+
+# Para Docker y los monitores: responde si la aplicación llega a la base de datos
+@app.get("/salud", include_in_schema=False)
+def salud():
+    try:
+        with engine.connect() as conexion:
+            conexion.execute(text("SELECT 1"))
+    except Exception:
+        return Response('{"estado":"sin base de datos"}', status_code=503, media_type="application/json")
+    return Response('{"estado":"ok"}', media_type="application/json")
+
 
 if __name__ == "__main__":
     import os

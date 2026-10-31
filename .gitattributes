@@ -1,0 +1,2 @@
+# Estos corren dentro de Linux: un fin de linea de Windows los rompe
+*.sh text eol=lf

@@ -55,6 +55,48 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
 
+  docker:
+    name: Paquete de Docker
+    runs-on: ubuntu-latest
+    env:
+      E2E_APP: http://localhost
+      E2E_API: http://localhost/api
+      E2E_NAVEGADOR: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - name: Claves de prueba
+        run: |
+          cp .env.example .env
+          {
+            echo "DB_PASS=clave-solo-para-ci"
+            echo "DB_APP_PASS=otra-clave-solo-para-ci"
+            echo "MY_SECRET_KEY=clave-de-firma-solo-para-ci-0123456789abcdef"
+          } >> .env
+      - name: Construir y levantar
+        run: docker compose up -d --build --wait
+      - name: Datos demo
+        run: docker compose exec -T backend python seed.py --demo --superadmin soporte --password Soporte12345 --nombre Soporte
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Preparar el navegador
+        working-directory: e2e
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+      - name: Recorrido completo por nginx (incluye WebSocket)
+        working-directory: e2e
+        run: python fase1.py
+      - name: Salud, respaldo y restauración
+        run: python e2e/prueba_docker.py
+      # Sin sesión en GitHub los registros no se pueden leer; las anotaciones sí
+      - name: Mostrar el error
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail=40 > registros.txt 2>&1
+          tail -n 12 registros.txt | sed 's/^/::error::/'
+
   frontend:
     name: Frontend (compilación)
     runs-on: ubuntu-latest

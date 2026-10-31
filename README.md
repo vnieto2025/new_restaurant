@@ -2,12 +2,14 @@
 
 Software para restaurantes pequeños: carta por QR, tablet del mesero, pantalla de cocina, mostrador y administración. La documentación funcional está en [RestaurantERP/](RestaurantERP/README.md).
 
-**Estado:** fases 0 y 1 construidas ([38 - Roadmap](RestaurantERP/docs/38%20-%20Roadmap.md)).
+**Estado:** fases 0, 1 y 2 construidas ([38 - Roadmap](RestaurantERP/docs/38%20-%20Roadmap.md)).
 
 - **Fase 0, corte vertical:** QR de mesa → carta → orden → cocina → en proceso → listo → entregado.
 - **Fase 1, MVP operativo:** modificadores de producto; caja con turnos, arqueo, cuenta por mesa, pagos mixtos, división de cuenta, propina, descuentos, anulaciones y cierre de jornada; trasladar, unir y reasignar mesas; tablets autorizadas con PIN y turnos de mesero; horarios de restaurante, zona y carta por franja; reportes con comparativos, informe por mesero y dashboard; aislamiento por empresa también en la base de datos (RLS) y migraciones con Alembic.
 
-Facturación electrónica, inventario, domicilios, pagos en línea y lo demás son de la fase 2.
+- **Fase 2, versión comercial:** clientes, impuestos y facturación electrónica, inventario y recetas, compras, domicilios (también pedidos por la web), avisos por WhatsApp, pagos en línea, cupones, propinas y liquidaciones, POS y planes, exportación e importación de datos.
+
+Los proveedores de facturación, pagos y WhatsApp funcionan con adaptadores simulados hasta elegirlos ([ADR en 37](RestaurantERP/docs/37%20-%20Decisiones%20de%20Arquitectura.md)).
 
 ## Cómo levantarlo
 
@@ -31,6 +33,8 @@ copy .env.example .env
 
 **Dos usuarios de base de datos (ADR-029):** `DB_USER` es el dueño de las tablas (migraciones y `seed.py`); el backend se conecta con `DB_APP_USER`, un rol sin privilegios que `seed.py` crea. Así la base misma impide ver datos de otra empresa. Para un cambio en los modelos: `env\Scripts\python -m alembic revision --autogenerate -m "qué cambió"`.
 
+**En un servidor:** sigue la [guía de instalación](RestaurantERP/docs/40A%20-%20Gu%C3%ADa%20de%20Instalaci%C3%B3n.md), con respaldos, restauración y actualización.
+
 **Con Docker** (servidor): copiar `.env.example` a `.env`, completar las claves y `docker compose up -d --build`. Nginx sirve el frontend y reenvía `/api` (incluido el WebSocket) al backend.
 
 ## Usuarios de demostración
@@ -46,9 +50,12 @@ copy .env.example .env
 | `cocina.esquina` | Cocina | Producción → Cocina |
 | `bar.esquina` | Bar | Producción → Bar |
 | `caja.esquina` | Cajero | Caja, mostrador y mesas |
+| `domi.esquina` | Domiciliario | Entregas |
+| `contador.esquina` | Contador (solo consulta) | Reportes y exportar datos |
 | `napoli`, `mesero.napoli`, `cocina.napoli` | Otra empresa | — |
+| `trigo`, `caja.trigo` | Panadería en plan Gestión, en mora | Caja |
 
-La Esquina tiene contratados los módulos pedidos y caja; Napoli, solo pedidos.
+La Esquina tiene contratados todos los módulos; Napoli, solo pedidos.
 
 **PIN en tablet:** en Administración → Dispositivos crea una tablet de zona y anota el código. En Personal asigna un PIN al mesero. En otra ventana abre http://localhost:5173/dispositivo, escribe el código y entra con el PIN.
 

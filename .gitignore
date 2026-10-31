@@ -5,3 +5,7 @@
 e2e/capturas/
 e2e/.venv/
 __pycache__/
+
+# Respaldos de la base: datos reales, nunca al repositorio
+respaldos/
+*.dump

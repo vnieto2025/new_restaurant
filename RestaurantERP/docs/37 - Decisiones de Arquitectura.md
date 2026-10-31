@@ -598,6 +598,23 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** los documentos de venta sí traen el nombre y el documento de quien recibe la factura, porque son soporte contable. Solo ve los módulos contratados.
 - **Cuándo revisar:** si un contador atiende varios restaurantes o empresas: un usuario pertenece a una sola empresa (RN-EMP-03).
 
+## ADR-045: Paquete de Docker listo para instalar
+
+- **Estado:** Aprobada (2026-10-30). El hosting sigue pendiente (doc 40, sección 4).
+- **Contexto:** ya existían los contenedores, pero nadie los había probado, y faltaba lo necesario para un piloto: respaldos, restauración, revisión de salud y cerrar lo que queda público en producción.
+- **Decisión:**
+  - **Respaldos:** servicio `respaldos` con un `pg_dump` diario, verificado con `pg_restore --list` antes de darlo por bueno, y retención configurable. `ops/restaurar.sh` restaura sin dueños ni permisos y corre `seed.py` para reponer permisos y RLS.
+  - **Se prueba de verdad:** GitHub Actions construye las imágenes, levanta todo, corre el recorrido `fase1` por nginx y hace respaldo, cambio y restauración en cada envío (`e2e/prueba_docker.py`).
+  - **Producción:** sin `APP_ENV` no se publica `/docs`, CORS solo acepta `PUBLIC_URL` y el backend no arranca con una `MY_SECRET_KEY` corta. Compose se niega a arrancar si falta una clave.
+  - **Salud:** `GET /salud` revisa la base. Docker lo usa para ordenar el arranque y sirve para un monitor externo.
+  - **nginx:** `client_max_body_size 4m`, porque con el valor por defecto la importación de productos fallaría, y cabeceras básicas de seguridad.
+  - Guía en `docs/40A`.
+- **Consecuencias:**
+  - **Aún sin resolver, por depender del hosting:** HTTPS, copia de los respaldos a otro lugar y su cifrado, monitoreo y alertas, despliegue automático.
+  - Un solo proceso del backend: el tiempo real y las colas viven dentro de él.
+  - El respaldo no incluye `.env`, y sin `MY_SECRET_KEY` no se leen las credenciales guardadas.
+- **Cuándo revisar:** al elegir el hosting, y antes de escalar a varias réplicas.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.
