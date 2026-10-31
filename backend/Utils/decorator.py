@@ -103,8 +103,12 @@ def http_decorator(func):
                         resultado = tool.output(codigo, message, data)
 
                     # Acceder al contenido del JSONResponse
-                    contenido_serializado = resultado.body  # Esto está en formato bytes
-                    contenido = json.loads(contenido_serializado.decode("utf-8"))  # Convertirlo a dict
+                    # Un archivo descargado no se copia al log: puede traer datos personales y pesar mucho
+                    if resultado.media_type != "application/json":
+                        contenido = {"archivo": resultado.headers.get("content-disposition")}
+                    else:
+                        contenido_serializado = resultado.body  # Esto está en formato bytes
+                        contenido = json.loads(contenido_serializado.decode("utf-8"))  # Convertirlo a dict
 
                     data_log = {
                         "service": request.url.path,

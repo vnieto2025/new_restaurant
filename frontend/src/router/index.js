@@ -47,6 +47,7 @@ const router = createRouter({
         { path: 'clientes', name: 'admin-clientes', component: () => import('@/views/admin/ClientesView.vue'), meta: { permiso: 'clientes.gestionar' } },
         { path: 'inventario', name: 'admin-inventario', component: () => import('@/views/admin/InventarioView.vue'), meta: { permiso: ['inventario.ver', 'inventario.gestionar'] } },
         { path: 'recetas', name: 'admin-recetas', component: () => import('@/views/admin/RecetasView.vue'), meta: { permiso: ['inventario.ver', 'inventario.gestionar'] } },
+        { path: 'exportar', name: 'admin-exportar', component: () => import('@/views/admin/ExportarView.vue'), meta: { permiso: 'datos.exportar' } },
         { path: 'plan', name: 'admin-plan', component: () => import('@/views/admin/PlanView.vue'), meta: { permiso: 'restaurante.configurar' } },
         { path: 'liquidaciones', name: 'admin-liquidaciones', component: () => import('@/views/admin/LiquidacionesView.vue'), meta: { permiso: ['liquidaciones.gestionar', 'domicilios.liquidar'] } },
         { path: 'cupones', name: 'admin-cupones', component: () => import('@/views/admin/CuponesView.vue'), meta: { permiso: ['cupones.gestionar', 'cupones.ver'] } },

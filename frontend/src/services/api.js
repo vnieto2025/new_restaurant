@@ -19,7 +19,7 @@ export function configureApi(options) {
   onUnauthorized = options.onUnauthorized
 }
 
-export async function post(path, body = {}) {
+async function send(path, body) {
   // El backend solo procesa la petición si el header accept es exactamente application/json
   const headers = {
     accept: 'application/json',
@@ -38,8 +38,11 @@ export async function post(path, body = {}) {
   } catch {
     throw new ApiError('Sin conexión con el servidor. Revisa el internet del local y vuelve a intentar.', 0)
   }
+  return response
+}
 
-  const json = await response.json().catch(() => ({}))
+function checkErrors(response, json) {
+  const token = getToken()
 
   // 401 viene del middleware JWT: la sesión ya no sirve
   if (response.status === 401 && json.detail) {
@@ -56,8 +59,27 @@ export async function post(path, body = {}) {
   if (!response.ok) {
     throw new ApiError(json.message || 'No se pudo completar la acción.', response.status, json.data)
   }
+}
 
+export async function post(path, body = {}) {
+  const response = await send(path, body)
+  const json = await response.json().catch(() => ({}))
+  checkErrors(response, json)
   return json
+}
+
+// Pide un archivo al backend y lo guarda con el nombre que este indique
+export async function download(path, body = {}) {
+  const response = await send(path, body)
+  if (!response.ok) checkErrors(response, await response.json().catch(() => ({})))
+  const nombre = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') || '')?.[1] || 'datos'
+  const url = URL.createObjectURL(await response.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  enlace.click()
+  URL.revokeObjectURL(url)
+  return nombre
 }
 
 // Atajo para los endpoints que solo interesa su data

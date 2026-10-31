@@ -29,6 +29,8 @@ PERMISOS = {
     "auditoria.ver": ("Ver auditoría", "base"),
     "reportes.ver": ("Ver reportes de ventas y por mesero", "base"),
     "reportes.propio": ("Ver su propio informe del día", "base"),
+    "datos.exportar": ("Descargar datos en CSV o Excel", "base"),
+    "nomina.exportar": ("Descargar horas, propinas y pagos a domiciliarios", "base"),
     "clientes.ver": ("Buscar clientes y ver sus datos de contacto", "base"),
     "clientes.gestionar": ("Editar, bloquear y anonimizar clientes", "base"),
     "clientes.exportar": ("Exportar los datos de un cliente", "base"),
@@ -102,7 +104,7 @@ _CAJERO = ["caja.ver", "caja.turno", "caja.cobrar", "caja.movimientos", "factura
 
 _ADMIN_RESTAURANTE = [
     "restaurante.configurar", "restaurante.pausar", "usuarios.gestionar", "catalogo.gestionar", "reportes.ver",
-    "clientes.ver", "clientes.gestionar", "clientes.exportar", "impuestos.configurar",
+    "datos.exportar", "nomina.exportar", "clientes.ver", "clientes.gestionar", "clientes.exportar", "impuestos.configurar",
     "facturacion.gestionar", "facturacion.configurar",
     "inventario.ver", "inventario.gestionar", "inventario.movimientos", "inventario.contar",
     "compras.ver", "compras.registrar", "compras.recibir", "compras.anular", "proveedores.gestionar",
@@ -125,7 +127,7 @@ ROLES = [
         "permisos": [
             "restaurante.configurar", "usuarios.gestionar", "catalogo.gestionar", "catalogo.precios",
             "auditoria.ver", "estructura.gestionar", "qr.gestionar", "ordenes.ver", "caja.ver", "caja.medios", "reportes.ver",
-            "clientes.ver", "clientes.gestionar", "clientes.exportar", "impuestos.configurar", "facturacion.ver",
+            "datos.exportar", "nomina.exportar", "clientes.ver", "clientes.gestionar", "clientes.exportar", "impuestos.configurar", "facturacion.ver",
             "inventario.ver", "inventario.gestionar", "compras.ver", "proveedores.gestionar", "domicilios.gestionar",
         ],
     },

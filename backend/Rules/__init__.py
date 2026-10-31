@@ -2,14 +2,14 @@ from Utils.validator import Validator
 from Rules import (
     auth, plataforma, restaurante, usuario, zona, mesa, punto_produccion, qr,
     categoria, producto, carta, orden, cocina, publico, auditoria, modificador, caja, cuenta, dispositivo, horario, reporte, cliente,
-    facturacion, inventario, compra, domicilio, notificacion, pago_linea, cupon, liquidacion, pos,
+    facturacion, inventario, compra, domicilio, notificacion, pago_linea, cupon, liquidacion, pos, exportacion,
 )
 
 # Cada módulo declara sus reglas en Rules/<modulo>.py como RULES = {path: función}
 MODULES = [
     auth, plataforma, restaurante, usuario, zona, mesa, punto_produccion, qr,
     categoria, producto, carta, orden, cocina, publico, auditoria, modificador, caja, cuenta, dispositivo, horario, reporte, cliente,
-    facturacion, inventario, compra, domicilio, notificacion, pago_linea, cupon, liquidacion, pos,
+    facturacion, inventario, compra, domicilio, notificacion, pago_linea, cupon, liquidacion, pos, exportacion,
 ]
 
 PATHS = {}

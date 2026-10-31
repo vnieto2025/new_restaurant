@@ -7,7 +7,8 @@ from Models.producto_model import ProductoModel
 from Utils.estados import PENDIENTE, NUEVO, EN_PROCESO, DESPACHADO, CANCELADO
 
 MAX_DIAS = 366
-CANALES = {"tablet": "Mesa", "qr_mesa": "QR de mesa", "qr_rapido": "QR para llevar", "mostrador": "Mostrador"}
+CANALES = {"tablet": "Mesa", "qr_mesa": "QR de mesa", "qr_rapido": "QR para llevar", "mostrador": "Mostrador",
+           "domicilio": "Domicilio", "pos": "Venta directa"}
 
 
 def variacion(actual, anterior):

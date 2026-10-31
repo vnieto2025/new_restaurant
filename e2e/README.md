@@ -19,6 +19,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `cupones` | Cupones con reglas, cupón de la próxima visita y aplicación desde el celular |
 | `liquidaciones` | Reparto de propinas, aprobación, pago y liquidación de domiciliarios |
 | `pos_planes` | Venta directa sin pedidos, plan del restaurante y pagos del servicio |
+| `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |
 | `domicilio_web` | Domicilio pedido por el cliente desde el enlace, confirmación o rechazo en Entregas y pago en línea |
 
 ## Preparar (una vez)

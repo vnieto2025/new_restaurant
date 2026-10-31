@@ -521,6 +521,32 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Si los restaurantes piden retener la cocina hasta recibir el pago en línea.
   - Si se necesita cobertura por mapa en vez de lista de barrios (doc 15B).
 
+## ADR-041: Exportación de datos en CSV y Excel
+
+- **Estado:** Aprobada (2026-10-30). La exportación a formatos de software contable sigue en la fase 3 (doc 21).
+- **Contexto:**
+  - Los docs 26 (sección 8), 26B y 41 piden descargar datos en formatos abiertos: reportes, horas, propinas, pagos a domiciliarios, clientes, productos y órdenes.
+  - Ya existían descargas CSV armadas en el navegador con lo que se ve en pantalla: recortadas (top 15, 300 cancelaciones), sin Excel y sin auditoría.
+- **Opciones evaluadas:**
+  - A) Seguir generando en el navegador y agregar una librería de Excel al frontend.
+  - B) Generar en el servidor con una consulta completa para cada conjunto de datos.
+- **Decisión: B.**
+  - Pantalla **Exportar datos** (`/admin/exportar`) con periodo y 14 conjuntos: ventas por producto, órdenes, cancelaciones, cuentas, pagos, documentos de venta, compras, movimientos, existencias, productos, clientes, domicilios, horas y liquidaciones. Cada uno en CSV o Excel (`openpyxl`).
+  - **Permisos:** `datos.exportar` para entrar (administradores, doc 29). Clientes además exige `clientes.exportar`; horas y liquidaciones exigen `nomina.exportar` (RN-NOM-03). Lo de un módulo no contratado no se ofrece ni se entrega.
+  - **Datos de personas:** la pantalla advierte antes de descargar. Cada descarga queda en auditoría con conjunto, formato, filas y periodo. Los clientes anonimizados no salen; domicilios no lleva dirección ni teléfono del cliente. Las horas llevan la nota de que son dato operativo (RN-NOM-02).
+  - **Fórmulas:** un texto como `=HYPERLINK(...)` en un nombre se ejecutaría al abrir el archivo. En CSV se antepone un apóstrofo y en Excel la celda se guarda como texto. Lo mismo se aplicó a las descargas CSV que ya existían en el navegador.
+  - **Registro de peticiones:** el decorador no copia al log las respuestas que son archivos, solo su nombre.
+  - **CSV:** separador `;`, coma decimal y marca BOM, como lo espera Excel en español.
+  - Un periodo sin datos avisa en vez de bajar un archivo vacío; más de 100.000 filas pide un periodo más corto en vez de recortar.
+- **Consecuencias:**
+  - El archivo se genera dentro de la petición, en memoria. El doc 26 prevé tareas en segundo plano para los pesados; no hacen falta con el volumen actual.
+  - Un restaurante suspendido o cancelado queda solo con el módulo base y no puede bajar lo de los otros módulos. El doc 41 (RN-ONB-04) pide entregarlo todo al terminar el contrato: queda pendiente con el modo de solo lectura.
+  - El PDF del doc 26 sigue saliendo con la impresión del navegador.
+- **Cuándo revisar:**
+  - Al construir el modo de solo lectura para suspendidos.
+  - Si las descargas empiezan a tardar: pasarlas a segundo plano.
+  - Al integrar un software contable o de nómina (fase 3).
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

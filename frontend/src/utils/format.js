@@ -70,7 +70,9 @@ export function formatChange(percent) {
 
 // Descarga filas como CSV (separado por ; para que Excel en español lo abra bien)
 export function downloadCsv(nombre, columnas, filas) {
-  const escape = (valor) => `"${String(valor ?? '').replace(/"/g, '""')}"`
+  // El texto que una hoja de cálculo ejecutaría como fórmula se neutraliza; los números van tal cual
+  const seguro = (valor) => (typeof valor === 'string' && /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor)
+  const escape = (valor) => `"${String(seguro(valor) ?? '').replace(/"/g, '""')}"`
   const lineas = [columnas.map((c) => escape(c.titulo)).join(';')]
   for (const fila of filas) lineas.push(columnas.map((c) => escape(fila[c.campo])).join(';'))
   const blob = new Blob([`\uFEFF${lineas.join('\r\n')}`], { type: 'text/csv;charset=utf-8' })

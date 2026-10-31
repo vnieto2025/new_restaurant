@@ -21,6 +21,7 @@ const GRUPOS = [
     items: [
       { name: 'admin', label: 'Hoy', permiso: ['ordenes.ver', 'reportes.ver'] },
       { name: 'admin-reportes', label: 'Reportes', permiso: 'reportes.ver' },
+      { name: 'admin-exportar', label: 'Exportar datos', permiso: 'datos.exportar' },
     ],
   },
   {

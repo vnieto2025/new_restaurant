@@ -25,6 +25,7 @@ from Router.Cuenta import cuenta_router
 from Router.Dispositivo import dispositivo_router
 from Router.Horario import horario_router
 from Router.Reporte import reporte_router
+from Router.Exportacion import exportacion_router
 from Router.Cliente import cliente_router
 from Router.Impuesto import impuesto_router
 from Router.Resolucion import resolucion_router
@@ -95,6 +96,7 @@ app.include_router(cuenta_router)
 app.include_router(dispositivo_router)
 app.include_router(horario_router)
 app.include_router(reporte_router)
+app.include_router(exportacion_router)
 app.include_router(cliente_router)
 app.include_router(impuesto_router)
 app.include_router(resolucion_router)
