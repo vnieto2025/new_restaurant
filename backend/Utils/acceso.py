@@ -44,7 +44,7 @@ RUTAS_LECTURA = RUTAS_EXPORTACION | {
     "/proveedor/get", "/proveedor/insumos", "/proveedor/list",
     "/punto_produccion/list", "/qr/list",
     "/receta/costos", "/receta/get", "/receta/opcion/list",
-    "/reporte/cancelaciones", "/reporte/dashboard", "/reporte/mesero", "/reporte/meseros", "/reporte/ventas",
+    "/reporte/analisis", "/reporte/sedes", "/reporte/cancelaciones", "/reporte/dashboard", "/reporte/mesero", "/reporte/meseros", "/reporte/ventas",
     "/resolucion/list", "/restaurante/get", "/restaurante/plan", "/restaurante/puesta_en_marcha", "/turno_mesero/actual",
     "/usuario/get", "/usuario/list", "/usuario/roles", "/zona/list",
 }

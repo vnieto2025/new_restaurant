@@ -16,5 +16,7 @@ RULES = {
     "/reporte/ventas": val_periodo,
     "/reporte/cancelaciones": val_periodo,
     "/reporte/meseros": val_periodo,
+    "/reporte/analisis": val_periodo,
+    "/reporte/sedes": val_periodo,
     "/reporte/mesero": val_mesero,
 }

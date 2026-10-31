@@ -633,6 +633,19 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Las órdenes y ventas del ensayo quedan en los reportes de ese día; no hay modo de prueba ni forma de borrarlas. La pantalla avisa, y que el cierre de jornada bloquea más órdenes ese día.
 - **Cuándo revisar:** con el primer piloto, si el ensayo ensucia reportes o facturación: un modo de prueba sería el siguiente paso.
 
+## ADR-047: Reportes de la fase 2
+
+- **Estado:** Aprobada (2026-10-30). Implementa el doc 26, sección 5, salvo lo que ya existía (margen en Recetas y costos, rentabilidad en Cupones).
+- **Decisión:**
+  - `/reporte/analisis` entrega horas pico, tiempos de preparación, domiciliarios, clientes e inventario, según módulos; se calcula en vivo, sin tablas de resumen.
+  - **Horas pico:** usa las mismas cuentas pagadas que el total de ventas y una prueba exige que sumen igual (RN-REP-01). Sin caja, los ítems vendidos. Las horas van en la zona horaria del restaurante.
+  - **Tiempos:** de que el ítem entra a producción (o se aprueba) al último despacho. Muestra promedio y percentil 90, porque el promedio esconde las demoras.
+  - **Clientes:** el nombre solo lo ve quien tiene `clientes.ver`; el contador ve cantidades (doc 29). Inactivo: 30 días sin comprar.
+  - **Sedes:** `/reporte/sedes`, solo para el administrador de empresa y con más de un restaurante.
+  - El mapa de calor escribe el valor en cada celda: no depende del color.
+- **Consecuencias:** con muchos datos, un periodo largo puede tardar; el doc 26 prevé tablas de resumen cuando haga falta.
+- **Cuándo revisar:** cuando un periodo de un año tarde más de lo aceptable.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

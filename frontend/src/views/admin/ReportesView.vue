@@ -8,6 +8,7 @@ import {
 } from '@/utils/format'
 import BarChart from '@/components/BarChart.vue'
 import TablaDesglose from '@/components/TablaDesglose.vue'
+import AnalisisOperacion from '@/components/AnalisisOperacion.vue'
 
 /*
   Reportes del MVP (doc 26): ventas con comparativo, desgloses, meseros y cancelaciones.
@@ -163,6 +164,8 @@ onMounted(async () => {
         <TablaDesglose v-if="reporte.medios.length" titulo="Medios de pago (con propina)" columna="Medio" :filas="reporte.medios" conteo="pagos" archivo="medios-de-pago" />
         <TablaDesglose titulo="Menos vendidos" columna="Producto" :filas="reporte.menos_vendidos" archivo="menos-vendidos" />
       </div>
+
+      <AnalisisOperacion :desde="reporte.desde" :hasta="reporte.hasta" />
 
       <section class="panel bloque">
         <header class="bloque-head">

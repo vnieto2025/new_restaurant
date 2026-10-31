@@ -31,7 +31,11 @@ def cobrar(caja, orden, propina=0, factura=None, expect=200):
 
 
 def enviar(api, ids=None):
-    return api.data("/documento/enviar", {"documento_ids": ids or [], "forzar": bool(ids)})
+    if ids:
+        return api.data("/documento/enviar", {"documento_ids": ids, "forzar": True})
+    # La cola toma 20 por vez, los más antiguos primero: se repite para vaciar lo que dejaron otras pruebas
+    for _ in range(6):
+        api.data("/documento/enviar", {"documento_ids": [], "forzar": False})
 
 
 def modo_proveedor(admin, modo):

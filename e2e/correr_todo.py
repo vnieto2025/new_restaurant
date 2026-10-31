@@ -16,7 +16,7 @@ AQUI = Path(__file__).resolve().parent
 BACKEND = AQUI.parent / "backend"
 # Orden de construcción del sistema: fase 1 y luego los pasos de la fase 2
 RECORRIDOS = ["fase1", "clientes", "facturacion", "inventario", "compras", "domicilios", "avisos", "pagos",
-              "cupones", "liquidaciones", "pos_planes", "domicilio_web", "exportar", "solo_lectura", "importar", "contador", "puesta_en_marcha"]
+              "cupones", "liquidaciones", "pos_planes", "domicilio_web", "exportar", "solo_lectura", "importar", "contador", "puesta_en_marcha", "analisis"]
 
 
 def python_backend():

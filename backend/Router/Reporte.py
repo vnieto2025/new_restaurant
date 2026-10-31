@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Reporte import Reporte
+from Class.Analisis import Analisis
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -39,4 +40,18 @@ def waiter_report(request: Request, db: Session = Depends(get_db)):
 @http_decorator
 def dashboard(request: Request, db: Session = Depends(get_db)):
     response = Reporte(db, request.state.user).dashboard()
+    return response
+
+@reporte_router.post('/reporte/analisis', tags=["Reportes"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["reportes.ver"]))])
+@http_decorator
+def analysis(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Analisis(db, request.state.user).analysis(data)
+    return response
+
+@reporte_router.post('/reporte/sedes', tags=["Reportes"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["reportes.ver"]))])
+@http_decorator
+def branches(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Analisis(db, request.state.user).branches(data)
     return response
