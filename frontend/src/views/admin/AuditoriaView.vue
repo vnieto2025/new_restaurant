@@ -11,6 +11,7 @@ const accion = ref('')
 
 const ACCIONES = {
   datos_exportados: 'Datos exportados',
+  productos_importados: 'Productos importados',
   item_cancelado: 'Ítem cancelado',
   item_agotado: 'Producto agotado en una orden',
   orden_rechazada: 'Orden de QR rechazada',
@@ -38,6 +39,7 @@ async function load() {
 function detalle(registro) {
   const partes = []
   if (registro.accion === 'datos_exportados') partes.push(`${registro.despues.conjunto} · ${registro.despues.filas} ${registro.despues.filas === 1 ? 'fila' : 'filas'} · ${registro.despues.formato}`)
+  if (registro.accion === 'productos_importados') partes.push(`${registro.despues.archivo}: ${registro.despues.creados} nuevos, ${registro.despues.actualizados} actualizados`)
   if (registro.motivo) partes.push(`Motivo: ${registro.motivo}`)
   if (registro.antes?.precio !== undefined) partes.push(`Precio: ${registro.antes.precio} → ${registro.despues.precio}`)
   if (registro.despues?.usuario && registro.accion === 'login_fallido') partes.push(`Usuario: ${registro.despues.usuario}`)

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Producto import Producto
+from Class.ImportarProductos import ImportarProductos
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -40,4 +41,24 @@ def change_status(request: Request, db: Session = Depends(get_db)):
 def sold_out(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Producto(db, request.state.user).sold_out(data)
+    return response
+
+@producto_router.post('/producto/importar/plantilla', tags=["Producto"], dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def import_template(request: Request, db: Session = Depends(get_db)):
+    response = ImportarProductos(db, request.state.user).template()
+    return response
+
+@producto_router.post('/producto/importar/revisar', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def import_preview(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = ImportarProductos(db, request.state.user).preview(data)
+    return response
+
+@producto_router.post('/producto/importar/aplicar', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def import_apply(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = ImportarProductos(db, request.state.user).apply(data)
     return response

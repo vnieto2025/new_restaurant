@@ -5,7 +5,7 @@ COMPLETO = "completo"
 LECTURA = "lectura"
 EXPORTACION = "exportacion"
 
-# Plazo para bajar los datos después de cancelar (doc 41, sección 6). Hipótesis hasta definirlo en el contrato
+# Plazo para bajar los datos después de cancelar (doc 41, sección 6), confirmado por el dueño del producto
 DIAS_EXPORTACION = 90
 PERMISOS_EXPORTACION = {"datos.exportar", "nomina.exportar", "clientes.exportar"}
 

@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 tool = Tools()
 
 # Campos que nunca se deben guardar en texto plano en los logs
-SENSITIVE_FIELDS = ["password", "current_password", "new_password", "token", "pin"]
+SENSITIVE_FIELDS = ["password", "current_password", "new_password", "token", "pin", "archivo"]
 
 # Reemplaza los valores sensibles antes de guardar el log
 def mask_sensitive_data(obj):

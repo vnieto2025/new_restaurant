@@ -39,7 +39,18 @@ def val_sold_out(params):
     ]
 
 
+# El archivo se revisa en la clase: el validador repetiría su contenido en el mensaje de error
+def val_importar(params):
+    return [
+        campo("string", "nombre del archivo", params["nombre"], limite={"min": 3, "max": 150}),
+        campo("string", "archivo", params["archivo"]),
+        campo("opcion", "si ya existe", params.get("existentes"), False, opciones=["omitir", "actualizar"]),
+    ]
+
+
 RULES = {
+    "/producto/importar/revisar": val_importar,
+    "/producto/importar/aplicar": val_importar,
     "/producto/list": val_list,
     "/producto/create": campos_producto,
     "/producto/update": val_update,

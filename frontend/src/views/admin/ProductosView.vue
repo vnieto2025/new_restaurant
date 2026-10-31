@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAction } from '@/composables/useAction'
 import { formatMoney } from '@/utils/format'
 import AppModal from '@/components/AppModal.vue'
+import ImportarProductos from '@/components/ImportarProductos.vue'
 
 const auth = useAuthStore()
 const { busy, attempt, quiet } = useAction()
@@ -19,6 +20,7 @@ const buscar = ref('')
 const categoriaId = ref('')
 const form = ref(null)
 const cargado = ref(false)
+const importando = ref(false)
 
 function normalize(text) {
   return String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -89,8 +91,12 @@ onMounted(load)
         <h1>Productos</h1>
         <p>El precio es el que ve el cliente, con impuestos incluidos.</p>
       </div>
-      <button class="btn" type="button" :disabled="!categorias.length" @click="nuevo">Crear producto</button>
+      <div class="actions">
+        <button class="btn btn-secundario" type="button" @click="importando = true">Importar</button>
+        <button class="btn" type="button" :disabled="!categorias.length" @click="nuevo">Crear producto</button>
+      </div>
     </header>
+    <ImportarProductos :open="importando" @close="importando = false" @imported="load" />
 
     <div class="filtros">
       <input v-model="buscar" class="input" type="search" placeholder="Buscar producto" aria-label="Buscar producto">

@@ -20,6 +20,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `liquidaciones` | Reparto de propinas, aprobación, pago y liquidación de domiciliarios |
 | `pos_planes` | Venta directa sin pedidos, plan del restaurante y pagos del servicio |
 | `solo_lectura` | Suspender y cancelar: consulta y descarga sin operar, QR cerrado y reactivación |
+| `importar` | Plantilla de productos, errores por fila, importación y actualización de precios |
 | `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |
 | `domicilio_web` | Domicilio pedido por el cliente desde el enlace, confirmación o rechazo en Entregas y pago en línea |
 

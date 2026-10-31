@@ -570,8 +570,23 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Toda ruta de consulta nueva debe agregarse a la lista; si no, un restaurante suspendido no la verá.
   - Suspender corta el cobro de las cuentas abiertas. El aviso de mora y los 10 días de gracia son el aviso previo, y suspender sigue siendo una decisión manual de soporte.
 - **Cuándo revisar:**
-  - Al definir el plazo real de conservación en el contrato (docs 32A y 42): los 90 días son una hipótesis.
+  - Si los contratos llegan a fijar otro plazo de conservación (docs 32A y 42). Los 90 días los confirmó el dueño del producto el 2026-10-30.
   - Si soporte necesita cerrar las cuentas abiertas antes de suspender.
+
+## ADR-043: Importación de productos desde una hoja de cálculo
+
+- **Estado:** Aprobada (2026-10-30).
+- **Contexto:** los docs 12 y 41 piden cargar la carta desde CSV o Excel para el inicio de cada cliente. Crear 80 platos a mano es el primer obstáculo.
+- **Decisión:**
+  - Plantilla Excel, revisión sin guardar y aplicación. El servidor no guarda el archivo: al aplicar lo vuelve a validar completo.
+  - **Todo o nada:** con una fila con error no entra ninguna. Evita cartas a medias y, como lo existente se omite, subir el archivo corregido no duplica.
+  - **Columnas:** producto, categoría y precio obligatorios; descripción, punto de producción e impuesto opcionales. Las categorías que no existen se crean; los puntos y los impuestos deben existir, porque un error de escritura ahí mandaría el plato al lugar equivocado.
+  - **Precios:** se aceptan `18000`, `18.000`, `18,000` y `$ 18.000`. Lo ambiguo, como `18,5`, es error de la fila: no se adivina.
+  - **Si ya existe:** por defecto se deja igual. Con "actualizar" se puede subir una lista de precios: exige `catalogo.precios` y audita cada cambio de precio como si fuera a mano.
+  - El producto nuevo queda en todas las cartas, igual que al crearlo a mano. Los grupos de modificadores no se importan.
+  - **Archivo:** viaja en base64 dentro del JSON, para conservar la regla de la API. Hasta 2 MB y 1.000 filas con datos, y no se copia al registro de peticiones. De un Excel se lee el valor calculado, nunca la fórmula.
+- **Consecuencias:** cada importación queda en auditoría. El CSV acepta `;` o `,` y UTF-8 o Windows-1252, lo que suele producir Excel.
+- **Cuándo revisar:** si los clientes piden importar modificadores, insumos o clientes.
 
 ## ADR-005 (avance): impresión desde el navegador
 
