@@ -22,6 +22,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `solo_lectura` | Suspender y cancelar: consulta y descarga sin operar, QR cerrado y reactivación |
 | `puesta_en_marcha` | Asistente inicial de una empresa nueva, del aviso al ensayo en vacío |
 | `analisis` | Horas pico, tiempos, clientes e inventario en Reportes |
+| `copiar_productos` | Duplicar un producto y pasar una categoría a otra sede |
 | `contador` | Rol de consulta: reportes, descargas y sin acceso a clientes ni a operar |
 | `importar` | Plantilla de productos, errores por fila, importación y actualización de precios |
 | `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Producto import Producto
 from Class.ImportarProductos import ImportarProductos
+from Class.CopiarProductos import CopiarProductos
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -61,4 +62,18 @@ def import_preview(request: Request, db: Session = Depends(get_db)):
 def import_apply(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = ImportarProductos(db, request.state.user).apply(data)
+    return response
+
+@producto_router.post('/producto/duplicar', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def duplicate(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = CopiarProductos(db, request.state.user).duplicate(data)
+    return response
+
+@producto_router.post('/producto/copiar', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def copy_to_branch(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = CopiarProductos(db, request.state.user).copy_to_branch(data)
     return response

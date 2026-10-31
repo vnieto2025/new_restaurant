@@ -11,6 +11,7 @@ const accion = ref('')
 
 const ACCIONES = {
   datos_exportados: 'Datos exportados',
+  productos_copiados: 'Productos copiados a otra sede',
   puesta_en_marcha: 'Puesta en marcha',
   productos_importados: 'Productos importados',
   item_cancelado: 'Ítem cancelado',

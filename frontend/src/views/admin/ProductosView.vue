@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { postData } from '@/services/api'
+import { post, postData } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { useAction } from '@/composables/useAction'
 import { formatMoney } from '@/utils/format'
@@ -21,6 +21,8 @@ const categoriaId = ref('')
 const form = ref(null)
 const cargado = ref(false)
 const importando = ref(false)
+const copia = ref(null)
+const otrasSedes = computed(() => (auth.roles.includes('admin_empresa') ? auth.restaurantes.filter((r) => r.id !== auth.restaurante?.id) : []))
 
 function normalize(text) {
   return String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -59,6 +61,21 @@ function editar(producto) {
   form.value = { ...producto, producto_id: producto.id }
 }
 
+async function duplicar(producto) {
+  const data = await attempt(() => postData('/producto/duplicar', { producto_id: producto.id }), { success: (d) => `Se creó ${d.nombre}.` })
+  if (data) {
+    await load()
+    editar(data)
+  }
+}
+
+// Copia lo que se ve en la lista filtrada, para poder pasar una sola categoría
+async function copiarASede() {
+  const json = await attempt(() => post('/producto/copiar', { restaurante_id: Number(copia.value.restaurante_id), productos: visibles.value.map((p) => p.id) }),
+    { success: (r) => r?.message })
+  if (json) copia.value = null
+}
+
 async function guardar() {
   const editando = !!form.value.producto_id
   const ok = await attempt(() => postData(editando ? '/producto/update' : '/producto/create', form.value),
@@ -92,11 +109,29 @@ onMounted(load)
         <p>El precio es el que ve el cliente, con impuestos incluidos.</p>
       </div>
       <div class="actions">
+        <button v-if="otrasSedes.length" class="btn btn-secundario" type="button" :disabled="!visibles.length"
+                @click="copia = { restaurante_id: otrasSedes[0].id }">Copiar a otra sede</button>
         <button class="btn btn-secundario" type="button" @click="importando = true">Importar</button>
         <button class="btn" type="button" :disabled="!categorias.length" @click="nuevo">Crear producto</button>
       </div>
     </header>
     <ImportarProductos :open="importando" @close="importando = false" @imported="load" />
+    <AppModal :open="!!copia" title="Copiar a otra sede" width="30rem" @close="copia = null">
+      <form v-if="copia" @submit.prevent="copiarASede">
+        <p>Se copian los <strong>{{ visibles.length }}</strong> productos de la lista actual. Usa los filtros para pasar solo una categoría.</p>
+        <div class="field copia-sede">
+          <label for="copia-sede">Hacia</label>
+          <select id="copia-sede" v-model="copia.restaurante_id" class="select">
+            <option v-for="r in otrasSedes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
+          </select>
+        </div>
+        <p class="muted">Lo que ya existe allá con el mismo nombre no se toca. Las recetas no se copian, porque dependen de los insumos de cada local.</p>
+        <div class="form-actions">
+          <button class="btn btn-secundario" type="button" @click="copia = null">Cancelar</button>
+          <button class="btn" type="submit" :disabled="busy">Copiar</button>
+        </div>
+      </form>
+    </AppModal>
 
     <div class="filtros">
       <input v-model="buscar" class="input" type="search" placeholder="Buscar producto" aria-label="Buscar producto">
@@ -127,6 +162,7 @@ onMounted(load)
             </td>
             <td class="actions">
               <button class="btn btn-secundario btn-sm" type="button" @click="editar(producto)">Editar</button>
+              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-label="`Duplicar ${producto.nombre}`" @click="duplicar(producto)">Duplicar</button>
               <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(producto)">
                 {{ producto.activo ? 'Desactivar' : 'Activar' }}
               </button>

@@ -646,6 +646,18 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** con muchos datos, un periodo largo puede tardar; el doc 26 prevé tablas de resumen cuando haga falta.
 - **Cuándo revisar:** cuando un periodo de un año tarde más de lo aceptable.
 
+## ADR-048: Duplicar productos y copiarlos entre restaurantes
+
+- **Estado:** Aprobada (2026-10-30). Docs 07 y 12.
+- **Decisión:**
+  - **Duplicar:** crea "X (copia)" con la misma categoría, precio, cartas, modificadores y receta, y abre el formulario para ajustarla.
+  - **Copiar a otra sede:** solo el administrador de empresa, y solo entre sus restaurantes. Copia lo que esté en la lista filtrada, y así se puede pasar una sola categoría.
+  - **No pisa nada:** un producto que ya existe allá con ese nombre se deja igual, para conservar los precios de cada local.
+  - **Por nombre:** categoría y grupos de modificadores se reutilizan si existen o se crean. Punto de producción e impuesto se enlazan solo si existen con ese nombre; si no, aplica el de la categoría o el de defecto.
+  - **Las recetas no se copian entre sedes:** cada local tiene sus propios insumos y costos.
+- **Consecuencias:** los catálogos siguen siendo independientes: un cambio posterior de precio no se propaga. El catálogo compartido por empresa queda fuera.
+- **Cuándo revisar:** si una cadena necesita cambiar precios en todas sus sedes a la vez.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

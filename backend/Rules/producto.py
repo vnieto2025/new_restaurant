@@ -49,6 +49,8 @@ def val_importar(params):
 
 
 RULES = {
+    "/producto/duplicar": lambda p: [campo("int", "producto", p["producto_id"])],
+    "/producto/copiar": lambda p: [campo("int", "restaurante", p["restaurante_id"]), campo("list", "productos", p["productos"])],
     "/producto/importar/revisar": val_importar,
     "/producto/importar/aplicar": val_importar,
     "/producto/list": val_list,
