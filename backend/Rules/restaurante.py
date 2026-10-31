@@ -28,4 +28,6 @@ def val_change_status(params):
 RULES = {
     "/restaurante/update": campos_restaurante,
     "/restaurante/change_status": val_change_status,
+    "/restaurante/puesta_en_marcha/marcar": lambda p: [campo("string", "paso", p["paso"], limite={"min": 2, "max": 20}),
+                                                       campo("bool", "hecho", p["hecho"])],
 }

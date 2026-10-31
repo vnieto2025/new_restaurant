@@ -1,3 +1,4 @@
+from Class.PuestaEnMarcha import PuestaEnMarcha
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Restaurante import Restaurante
@@ -48,3 +49,17 @@ def regenerate_qr(request: Request, db: Session = Depends(get_db)):
 @http_decorator
 def my_plan(request: Request, db: Session = Depends(get_db)):
     return Suscripcion(db, request.state.user).my_plan()
+
+# Asistente de configuración inicial (doc 41, sección 2)
+@restaurante_router.post('/restaurante/puesta_en_marcha', tags=["Restaurante"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def setup_status(request: Request, db: Session = Depends(get_db)):
+    response = PuestaEnMarcha(db, request.state.user).get()
+    return response
+
+@restaurante_router.post('/restaurante/puesta_en_marcha/marcar', tags=["Restaurante"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def setup_mark(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = PuestaEnMarcha(db, request.state.user).mark(data)
+    return response

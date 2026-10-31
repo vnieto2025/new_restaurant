@@ -615,6 +615,24 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - El respaldo no incluye `.env`, y sin `MY_SECRET_KEY` no se leen las credenciales guardadas.
 - **Cuándo revisar:** al elegir el hosting, y antes de escalar a varias réplicas.
 
+## ADR-046: Asistente de configuración inicial
+
+- **Estado:** Aprobada (2026-10-30). Implementa el doc 41, secciones 2.3 a 2.7.
+- **Opciones evaluadas:**
+  - A) Pantallas seguidas que repiten cada formulario. Duplica mucho y se desincroniza de las pantallas reales.
+  - B) Lista de pasos que lee el estado real y lleva a la pantalla de cada cosa.
+- **Decisión: B.**
+  - Cada paso se **deduce de los datos**: lo que se hizo en su pantalla, o antes del asistente, cuenta. No se guarda avance aparte.
+  - Mesas e importación de la carta se hacen en la misma pantalla, por ser lo más tedioso. El resto abre su pantalla.
+  - **Solo se confirman a mano** los QR impresos y el ensayo en vacío (`restaurante.puesta_en_marcha`), con usuario y fecha, y quedan en auditoría.
+  - **Ensayo (RN-ONB-01):** se confirma solo si lo obligatorio está listo. Es una declaración de la persona: el sistema no verifica que haya ocurrido.
+  - Los pasos dependen de los módulos contratados: un plan sin pedidos no pide mesas ni QR, y el personal es opcional.
+  - El aviso en administración desaparece al confirmar el ensayo y no reaparece aunque luego cambien los datos.
+- **Consecuencias:**
+  - No impide operar: es una guía, no un candado. La regla RN-ONB-01 se cumple por acompañamiento, no por bloqueo.
+  - Las órdenes y ventas del ensayo quedan en los reportes de ese día; no hay modo de prueba ni forma de borrarlas. La pantalla avisa, y que el cierre de jornada bloquea más órdenes ese día.
+- **Cuándo revisar:** con el primer piloto, si el ensayo ensucia reportes o facturación: un modo de prueba sería el siguiente paso.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

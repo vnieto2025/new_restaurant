@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import DeEmpresa
-from sqlalchemy import Column, String, Time, Integer, Boolean
+from sqlalchemy import Column, String, Time, Integer, Boolean, JSON
 
 TIPOS_RESTAURANTE = ["restaurante", "comida_rapida", "bar", "panaderia", "cocina_oculta", "otro"]
 ESTADOS_RESTAURANTE = ["activo", "pausado", "cerrado", "inactivo"]
@@ -29,3 +29,5 @@ class RestauranteModel(DeEmpresa, BASE):
     aviso_datos = Column(String(600), nullable=True)
     aviso_version = Column(Integer, nullable=False, default=1, server_default="1")
     politica_url = Column(String(250), nullable=True)
+    # Pasos confirmados a mano del asistente inicial: {"qr": {"en", "por"}, "ensayo": {...}} (doc 41)
+    puesta_en_marcha = Column(JSON, nullable=True)

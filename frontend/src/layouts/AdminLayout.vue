@@ -1,5 +1,6 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { postData } from '@/services/api'
 
@@ -13,6 +14,15 @@ onMounted(async () => {
   const c = plan?.cuenta
   if (c && (['en_mora', 'por_vencer', 'prueba_vencida'].includes(c.estado) || (c.estado === 'prueba' && c.dias !== null && c.dias <= 7))) cuenta.value = c
 })
+
+// Aviso de lo que falta para abrir (doc 41); se actualiza al moverse entre pantallas hasta terminar el ensayo
+const marcha = ref(null)
+async function cargarMarcha() {
+  if (!auth.can('restaurante.configurar') || marcha.value?.listo) return
+  marcha.value = await postData('/restaurante/puesta_en_marcha').catch(() => marcha.value)
+}
+const rutaActual = useRoute()
+watch(() => rutaActual.name, cargarMarcha, { immediate: true })
 
 // Secciones de administración agrupadas como las trabaja el dueño: operación, local, carta, personal
 const GRUPOS = [
@@ -65,6 +75,7 @@ const GRUPOS = [
       { name: 'admin-pagos-linea', label: 'Pagos en línea', permiso: ['pagos_linea.configurar', 'pagos_linea.conciliar', 'pagos_linea.reembolsar'] },
       { name: 'admin-facturacion', label: 'Facturación', permiso: ['facturacion.ver', 'facturacion.configurar'] },
       { name: 'admin-impuestos', label: 'Impuestos', permiso: 'impuestos.configurar' },
+      { name: 'admin-marcha', label: 'Puesta en marcha', permiso: 'restaurante.configurar' },
       { name: 'admin-plan', label: 'Mi plan', permiso: 'restaurante.configurar' },
       { name: 'admin-restaurante', label: 'Configuración', permiso: ['restaurante.configurar', 'restaurante.pausar'] },
       { name: 'admin-auditoria', label: 'Auditoría', permiso: 'auditoria.ver' },
@@ -95,6 +106,10 @@ const grupos = computed(() =>
       <button class="salir" type="button" @click="auth.logout()">Salir ({{ auth.user?.nombre }})</button>
     </aside>
     <main class="contenido">
+      <p v-if="marcha && !marcha.listo && $route.name !== 'admin-marcha'" class="aviso-marcha" role="status">
+        <strong>Puesta en marcha:</strong> {{ marcha.hechos }} de {{ marcha.total }} pasos.
+        <RouterLink :to="{ name: 'admin-marcha' }">Continuar</RouterLink>
+      </p>
       <p v-if="cuenta && $route.name !== 'admin-plan'" class="aviso-cuenta" :class="cuenta.estado" role="status">
         {{ cuenta.estado === 'en_mora' ? 'Tu pago del servicio está pendiente.' : cuenta.texto + '.' }}
         <RouterLink :to="{ name: 'admin-plan' }">Ver mi plan</RouterLink>
@@ -236,6 +251,14 @@ const grupos = computed(() =>
   .contenido {
     padding: var(--space-5) var(--space-4);
   }
+}
+
+.aviso-marcha {
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--accion);
+  border-radius: var(--radio-sm);
+  background: var(--superficie);
 }
 
 .aviso-cuenta {

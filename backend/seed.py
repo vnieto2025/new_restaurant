@@ -110,7 +110,7 @@ def admin_ctx(empresa_id, restaurante_id):
 
 def demo_company(db, nombre, restaurante, admin, zonas, puntos_extra, categorias, personal, modificadores=(),
                  modulos=("pedidos",), facturacion=None, inventario=None, domicilios=None, pagos_linea=None,
-                 cupones=(), cobro=None):
+                 cupones=(), cobro=None, abierto=False):
     """ Empresa de ejemplo armada con las mismas clases que usa la API """
     from Class.Plataforma import Plataforma
     from Class.Zona import Zona
@@ -208,6 +208,13 @@ def demo_company(db, nombre, restaurante, admin, zonas, puntos_extra, categorias
         contrato = db.query(ContratoModel).filter(ContratoModel.restaurante_id == restaurante_id).first()
         contrato.mensualidad = cobro["mensualidad"]
         contrato.proximo_vencimiento = hoy_de() + timedelta(days=cobro["vence_en_dias"])
+        db.commit()
+
+    if abierto:
+        # Ya pasó por el asistente inicial: no muestra el aviso de puesta en marcha
+        from Models.restaurante_model import RestauranteModel
+        marca = {"en": "2026-01-01T12:00:00+00:00", "por": "Demo"}
+        db.get(RestauranteModel, restaurante_id).puesta_en_marcha = {"qr": marca, "ensayo": marca}
         db.commit()
 
     print(f"Empresa demo {nombre} creada. Usuarios: {admin}, " +
@@ -309,6 +316,7 @@ def seed_demo(db):
         "esquina",
         modulos=("pedidos", "caja", "facturacion", "inventario", "domicilios", "pagos_linea", "fidelizacion", "propinas"),
         cobro={"mensualidad": 250000, "vence_en_dias": 20},
+        abierto=True,
         # Cupones de ejemplo (doc 25A): uno general, uno de domicilio y la plantilla del cupón de la próxima visita
         cupones=[
             {"codigo": "BIENVENIDO", "nombre": "Bienvenida", "descripcion": "10 % en tu primera compra", "tipo": "porcentaje",

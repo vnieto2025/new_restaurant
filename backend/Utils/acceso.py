@@ -45,7 +45,7 @@ RUTAS_LECTURA = RUTAS_EXPORTACION | {
     "/punto_produccion/list", "/qr/list",
     "/receta/costos", "/receta/get", "/receta/opcion/list",
     "/reporte/cancelaciones", "/reporte/dashboard", "/reporte/mesero", "/reporte/meseros", "/reporte/ventas",
-    "/resolucion/list", "/restaurante/get", "/restaurante/plan", "/turno_mesero/actual",
+    "/resolucion/list", "/restaurante/get", "/restaurante/plan", "/restaurante/puesta_en_marcha", "/turno_mesero/actual",
     "/usuario/get", "/usuario/list", "/usuario/roles", "/zona/list",
 }
 RUTAS_POR_MODO = {LECTURA: RUTAS_LECTURA, EXPORTACION: RUTAS_EXPORTACION}
