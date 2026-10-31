@@ -161,6 +161,12 @@ ROLES = [
         "permisos": ["domicilios.entregar", "liquidaciones.ver_propia"],
     },
     {
+        # Consulta informes y exporta, sin operar (doc 08). Sin clientes: exportar datos personales se concede aparte (doc 29)
+        "codigo": "contador", "nombre": "Contador / auditor (lectura)", "alcance": "restaurante",
+        "permisos": ["reportes.ver", "ordenes.ver", "caja.ver", "facturacion.ver", "compras.ver", "inventario.ver",
+                     "cupones.ver", "auditoria.ver", "datos.exportar", "nomina.exportar"],
+    },
+    {
         "codigo": "cocina", "nombre": "Cocina / bar", "alcance": "punto",
         "permisos": ["cocina.operar", "cocina.reabrir", "productos.agotar", "tirilla.imprimir",
                      "inventario.movimientos", "inventario.contar", "compras.recibir",

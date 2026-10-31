@@ -460,6 +460,7 @@ def seed_demo(db):
             {"usuario": "cocina.esquina", "nombre": "Pedro Cocina", "roles": ["cocina"], "puntos": ["Cocina"]},
             {"usuario": "bar.esquina", "nombre": "Sofía Bar", "roles": ["cocina"], "puntos": ["Bar"]},
             {"usuario": "caja.esquina", "nombre": "Marta Caja", "roles": ["cajero"]},
+            {"usuario": "contador.esquina", "nombre": "Pedro Contador", "roles": ["contador"]},
             {"usuario": "domi.esquina", "nombre": "Julián Moto", "roles": ["domiciliario"]},
         ],
     )

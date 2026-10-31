@@ -169,6 +169,7 @@ export const ESTADOS = {
 export const TIPOS_IDENTIFICACION = { CC: 'Cédula', NIT: 'NIT', CE: 'Cédula de extranjería', PAS: 'Pasaporte', PPT: 'PPT', TI: 'Tarjeta de identidad' }
 
 export const ROLES = {
+  contador: 'Contador / auditor',
   admin_empresa: 'Administrador de empresa',
   admin_restaurante: 'Administrador de restaurante',
   cajero: 'Cajero',

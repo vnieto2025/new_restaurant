@@ -588,6 +588,16 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** cada importación queda en auditoría. El CSV acepta `;` o `,` y UTF-8 o Windows-1252, lo que suele producir Excel.
 - **Cuándo revisar:** si los clientes piden importar modificadores, insumos o clientes.
 
+## ADR-044: Rol de contador o auditor
+
+- **Estado:** Aprobada (2026-10-30). Completa el rol previsto en el doc 08.
+- **Decisión:**
+  - Rol fijo `contador`, de alcance restaurante, que el administrador asigna en Personal. Tiene reportes, órdenes, caja, facturación, compras, inventario, cupones y auditoría en modo consulta, más las descargas de datos y de nómina.
+  - **Sin clientes:** el doc 29 pide conceder aparte la exportación de datos personales. Si un contador la necesita, el administrador le entrega el archivo.
+  - Una prueba recorre todas las rutas que no son de consulta y exige que este rol reciba 403 en cada una.
+- **Consecuencias:** los documentos de venta sí traen el nombre y el documento de quien recibe la factura, porque son soporte contable. Solo ve los módulos contratados.
+- **Cuándo revisar:** si un contador atiende varios restaurantes o empresas: un usuario pertenece a una sola empresa (RN-EMP-03).
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.
