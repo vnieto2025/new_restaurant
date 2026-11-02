@@ -3,6 +3,7 @@ from Utils.decorator import http_decorator
 from Class.Producto import Producto
 from Class.ImportarProductos import ImportarProductos
 from Class.CopiarProductos import CopiarProductos
+from Class.FotoProducto import FotoProducto
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -76,4 +77,18 @@ def duplicate(request: Request, db: Session = Depends(get_db)):
 def copy_to_branch(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = CopiarProductos(db, request.state.user).copy_to_branch(data)
+    return response
+
+@producto_router.post('/producto/imagen', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def upload_photo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = FotoProducto(db, request.state.user).upload(data)
+    return response
+
+@producto_router.post('/producto/imagen/quitar', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])
+@http_decorator
+def remove_photo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = FotoProducto(db, request.state.user).remove(data)
     return response

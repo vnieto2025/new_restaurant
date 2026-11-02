@@ -107,6 +107,8 @@ class Producto:
             "punto_produccion_id": punto_id or None,
             "orden": int(data.get("orden") or 0),
         }
+        if "alergenos" in data:
+            fields["alergenos"] = clean_text(data.get("alergenos"))
         # Vacío = el de la categoría o el impuesto por defecto (doc 21A, sección 2)
         if "impuesto_id" in data:
             impuesto_id = data.get("impuesto_id")

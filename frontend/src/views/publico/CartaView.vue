@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { postData } from '@/services/api'
 import { useDraft } from '@/composables/useDraft'
 import { useAction } from '@/composables/useAction'
-import { formatMoney } from '@/utils/format'
+import { formatMoney, mediaUrl } from '@/utils/format'
 import OpcionesProducto from '@/components/OpcionesProducto.vue'
 
 /*
@@ -199,9 +199,11 @@ onMounted(() => {
           <h2>{{ categoria.nombre }}</h2>
           <ul>
             <li v-for="producto in categoria.productos" :key="producto.id" class="producto" :class="{ agotado: producto.agotado }">
+              <img v-if="producto.imagen" class="foto" :src="mediaUrl(producto.imagen)" :alt="producto.nombre" loading="lazy" decoding="async" width="88" height="88">
               <div class="info">
                 <span class="nombre">{{ producto.nombre }}</span>
                 <span v-if="producto.descripcion" class="desc">{{ producto.descripcion }}</span>
+                <span v-if="producto.alergenos" class="desc alergenos">Contiene: {{ producto.alergenos }}</span>
                 <span v-if="producto.grupos?.length && !producto.agotado" class="desc">Puedes elegir: {{ producto.grupos.map((g) => g.nombre.toLowerCase()).join(', ') }}</span>
                 <span class="precio">{{ producto.agotado ? 'Agotado por hoy' : formatMoney(producto.precio) }}</span>
               </div>
@@ -442,6 +444,23 @@ onMounted(() => {
 
 .precio {
   margin-top: var(--space-1);
+  font-weight: 600;
+}
+
+.foto {
+  flex: none;
+  width: 5.5rem;
+  height: 5.5rem;
+  object-fit: cover;
+  border-radius: var(--radio-sm);
+  background: var(--fondo);
+}
+
+.agotado .foto {
+  opacity: 0.5;
+}
+
+.alergenos {
   font-weight: 600;
 }
 

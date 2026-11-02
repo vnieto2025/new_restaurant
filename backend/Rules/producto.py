@@ -6,6 +6,7 @@ def campos_producto(params):
         campo("int", "categoría", params["categoria_id"]),
         campo("string", "nombre", params["nombre"], limite={"min": 2, "max": 100}),
         campo("string", "descripción", params.get("descripcion"), False, limite={"min": 1, "max": 500}),
+        campo("string", "alérgenos", params.get("alergenos"), False, limite={"min": 1, "max": 200}),
         campo("int", "precio", params["precio"]),
         campo("int", "punto de producción", params.get("punto_produccion_id"), False),
         campo("int", "orden", params.get("orden"), False),
@@ -49,6 +50,9 @@ def val_importar(params):
 
 
 RULES = {
+    # El archivo se revisa en la clase: el validador repetiría su contenido en el mensaje de error
+    "/producto/imagen": lambda p: [campo("int", "producto", p["producto_id"]), campo("string", "archivo", p["archivo"])],
+    "/producto/imagen/quitar": lambda p: [campo("int", "producto", p["producto_id"])],
     "/producto/duplicar": lambda p: [campo("int", "producto", p["producto_id"])],
     "/producto/copiar": lambda p: [campo("int", "restaurante", p["restaurante_id"]), campo("list", "productos", p["productos"])],
     "/producto/importar/revisar": val_importar,

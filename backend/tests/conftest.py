@@ -4,6 +4,7 @@ que se borra y se vuelve a crear al iniciar cada corrida.
 """
 import os
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 from dotenv import load_dotenv
@@ -16,6 +17,8 @@ os.environ["PUBLIC_URL"] = "http://carta.test"
 # La cola de emisión se procesa a mano en las pruebas (/documento/enviar), no en segundo plano
 os.environ["EMISION_AUTOMATICA"] = "0"
 os.environ["MENSAJES_AUTOMATICOS"] = "0"
+# Las fotos de las pruebas no se mezclan con las de desarrollo
+os.environ["MEDIA_DIR"] = tempfile.mkdtemp(prefix="restaurant_media_")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

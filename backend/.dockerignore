@@ -11,3 +11,4 @@ __pycache__/
 .gitignore
 Dockerfile
 .dockerignore
+media/

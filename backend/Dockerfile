@@ -15,7 +15,8 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # El contenedor no corre como root
-RUN useradd --create-home --uid 1000 restaurant && chown -R restaurant:restaurant /app
+# La carpeta de fotos se crea antes: el volumen nuevo hereda este dueño
+RUN useradd --create-home --uid 1000 restaurant && mkdir -p /app/media && chown -R restaurant:restaurant /app
 USER restaurant
 
 EXPOSE 8000

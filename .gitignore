@@ -9,3 +9,6 @@ __pycache__/
 # Respaldos de la base: datos reales, nunca al repositorio
 respaldos/
 *.dump
+
+# Fotos subidas en desarrollo
+backend/media/

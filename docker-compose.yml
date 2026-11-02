@@ -51,6 +51,8 @@ services:
       # La app corre con un rol sin privilegios para que RLS la limite; seed.py lo crea
       DB_APP_USER: ${DB_APP_USER:?Falta DB_APP_USER en .env}
       DB_APP_PASS: ${DB_APP_PASS:?Falta DB_APP_PASS en .env}
+    volumes:
+      - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -70,6 +72,7 @@ services:
       RESPALDO_DIAS: ${RESPALDO_DIAS:-30}
     volumes:
       - ./ops:/ops:ro
+      - media_data:/media:ro
       - ${RESPALDOS_DIR:-./respaldos}:/respaldos
     depends_on:
       db:
@@ -86,4 +89,5 @@ services:
         condition: service_healthy
 
 volumes:
+  media_data:
   db_data:

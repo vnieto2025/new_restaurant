@@ -658,6 +658,23 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** los catálogos siguen siendo independientes: un cambio posterior de precio no se propaga. El catálogo compartido por empresa queda fuera.
 - **Cuándo revisar:** si una cadena necesita cambiar precios en todas sus sedes a la vez.
 
+## ADR-049: Fotos y alérgenos de los productos
+
+- **Estado:** Aprobada (2026-11-01). Docs 11 y 12.
+- **Decisión:**
+  - **Carpeta por restaurante** (lo pidió el dueño del producto): `media/restaurantes/<id>-<nombre>/productos/<aleatorio>.webp`. El número la hace única y el nombre deja reconocerla. La ruta completa queda en `producto.imagen`, así que cambiar el nombre del restaurante no rompe nada.
+  - **Compresión con Pillow:** WebP, máximo 1000 px por lado, bajando la calidad hasta acercarse a 150 KB. No se guarda la original. El celular también reduce la foto antes de subirla, para que una de cámara no se rechace ni tarde.
+  - **Validación:** se abre como imagen de verdad, solo JPG, PNG o WebP, hasta 6 MB y 40 megapíxeles. Regenerarla quita los metadatos, como la ubicación GPS.
+  - **Se sirve en `/media`, sin sesión**, porque la carta es pública. El nombre aleatorio impide adivinar otras fotos y permite caché larga. No hay listado de carpetas.
+  - **Copias independientes:** duplicar o copiar a otra sede crea otro archivo, para que borrar una foto no deje a otro producto sin la suya.
+  - **Docker y respaldos:** volumen `media_data`. El respaldo diario agrega `<nombre>.fotos.tar.gz` y `restaurar.sh` lo repone. CI lo prueba.
+  - **Alérgenos:** texto libre del restaurante en `producto.alergenos`, también en la importación; la carta lo muestra como "Contiene: ...".
+- **Consecuencias:**
+  - Los alérgenos son lo que escribe el restaurante: el sistema no los deduce de la receta ni los verifica.
+  - Reiniciar la base de desarrollo no borra los archivos; quedan huérfanos en `backend/media`.
+  - Con varios servidores harían falta almacenamiento compartido; hoy hay uno solo (doc 40A).
+- **Cuándo revisar:** al comprar el hosting, si ofrece almacenamiento de objetos.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

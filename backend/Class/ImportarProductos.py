@@ -13,10 +13,10 @@ from Class.Producto import MAX_PRECIO
 MAX_ARCHIVO = 2 * 1024 * 1024
 MAX_FILAS = 1000
 COLUMNAS = {"producto": "Producto", "categoria": "Categoría", "precio": "Precio", "descripcion": "Descripción",
-            "punto": "Punto de producción", "impuesto": "Impuesto"}
+            "punto": "Punto de producción", "impuesto": "Impuesto", "alergenos": "Alérgenos"}
 OBLIGATORIAS = ["producto", "categoria", "precio"]
-EJEMPLO = [["Hamburguesa clásica", "Hamburguesas", 18000, "Carne de res, queso, lechuga y tomate", "Cocina", ""],
-           ["Limonada natural", "Bebidas", 6000, "", "Bar", ""]]
+EJEMPLO = [["Hamburguesa clásica", "Hamburguesas", 18000, "Carne de res, queso, lechuga y tomate", "Cocina", "", "Gluten, lácteos"],
+           ["Limonada natural", "Bebidas", 6000, "", "Bar", "", ""]]
 
 
 def leer_precio(valor):
@@ -64,7 +64,7 @@ class ImportarProductos:
         cartas = [carta.id for carta in self.querys.get_cartas()]
         for fila in revision["filas"]:
             campos = {"categoria_id": categorias[fila["categoria"].lower()], "precio": fila["precio"], "nombre": fila["producto"]}
-            campos.update({k: fila[k] for k in ("descripcion", "punto_produccion_id", "impuesto_id") if fila.get(k)})
+            campos.update({k: fila[k] for k in ("descripcion", "alergenos", "punto_produccion_id", "impuesto_id") if fila.get(k)})
             if fila["accion"] == "crear":
                 producto_id = self.querys.insert_data(ProductoModel, campos, commit=False)
                 self.querys.set_cartas_producto(producto_id, cartas)
@@ -97,6 +97,7 @@ class ImportarProductos:
             categoria = clean_text(valores.get("categoria"))
             fila["producto"], fila["categoria"] = nombre, categoria
             fila["descripcion"] = clean_text(valores.get("descripcion"))
+            fila["alergenos"] = clean_text(valores.get("alergenos"))
             fila["precio"] = leer_precio(valores.get("precio"))
 
             if not nombre or not 2 <= len(nombre) <= 100:
@@ -111,6 +112,8 @@ class ImportarProductos:
                 fila["errores"].append("El precio debe ser un valor en pesos, sin decimales.")
             if fila["descripcion"] and len(fila["descripcion"]) > 500:
                 fila["errores"].append("La descripción puede tener máximo 500 caracteres.")
+            if fila["alergenos"] and len(fila["alergenos"]) > 200:
+                fila["errores"].append("Los alérgenos pueden tener máximo 200 caracteres.")
             fila["punto_produccion_id"] = self.lookup(valores.get("punto"), puntos, "punto de producción", fila)
             fila["impuesto_id"] = self.lookup(valores.get("impuesto"), impuestos, "impuesto", fila)
 

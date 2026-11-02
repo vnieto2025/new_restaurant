@@ -57,6 +57,8 @@ class ProductoQuerys(Querys):
             "categoria": categoria.nombre if categoria else None,
             "nombre": producto.nombre,
             "descripcion": producto.descripcion,
+            "imagen": producto.imagen,
+            "alergenos": producto.alergenos,
             "precio": producto.precio,
             "punto_produccion_id": producto.punto_produccion_id,
             "punto_produccion": punto.nombre if punto else None,

@@ -10,6 +10,10 @@ class ProductoModel(DeRestaurante, BorradoLogico, BASE):
     categoria_id = Column(BigInteger, ForeignKey("categoria.id"), nullable=False, index=True)
     nombre = Column(String(100), nullable=False)
     descripcion = Column(Text, nullable=True)
+    # Foto comprimida, relativa a MEDIA_DIR, en la carpeta del restaurante
+    imagen = Column(String(200), nullable=True)
+    # Aviso para el cliente: "Contiene gluten, lácteos". Lo escribe el restaurante, que es quien sabe qué lleva cada plato
+    alergenos = Column(String(200), nullable=True)
     # Precio final de carta, con impuesto incluido, en pesos enteros (RG-03, ADR-010)
     precio = Column(BigInteger, nullable=False)
     punto_produccion_id = Column(BigInteger, ForeignKey("punto_produccion.id"), nullable=True)

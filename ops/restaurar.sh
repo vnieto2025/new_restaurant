@@ -27,5 +27,12 @@ docker compose stop backend respaldos
 # Sin dueños ni permisos: el archivo sirve también en un servidor nuevo. seed.py los vuelve a poner con el aislamiento (RLS)
 docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$archivo"
 docker compose run --rm backend python seed.py
+# Las fotos del mismo respaldo, si están a su lado
+fotos="${archivo%.dump}.fotos.tar.gz"
+if [ -f "$fotos" ]; then
+    docker compose run --rm --no-deps -T --entrypoint sh backend -c 'find /app/media -mindepth 1 -delete; tar xzf - -C /app/media' < "$fotos"
+else
+    echo "AVISO: no se encontró $fotos: las fotos se quedan como están."
+fi
 docker compose up -d --wait
 echo "Restauración lista. Revisa en la aplicación que los datos sean los esperados."

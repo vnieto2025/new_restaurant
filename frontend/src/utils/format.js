@@ -1,3 +1,4 @@
+import { API_URL } from '@/services/api'
 // Formatos del restaurante: pesos sin decimales (RG-25) y horas locales
 const money = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -53,6 +54,11 @@ export function formatDate(value) {
 export function formatDateLong(value) {
   const date = parseDate(value)
   return date ? dateLong.format(date) : ''
+}
+
+// Dirección de una foto guardada en el backend
+export function mediaUrl(ruta) {
+  return ruta ? `${API_URL}/media/${ruta}` : null
 }
 
 export function isoDate(date) {

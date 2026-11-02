@@ -22,7 +22,15 @@ respaldar() {
         return 1
     fi
     mv "$nombre.parcial" "$nombre"
-    find "$DESTINO" -name '*.dump' -mtime +"$DIAS" -delete
+    # Las fotos van al lado, con el mismo nombre: un respaldo de la base sin ellas dejaría la carta sin imágenes
+    fotos="${nombre%.dump}.fotos.tar.gz"
+    if ! tar czf "$fotos.parcial" -C /media . || ! tar tzf "$fotos.parcial" > /dev/null; then
+        echo "ERROR: falló el respaldo de las fotos" >&2
+        rm -f "$fotos.parcial"
+        return 1
+    fi
+    mv "$fotos.parcial" "$fotos"
+    find "$DESTINO" \( -name '*.dump' -o -name '*.fotos.tar.gz' \) -mtime +"$DIAS" -delete
     echo "Respaldo listo: $nombre ($(du -h "$nombre" | cut -f1))"
 }
 

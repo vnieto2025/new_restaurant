@@ -68,6 +68,8 @@ class CartaQuerys(Querys):
                 "id": producto.id,
                 "nombre": producto.nombre,
                 "descripcion": producto.descripcion,
+                "imagen": producto.imagen,
+                "alergenos": producto.alergenos,
                 "precio": producto.precio,
                 "agotado": producto.agotado,
                 "grupos": grupos.get(producto.id, []),

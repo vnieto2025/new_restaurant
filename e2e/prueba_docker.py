@@ -52,12 +52,22 @@ def total_productos():
     return len(json.loads(pedir("/api/producto/list", {"todos": True}, token)[1])["data"])
 
 
+# Una foto subida por nginx se sirve por nginx
+PUNTO = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEAQH/7yMK/gAAAABJRU5ErkJggg=="
+productos = json.loads(pedir("/api/producto/list", {"todos": True}, token)[1])["data"]
+foto_id = productos[0]["id"]
+imagen = json.loads(pedir("/api/producto/imagen", {"producto_id": foto_id, "archivo": PUNTO}, token)[1])["data"]["imagen"]
+comprobar("la foto se sirve", pedir(f"/api/media/{imagen}")[0] == 200, imagen)
+
 # Respaldo, daño y restauración: un respaldo que nunca se ha probado no existe (doc 40, sección 6)
 antes = total_productos()
 correr("docker", "compose", "exec", "-T", "respaldos", "/ops/respaldar.sh", "--ahora")
 archivos = sorted(f for f in os.listdir("respaldos") if f.endswith(".dump"))
 comprobar("se creó el respaldo", bool(archivos), str(archivos))
 
+comprobar("se respaldaron las fotos", any(f.endswith(".fotos.tar.gz") for f in os.listdir("respaldos")))
+pedir("/api/producto/imagen/quitar", {"producto_id": foto_id}, token)
+comprobar("la foto se borró", pedir(f"/api/media/{imagen}")[0] == 404)
 categoria = json.loads(pedir("/api/categoria/list", {}, token)[1])["data"][0]["id"]
 estado, _ = pedir("/api/producto/create", {"nombre": "Creado después del respaldo", "categoria_id": categoria, "precio": 1000}, token)
 comprobar("cambio posterior al respaldo", estado == 201 and total_productos() == antes + 1)
@@ -66,6 +76,7 @@ correr("sh", "ops/restaurar.sh", "--si", f"respaldos/{archivos[-1]}")
 sesion = json.loads(pedir("/api/login", {"usuario": "admin.esquina", "password": "demo1234"})[1])["data"]
 token = sesion["token"]
 comprobar("volvió al estado del respaldo", total_productos() == antes)
+comprobar("el respaldo trae las fotos", pedir(f"/api/media/{imagen}")[0] == 200)
 
 # El aislamiento entre empresas sobrevive a la restauración
 salida = subprocess.run(

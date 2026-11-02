@@ -1,4 +1,5 @@
 from Utils.tools import Tools, CustomException
+from Utils import imagenes
 from Querys.base import Querys
 from Querys.producto import ProductoQuerys
 from Querys.modificador import ModificadorQuerys
@@ -29,6 +30,8 @@ class CopiarProductos:
         nombre = self.free_name(original.nombre)
         producto_id = self.querys.insert_data(ProductoModel, {
             "categoria_id": original.categoria_id, "nombre": nombre, "descripcion": original.descripcion, "precio": original.precio,
+            "alergenos": original.alergenos,
+            "imagen": imagenes.copiar(original.imagen, self.db.get(RestauranteModel, self.ctx["restaurante_id"])),
             "punto_produccion_id": original.punto_produccion_id, "impuesto_id": original.impuesto_id, "orden": original.orden,
         }, commit=False)
         self.querys.set_cartas_producto(producto_id, self.querys.get_cartas_producto(original.id))
@@ -96,6 +99,7 @@ class CopiarProductos:
                 categorias_nuevas += 1
             nuevo_id = allá.insert_data(ProductoModel, {
                 "categoria_id": categoria_id, "nombre": producto.nombre, "descripcion": producto.descripcion, "precio": producto.precio,
+                "alergenos": producto.alergenos, "imagen": imagenes.copiar(producto.imagen, destino),
                 "orden": producto.orden, "activo": producto.activo,
                 # Se enlaza con el punto y el impuesto del mismo nombre; si allá no existen, usa los de su categoría o el de defecto
                 "punto_produccion_id": self.same_name(PuntoProduccionModel, producto.punto_produccion_id, puntos),

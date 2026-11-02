@@ -39,7 +39,7 @@ El paquete sirve HTTP en `APP_PORT`. Antes de recibir clientes reales pon delant
 
 ## 3. Respaldos
 
-El servicio `respaldos` guarda uno al día en `RESPALDOS_DIR`, lo verifica y borra los que pasen de `RESPALDO_DIAS`. Para hacer uno ahora, por ejemplo antes de actualizar:
+El servicio `respaldos` guarda uno al día en `RESPALDOS_DIR`, de la base y de las fotos, lo verifica y borra los que pasen de `RESPALDO_DIAS`. Para hacer uno ahora, por ejemplo antes de actualizar:
 
 ```bash
 docker compose exec respaldos /ops/respaldar.sh --ahora

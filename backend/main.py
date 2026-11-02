@@ -2,6 +2,7 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Response
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 import Models  # noqa: F401 (registra todas las tablas; el esquema lo crean las migraciones con seed.py)
@@ -48,6 +49,7 @@ from Router.Receta import receta_router
 from Router.Inventario import inventario_router
 from Router.Conteo import conteo_router
 from Config.db import engine
+from Utils.imagenes import MEDIA_DIR
 from Utils.emision import cola_emision
 from Utils.mensajeria import cola_mensajes
 from Router.Realtime import realtime_router
@@ -127,6 +129,20 @@ app.include_router(cupon_router)
 app.include_router(liquidacion_router)
 app.include_router(pos_router)
 app.include_router(realtime_router)
+
+
+
+class Fotos(StaticFiles):
+    """ Fotos de la carta: públicas como la carta. El nombre es aleatorio y no cambia, así que el celular las guarda """
+
+    def file_response(self, *args, **kwargs):
+        respuesta = super().file_response(*args, **kwargs)
+        respuesta.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        respuesta.headers["X-Content-Type-Options"] = "nosniff"
+        return respuesta
+
+
+app.mount("/media", Fotos(directory=MEDIA_DIR), name="media")
 
 
 # Para Docker y los monitores: responde si la aplicación llega a la base de datos
