@@ -88,14 +88,18 @@ jobs:
         working-directory: e2e
         run: python fase1.py
       - name: Salud, respaldo y restauración
-        run: python e2e/prueba_docker.py
+        shell: bash
+        run: python e2e/prueba_docker.py 2>&1 | tee prueba.txt
       # Sin sesión en GitHub los registros no se pueden leer; las anotaciones sí
       - name: Mostrar el error
         if: failure()
         run: |
           docker compose ps -a
-          docker compose logs --tail=40 > registros.txt 2>&1
-          tail -n 12 registros.txt | sed 's/^/::error::/'
+          # GitHub muestra máximo 10 anotaciones por paso: primero la comprobación que falló
+          touch prueba.txt
+          tail -n 6 prueba.txt | sed 's/^/::error::/'
+          docker compose logs --tail=40 backend > registros.txt 2>&1
+          grep -vE 'GET|POST|INFO' registros.txt | tail -n 4 | sed 's/^/::error::/'
 
   frontend:
     name: Frontend (compilación)
