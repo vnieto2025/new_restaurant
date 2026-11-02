@@ -15,12 +15,11 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # El contenedor no corre como root
-# La carpeta de fotos se crea antes: el volumen nuevo hereda este dueño
 RUN useradd --create-home --uid 1000 restaurant && mkdir -p /app/media && chown -R restaurant:restaurant /app
-USER restaurant
 
 EXPOSE 8000
 
 # Al arrancar: crea tablas y catálogos si faltan (seed.py no duplica nada) y levanta la API.
 # --proxy-headers hace que los logs guarden la IP real que envía nginx, no la del contenedor.
-CMD ["sh", "-c", "python seed.py && exec uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"]
+# El volumen de fotos no trae el dueño de la imagen: se ajusta como root y la aplicación corre sin privilegios.
+CMD ["sh", "-c", "chown -R restaurant:restaurant /app/media && exec setpriv --reuid=1000 --regid=1000 --init-groups sh -c \"python seed.py && exec uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'\""]

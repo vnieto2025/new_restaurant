@@ -74,11 +74,8 @@ services:
       - ./ops:/ops:ro
       - media_data:/media:ro
       - ${RESPALDOS_DIR:-./respaldos}:/respaldos
-    # Después del backend: quien crea primero el volumen de fotos le deja su dueño, y debe poder escribir en él
     depends_on:
       db:
-        condition: service_healthy
-      backend:
         condition: service_healthy
 
   frontend:
