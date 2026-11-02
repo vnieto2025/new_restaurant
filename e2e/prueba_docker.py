@@ -1,11 +1,15 @@
 """Prueba del paquete de Docker ya levantado (la corre GitHub Actions): salud, lo que no debe quedar público, el límite
 de tamaño de nginx y que un respaldo se pueda restaurar. Los flujos de la aplicación los prueba el recorrido fase1."""
+import base64
+import io
 import json
 import os
 import subprocess
 import sys
 import urllib.error
 import urllib.request
+
+from PIL import Image
 
 BASE = os.getenv("E2E_APP", "http://localhost")
 
@@ -53,7 +57,9 @@ def total_productos():
 
 
 # Una foto subida por nginx se sirve por nginx
-PUNTO = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEAQH/7yMK/gAAAABJRU5ErkJggg=="
+lienzo = io.BytesIO()
+Image.new("RGB", (64, 64), "red").save(lienzo, "PNG")
+PUNTO = base64.b64encode(lienzo.getvalue()).decode()
 productos = json.loads(pedir("/api/producto/list", {"todos": True}, token)[1])["data"]
 foto_id = productos[0]["id"]
 imagen = json.loads(pedir("/api/producto/imagen", {"producto_id": foto_id, "archivo": PUNTO}, token)[1])["data"]["imagen"]
