@@ -23,7 +23,7 @@ if [ "$confirmado" != "1" ]; then
 fi
 
 docker compose up -d --wait db
-docker compose stop backend respaldos
+docker compose stop respaldos backend
 # Sin dueños ni permisos: el archivo sirve también en un servidor nuevo. seed.py los vuelve a poner con el aislamiento (RLS)
 docker compose exec -T db sh -c 'pg_restore --clean --if-exists --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"' < "$archivo"
 docker compose run --rm backend python seed.py

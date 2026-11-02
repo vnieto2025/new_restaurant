@@ -153,6 +153,9 @@ def salud():
             conexion.execute(text("SELECT 1"))
     except Exception:
         return Response('{"estado":"sin base de datos"}', status_code=503, media_type="application/json")
+    # Sin esto, las fotos fallarían recién cuando alguien intente subir la primera
+    if not os.access(MEDIA_DIR, os.W_OK):
+        return Response('{"estado":"sin permiso en la carpeta de fotos"}', status_code=503, media_type="application/json")
     return Response('{"estado":"ok"}', media_type="application/json")
 
 
