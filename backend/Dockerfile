@@ -14,7 +14,7 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-# El contenedor no corre como root
+# La aplicación corre con este usuario, no como root (ver CMD)
 RUN useradd --create-home --uid 1000 restaurant && mkdir -p /app/media && chown -R restaurant:restaurant /app
 
 EXPOSE 8000

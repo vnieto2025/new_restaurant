@@ -90,4 +90,8 @@ salida = subprocess.run(
      'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select count(*) from pg_class where relrowsecurity and relname = \'producto\'"'],
     capture_output=True, text=True, check=True).stdout.strip()
 comprobar("RLS sigue activo", salida == "1", salida)
+# El arranque corre como root solo para ajustar la carpeta de fotos: la aplicación no
+uid = subprocess.run(["docker", "compose", "exec", "-T", "backend", "sh", "-c", "grep ^Uid /proc/1/status"],
+                     capture_output=True, text=True, check=True).stdout.split()[1]
+comprobar("la aplicación corre sin privilegios", uid == "1000", uid)
 print("Paquete de Docker verificado.")

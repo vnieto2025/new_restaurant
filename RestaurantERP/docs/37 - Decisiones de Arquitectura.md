@@ -668,6 +668,7 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - **Se sirve en `/media`, sin sesión**, porque la carta es pública. El nombre aleatorio impide adivinar otras fotos y permite caché larga. No hay listado de carpetas.
   - **Copias independientes:** duplicar o copiar a otra sede crea otro archivo, para que borrar una foto no deje a otro producto sin la suya.
   - **Docker y respaldos:** volumen `media_data`. El respaldo diario agrega `<nombre>.fotos.tar.gz` y `restaurar.sh` lo repone. CI lo prueba.
+  - **Permisos:** un volumen nuevo no hereda el dueño de la imagen, así que el contenedor arranca como root solo para ajustar esa carpeta y corre la aplicación como usuario 1000. `/salud` falla si no se puede escribir ahí, y CI comprueba el usuario.
   - **Alérgenos:** texto libre del restaurante en `producto.alergenos`, también en la importación; la carta lo muestra como "Contiene: ...".
 - **Consecuencias:**
   - Los alérgenos son lo que escribe el restaurante: el sistema no los deduce de la receta ni los verifica.
