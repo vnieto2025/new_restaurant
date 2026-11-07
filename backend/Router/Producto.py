@@ -4,6 +4,7 @@ from Class.Producto import Producto
 from Class.ImportarProductos import ImportarProductos
 from Class.CopiarProductos import CopiarProductos
 from Class.FotoProducto import FotoProducto
+from Class.Disponibilidad import Disponibilidad
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -43,6 +44,13 @@ def change_status(request: Request, db: Session = Depends(get_db)):
 def sold_out(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Producto(db, request.state.user).sold_out(data)
+    return response
+
+@producto_router.post('/producto/sugerir_agotados', tags=["Producto"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["productos.agotar"], modulo="inventario"))])
+@http_decorator
+def suggest_sold_out(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Disponibilidad(db, request.state.user).suggest(data)
     return response
 
 @producto_router.post('/producto/importar/plantilla', tags=["Producto"], dependencies=[Depends(JWTBearer(permisos=["catalogo.gestionar"]))])

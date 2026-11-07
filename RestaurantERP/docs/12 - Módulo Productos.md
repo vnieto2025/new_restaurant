@@ -53,7 +53,7 @@ Un combo define **componentes**, cada uno con la posibilidad de elegir entre var
 - El administrador, el cajero o **producción** puede marcar un producto como **agotado** de inmediato.
 - Al agotarse, desaparece o se muestra bloqueado en todas las cartas y tablets en tiempo real.
 - Un agotado manual **se reinicia** al comenzar la siguiente jornada, configurable.
-- Si hay **inventario con receta** (`22`), el sistema podrá sugerir el agotado cuando el stock llegue a cero (fase 2).
+- Si hay **inventario con receta** (`22`), el sistema sugiere el agotado cuando el stock no alcanza para una porción, avisa lo que se está acabando y propone volver a ofrecer un agotado cuando hay con qué prepararlo (ADR-051). Solo sugiere: marcarlo sigue siendo decisión de cocina o del administrador.
 
 ## 6. Precios e historial
 

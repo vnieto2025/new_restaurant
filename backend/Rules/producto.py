@@ -64,4 +64,5 @@ RULES = {
     "/producto/update": val_update,
     "/producto/change_status": val_change_status,
     "/producto/agotado": val_sold_out,
+    "/producto/sugerir_agotados": lambda p: [campo("int", "punto de producción", p.get("punto_produccion_id"), False)],
 }

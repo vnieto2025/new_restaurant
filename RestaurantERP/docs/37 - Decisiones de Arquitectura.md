@@ -693,6 +693,19 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Si se cambian las partes de un combo, lo ya pedido no se afecta: cada ítem guarda su copia.
 - **Cuándo revisar:** si hacen falta partes con varias elecciones distintas ("2 salsas a elegir") o combos que repartan el valor entre sus partes.
 
+## ADR-051: Sugerir agotados con el inventario
+
+- **Estado:** Aprobada (2026-11-06). Doc 12, sección 5.
+- **Decisión:**
+  - **Porciones que alcanzan:** para cada producto simple activo con receta se calcula el stock de cada ingrediente entre lo que lleva una porción (con su merma y rendimiento); el menor manda. Se calcula al consultar, sin tablas nuevas.
+  - **Solo insumos con inventario cargado:** cuenta un insumo que tuvo alguna entrada, compra, producción o ajuste. Uno que solo tiene consumos nunca se cargó y su stock en cero no dice que se acabó; así un restaurante que no lleva inventario no recibe sugerencias falsas.
+  - **Tres listas en `/producto/sugerir_agotados`** (permiso `productos.agotar`, módulo inventario): agotar (no alcanza para una porción), se están acabando (5 o menos) y agotados que ya se pueden preparar.
+  - **Solo sugiere, nunca agota solo:** el stock del sistema puede no coincidir con la nevera. "Todavía hay" oculta la sugerencia hasta que el stock vuelva a cambiar. Agotar sigue por `/producto/agotado`, con su auditoría y aviso en tiempo real.
+  - **Dónde se ve:** la pantalla de cocina o bar muestra lo de su punto (el del producto o el de su categoría; un plato que depende de la zona aparece en todos) y se refresca con cada comanda, porque abrirla descuenta inventario. Hoy muestra las tres listas de todo el restaurante.
+  - **Combos:** la sugerencia dice qué combos se quedan sin ese plato; al agotarlo, el combo deja de ofrecerse como ya pasaba (ADR-050).
+- **Consecuencias:** las opciones de modificador con insumo ("Queso extra") no se sugieren: un modificador no se puede marcar agotado. Una merma registrada desde Existencias no avisa en tiempo real; se ve en la siguiente consulta de la pantalla.
+- **Cuándo revisar:** si los restaurantes piden agotar opciones de modificador o que el umbral de "se están acabando" sea configurable.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

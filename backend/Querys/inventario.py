@@ -15,6 +15,8 @@ CERO = Decimal("0")
 ENTRADAS_CON_COSTO = {"entrada", "compra", "produccion"}
 # Salidas que devuelven mercancía al costo que entró: sacan ese valor del promedio (RN-COM-05)
 SALIDAS_AL_COSTO = {"anulacion_compra", "devolucion"}
+# Un insumo con alguno de estos movimientos lleva inventario; sin ellos su stock solo refleja consumos
+CARGAS = ("entrada", "compra", "produccion", "ajuste")
 
 
 def dec(valor) -> Decimal:
@@ -180,6 +182,46 @@ class InventarioQuerys(Querys):
             if receta:
                 pendientes.extend(l.insumo_id for l in self.lineas(receta.id))
         return False
+
+    def alcance_productos(self) -> list:
+        """ Porciones que alcanzan de cada producto con receta según el stock actual (doc 12, sección 5).
+            Solo cuentan los insumos con inventario cargado: si el restaurante nunca registró entradas,
+            su stock no dice si hay o no. """
+        from Models.producto_model import ProductoModel
+        from Models.categoria_model import CategoriaModel
+        recetas = {r.id: r for r in self.scoped(RecetaModel).filter(RecetaModel.producto_id.isnot(None)).all()}
+        if not recetas:
+            return []
+        insumos = {i.id: i for i in self.insumos()}
+        controlados = {insumo_id for (insumo_id,) in self.scoped(MovimientoInventarioModel).filter(
+            MovimientoInventarioModel.tipo.in_(CARGAS)).with_entities(MovimientoInventarioModel.insumo_id).distinct()}
+        por_porcion = {}
+        for linea in self.scoped(RecetaLineaModel).filter(RecetaLineaModel.receta_id.in_(list(recetas))).all():
+            if linea.insumo_id not in insumos or linea.insumo_id not in controlados:
+                continue
+            receta = recetas[linea.receta_id]
+            cantidad = dec(linea.cantidad) * (1 + dec(linea.merma) / 100) / (dec(receta.rendimiento) or Decimal("1"))
+            lineas = por_porcion.setdefault(receta.producto_id, {})
+            lineas[linea.insumo_id] = lineas.get(linea.insumo_id, CERO) + cantidad
+        productos = self.scoped(ProductoModel).filter(ProductoModel.id.in_(list(por_porcion) or [0]), ProductoModel.activo.is_(True),
+                                                      ProductoModel.tipo == "simple").order_by(ProductoModel.nombre).all()
+        puntos_categoria = {c.id: c.punto_produccion_id for c in self.scoped(CategoriaModel).all()}
+        result = []
+        for producto in productos:
+            alcances = {i: max(int(dec(insumos[i].stock) // c), 0) for i, c in por_porcion[producto.id].items() if c > 0}
+            if not alcances:
+                continue
+            alcance = min(alcances.values())
+            result.append({
+                "producto_id": producto.id, "nombre": producto.nombre, "agotado": producto.agotado,
+                # Donde se prepara: el del producto o el de su categoría; si depende de la zona, queda en None
+                "punto_produccion_id": producto.punto_produccion_id or puntos_categoria.get(producto.categoria_id), "porciones": alcance,
+                # Lo que pone el límite: el insumo que alcanza para menos porciones
+                "limitan": [{"insumo_id": i, "nombre": insumos[i].nombre, "unidad": insumos[i].unidad,
+                             "stock": float(insumos[i].stock), "por_porcion": float(por_porcion[producto.id][i].quantize(Decimal("0.001")))}
+                            for i, n in alcances.items() if n == alcance],
+            })
+        return result
 
     def productos_vendidos(self, desde):
         """ Valor vendido por producto desde una fecha, para la cobertura de recetas (doc 14, sección 6) """

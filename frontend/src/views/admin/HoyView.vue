@@ -7,6 +7,7 @@ import { useAction } from '@/composables/useAction'
 import { formatMoney, formatTime, formatChange, plural, CANALES } from '@/utils/format'
 import StatusChip from '@/components/StatusChip.vue'
 import ConnectionBanner from '@/components/ConnectionBanner.vue'
+import SugerirAgotados from '@/components/SugerirAgotados.vue'
 
 // Lo que está pasando ahora en el restaurante: órdenes con algo pendiente y estado de recepción
 const auth = useAuthStore()
@@ -17,6 +18,7 @@ const vista = ref('activas')
 const restaurante = ref(null)
 const error = ref('')
 const tablero = ref(null)
+const sugerencias = ref(null)
 
 const GRUPOS = [
   { estado: 'pendiente_aprobacion', titulo: 'Por aprobar' },
@@ -29,6 +31,7 @@ const resumen = computed(() => GRUPOS.map((g) => ({ ...g, cantidad: ordenes.valu
 const vendido = computed(() => ordenes.value.filter((o) => o.estado !== 'cancelada').reduce((s, o) => s + o.total, 0))
 
 async function load() {
+  sugerencias.value?.load()
   if (auth.can('reportes.ver')) {
     tablero.value = await postData('/reporte/dashboard').catch(() => tablero.value)
   }
@@ -111,6 +114,8 @@ onMounted(load)
         <p v-for="nombre in tablero.agotados" :key="nombre">{{ nombre }}</p>
       </div>
     </section>
+
+    <SugerirAgotados ref="sugerencias" class="avisos" completo />
 
     <p v-if="!auth.can('ordenes.ver')" class="empty">Tu rol no incluye ver las órdenes. Usa el menú para administrar.</p>
     <p v-else-if="error" class="empty">{{ error }}</p>
@@ -210,6 +215,10 @@ onMounted(load)
 .fuerte {
   font-weight: 700;
   font-size: var(--text-lg);
+}
+
+.avisos {
+  margin-bottom: var(--space-5);
 }
 
 .pausa {

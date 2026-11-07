@@ -8,6 +8,7 @@ import { useToastStore } from '@/stores/toast'
 import ComandaSlip from '@/components/ComandaSlip.vue'
 import ConnectionBanner from '@/components/ConnectionBanner.vue'
 import ReasonDialog from '@/components/ReasonDialog.vue'
+import SugerirAgotados from '@/components/SugerirAgotados.vue'
 
 /*
   Pantalla de producción (KDS, doc 18): pestañas En proceso y Listos, más antigua primero.
@@ -33,6 +34,7 @@ const sonido = ref(readPref('kds.sonido', false))
 const vistos = new Set()
 
 const dialog = ref({ open: false, tipo: null, comanda: null, item: null })
+const sugerencias = ref(null)
 
 function readPref(key, fallback) {
   try {
@@ -72,6 +74,8 @@ async function load() {
       enProceso.value = data.en_proceso
       listos.value = data.listos
       cargado.value = true
+      // Abrir una comanda descuenta inventario: puede haberse acabado un insumo
+      sugerencias.value?.load()
     } catch (error) {
       toast.error(error.message)
     } finally {
@@ -137,6 +141,7 @@ async function abrir(comanda) {
   const tarjeta = await attempt(() => postData('/cocina/abrir', { comanda_id: comanda.id }))
   if (!tarjeta) return load()
   replace(tarjeta)
+  sugerencias.value?.load()
   if (tarjeta.imprimir) imprimir(tarjeta)
 }
 
@@ -209,6 +214,7 @@ onBeforeUnmount(() => clearInterval(reloj))
     </header>
 
     <main class="riel">
+      <SugerirAgotados ref="sugerencias" class="avisos" :punto-id="puntoId" />
       <p v-if="!cargado" class="vacio">Cargando comandas…</p>
       <p v-else-if="!visibles.length" class="vacio">
         {{ tab === 'listos' ? 'No hay nada esperando a que lo recojan.' : 'Sin comandas pendientes. Las nuevas aparecen aquí solas.' }}
@@ -345,6 +351,11 @@ onBeforeUnmount(() => clearInterval(reloj))
 
 .riel {
   padding: var(--space-4);
+}
+
+.avisos {
+  margin-bottom: var(--space-4);
+  --kds-borde: rgba(127, 138, 144, 0.3);
 }
 
 .grid {

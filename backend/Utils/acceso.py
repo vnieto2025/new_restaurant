@@ -40,7 +40,7 @@ RUTAS_LECTURA = RUTAS_EXPORTACION | {
     "/notificacion/config/get", "/notificacion/list", "/notificacion/pendientes",
     "/orden/carta", "/orden/get", "/orden/list", "/orden/tirilla",
     "/pago_linea/config/get", "/pago_linea/list",
-    "/pos/carta", "/producto/list",
+    "/pos/carta", "/producto/list", "/producto/sugerir_agotados",
     "/proveedor/get", "/proveedor/insumos", "/proveedor/list",
     "/punto_produccion/list", "/qr/list",
     "/receta/costos", "/receta/get", "/receta/opcion/list",

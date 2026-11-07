@@ -25,6 +25,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `copiar_productos` | Duplicar un producto y pasar una categoría a otra sede |
 | `fotos` | Foto de cámara comprimida, carpeta del restaurante y alérgenos en la carta |
 | `combos` | Combo armado en tablet y carta del cliente, cocina por partes y una línea en caja |
+| `agotados` | Se acaba un insumo: cocina ve qué platos agotar, el mesero ya no puede pedirlos y en Hoy se vuelven a ofrecer al llegar la compra |
 | `contador` | Rol de consulta: reportes, descargas y sin acceso a clientes ni a operar |
 | `importar` | Plantilla de productos, errores por fila, importación y actualización de precios |
 | `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |
