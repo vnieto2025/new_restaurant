@@ -21,6 +21,16 @@ from Utils.tools import CustomException
 from sqlalchemy import text, func
 
 
+def detalle_combo(item, filas, modificadores):
+    """ Lo que se eligió en un combo, como detalle de su línea: "Papas a la francesa", "Gaseosa (sin hielo)" """
+    if not item.es_combo:
+        return []
+    partes = [parte for parte, _ in filas if parte.combo_item_id == item.id]
+    return [{"grupo": "Combo", "nombre": parte.nombre_producto + (
+        f" ({', '.join(m['nombre'] for m in modificadores.get(parte.id, []))})" if modificadores.get(parte.id) else ""),
+        "precio_extra": 0} for parte in partes]
+
+
 class CajaQuerys(OrdenQuerys):
 
     # Caja principal del restaurante (en el MVP hay una)
@@ -224,13 +234,14 @@ class CajaQuerys(OrdenQuerys):
                 "id": item.id,
                 "orden": f"#{numero:03d}",
                 "nombre": item.nombre_producto,
-                "modificadores": modificadores.get(item.id, []),
+                "modificadores": modificadores.get(item.id, []) + detalle_combo(item, filas, modificadores),
                 "cantidad": item.cantidad,
                 "precio_unitario": item.precio_unitario,
                 "total": item.total,
                 "estado": item.estado,
-            } for item, numero in filas if item.estado != CANCELADO],
-            "items_pendientes": sum(1 for item, _ in filas if item.estado in PENDIENTES_DE_ENTREGA),
+            } for item, numero in filas if item.estado != CANCELADO and not item.combo_item_id],
+            # Un combo cuenta como una línea, aunque tenga varias partes en cocina
+            "items_pendientes": sum(1 for item, _ in filas if item.estado in PENDIENTES_DE_ENTREGA and not item.combo_item_id),
             "subtotal": cuenta.subtotal,
             "descuento": cuenta.descuento,
             "descuento_motivo": cuenta.descuento_motivo,

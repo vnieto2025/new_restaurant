@@ -60,7 +60,13 @@ class CartaQuerys(Querys):
             CategoriaModel.orden.asc(), CategoriaModel.nombre.asc(), ProductoModel.orden.asc(), ProductoModel.nombre.asc()
         ).all()
 
-        grupos = ModificadorQuerys(self.db, self.ctx).for_products([producto.id for producto, _ in rows])
+        from Querys.combo import ComboQuerys
+        componentes = ComboQuerys(self.db, self.ctx).componentes_de([p.id for p, _ in rows if p.tipo == "combo"])
+        ids_opciones = {o["producto_id"] for lista in componentes.values() for c in lista for o in c["opciones"]}
+        grupos = ModificadorQuerys(self.db, self.ctx).for_products([producto.id for producto, _ in rows] + list(ids_opciones))
+        for lista in componentes.values():
+            for componente in lista:
+                componente["opciones"] = [{**o, "grupos": grupos.get(o["producto_id"], [])} for o in componente["opciones"] if o["disponible"]]
         categorias = {}
         for producto, categoria in rows:
             grupo = categorias.setdefault(categoria.id, {"id": categoria.id, "nombre": categoria.nombre, "productos": []})
@@ -71,8 +77,11 @@ class CartaQuerys(Querys):
                 "imagen": producto.imagen,
                 "alergenos": producto.alergenos,
                 "precio": producto.precio,
-                "agotado": producto.agotado,
-                "grupos": grupos.get(producto.id, []),
+                # Un combo sin opción disponible en algún componente no se puede pedir
+                "agotado": producto.agotado or (producto.tipo == "combo" and any(not c["opciones"] for c in componentes.get(producto.id, [{"opciones": []}]))),
+                "grupos": grupos.get(producto.id, []) if producto.tipo != "combo" else [],
+                "tipo": producto.tipo,
+                "componentes": componentes.get(producto.id, []),
             })
         return list(categorias.values())
 

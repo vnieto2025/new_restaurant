@@ -90,8 +90,14 @@ class Documento:
         """ Ítems no cancelados de la cuenta con su impuesto desglosado. El descuento (manual y de cupones) se reparte
             entre las líneas en proporción a su valor, así baja la base y el impuesto. """
         caja = CajaQuerys(self.db, self.ctx)
-        filas = [item for item, _ in caja.items_de_sesion(cuenta.sesion_mesa_id) if item.estado != CANCELADO]
-        modificadores = caja.modifiers_of([item.id for item in filas])
+        todas = [item for item, _ in caja.items_de_sesion(cuenta.sesion_mesa_id) if item.estado != CANCELADO]
+        modificadores = caja.modifiers_of([item.id for item in todas])
+        # Los componentes de un combo valen 0: van en la descripción del combo, no como líneas
+        filas = [item for item in todas if not item.combo_item_id]
+        for item in filas:
+            if item.es_combo:
+                modificadores[item.id] = modificadores.get(item.id, []) + [
+                    {"nombre": parte.nombre_producto} for parte in todas if parte.combo_item_id == item.id]
         nombres = {i.id: i.nombre for i in self.querys.impuestos(incluir_inactivos=True)}
         descuentos = repartir(cuenta.descuento + cuenta.descuento_cupon, [item.total for item in filas])
         lineas = []

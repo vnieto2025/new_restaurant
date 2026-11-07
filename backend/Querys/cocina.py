@@ -63,7 +63,9 @@ class CocinaQuerys(OrdenQuerys):
                 "id": i.id,
                 "nombre": i.nombre_producto,
                 "cantidad": i.cantidad,
-                "nota": i.nota,
+                # Parte de un combo: la nota del combo y su nombre ayudan a armar el pedido
+                "combo": self.db.get(OrdenItemModel, i.combo_item_id).nombre_producto if i.combo_item_id else None,
+                "nota": i.nota or (self.db.get(OrdenItemModel, i.combo_item_id).nota if i.combo_item_id else None),
                 "modificadores": [m["nombre"] for m in modificadores.get(i.id, [])],
                 "estado": i.estado,
                 "estado_etiqueta": ETIQUETAS.get(i.estado, i.estado),

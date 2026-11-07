@@ -68,6 +68,7 @@ with sync_playwright() as p:
     shot(mesero, "07-tablet-mesas")
     mesero.get_by_role("button", name="Mesa 2").click()
     mesero.wait_for_url("**/mesas/**")
+    mesero.get_by_role("tab", name="Hamburguesas").click()
     mesero.get_by_role("button", name="Hamburguesa doble").click()
     elegir_opciones(mesero, ["Tres cuartos", "Tocineta"])
     mesero.get_by_role("tab", name="Bebidas").click()

@@ -28,6 +28,7 @@ const documento = computed(() => {
       <hr>
       <div v-for="item in ticket.data.items" :key="item.id" class="linea">
         <p class="grande">{{ item.cantidad }} x {{ item.nombre }}</p>
+        <p v-if="item.combo">   ({{ item.combo }})</p>
         <p v-for="mod in item.modificadores" :key="mod">   + {{ mod }}</p>
         <p v-if="item.nota" class="nota">&gt; {{ item.nota }}</p>
       </div>

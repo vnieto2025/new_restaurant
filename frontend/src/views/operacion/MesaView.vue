@@ -173,10 +173,10 @@ onMounted(async () => {
               {{ comanda.punto_produccion }} aún no confirma que recibió la comanda.
             </p>
             <ul class="items">
-              <li v-for="item in orden.items" :key="item.id" :class="{ tachado: item.estado === 'cancelado' }">
-                <span>{{ item.cantidad }} × {{ item.nombre }}<small v-if="item.modificadores.length"> · {{ item.modificadores.map((m) => m.nombre).join(', ') }}</small><small v-if="item.nota"> · {{ item.nota }}</small></span>
+              <li v-for="item in orden.items" :key="item.id" :class="{ tachado: item.estado === 'cancelado', parte: item.combo_item_id }">
+                <span><template v-if="item.combo_item_id">↳ </template>{{ item.cantidad }} × {{ item.nombre }}<small v-if="item.modificadores.length"> · {{ item.modificadores.map((m) => m.nombre).join(', ') }}</small><small v-if="item.nota"> · {{ item.nota }}</small></span>
                 <StatusChip :estado="item.estado" size="sm" />
-                <button v-if="['nuevo', 'pendiente_aprobacion'].includes(item.estado)" class="quitar" type="button"
+                <button v-if="['nuevo', 'pendiente_aprobacion'].includes(item.estado) && !item.combo_item_id" class="quitar" type="button"
                         :aria-label="`Cancelar ${item.nombre}`" @click="cancelar = { open: true, item }">Quitar</button>
               </li>
             </ul>
@@ -396,5 +396,10 @@ onMounted(async () => {
     font-size: var(--text-lg);
     cursor: pointer;
   }
+}
+.parte {
+  padding-left: var(--space-4);
+  color: var(--acero);
+  font-size: var(--text-sm);
 }
 </style>

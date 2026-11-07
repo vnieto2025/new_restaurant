@@ -676,6 +676,23 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Con varios servidores harían falta almacenamiento compartido; hoy hay uno solo (doc 40A).
 - **Cuándo revisar:** al comprar el hosting, si ofrece almacenamiento de objetos.
 
+## ADR-050: Combos
+
+- **Estado:** Aprobada (2026-11-06). Doc 12, sección 4. El dueño del producto eligió que las ventas cuenten como el combo.
+- **Decisión:**
+  - **Producto de tipo combo,** con partes (`combo_componente`) y opciones por parte (`combo_opcion`), cada una con valor extra. Con una sola opción la parte es fija. Un combo no va dentro de otro.
+  - **En la orden:** la línea del combo cobra su precio más lo extra de lo elegido, incluidos los modificadores de las partes. Cada parte es un ítem hijo de valor 0 (`orden_item.combo_item_id`) que va a su cocina o bar y descuenta su propio inventario.
+  - **Estado:** el combo está en preparación si alguna parte arrancó, y listo o entregado solo cuando todas lo están. Así el mesero no lo ve listo antes de tiempo.
+  - **Cancelaciones:** cancelar el combo cancela sus partes; si una parte se cancela o se agota en cocina, cae el combo completo, porque es lo que se cobra. Cancelar algo ya cancelado no hace nada, lo que protege los procesos que cancelan varios ítems seguidos.
+  - **Cobro y factura:** una línea por combo con sus partes como detalle; las partes de valor 0 no aparecen como líneas.
+  - **Reportes:** se vende el combo. Aparte, "Lo que salió en combos" muestra las unidades de cada parte. Las cancelaciones y los favoritos del cliente cuentan el combo.
+  - **Todos los canales:** se arma en el cálculo de precio y en la inserción de ítems que ya comparten mesa, QR, mostrador, domicilio y venta directa.
+  - **Copiar a otra sede** omite los combos: sus partes son productos de ese local, así que se arman allá.
+- **Consecuencias:**
+  - El margen del combo no sale en Recetas y costos: el combo no tiene receta propia, sus partes sí.
+  - Si se cambian las partes de un combo, lo ya pedido no se afecta: cada ítem guarda su copia.
+- **Cuándo revisar:** si hacen falta partes con varias elecciones distintas ("2 salsas a elegir") o combos que repartan el valor entre sus partes.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

@@ -72,6 +72,7 @@ class Reporte:
             "productos": self.filas(self.querys.por_producto(desde, hasta, 15)),
             "productos_por_unidades": self.filas(self.querys.por_producto(desde, hasta, 10, orden="unidades")),
             "menos_vendidos": self.filas(self.querys.menos_vendidos(desde, hasta)),
+            "componentes_combo": self.filas(self.querys.componentes_vendidos(desde, hasta)),
             "categorias": self.filas(self.querys.por_categoria(desde, hasta)),
             "zonas": self.filas(self.querys.por_zona(desde, hasta)),
             "canales": [{"nombre": CANALES.get(n, n), "unidades": u, "valor": v} for n, u, v in self.querys.por_canal(desde, hasta)],

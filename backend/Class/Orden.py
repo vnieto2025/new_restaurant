@@ -9,6 +9,8 @@ from Querys.orden import OrdenQuerys
 from Querys.mesa import MesaQuerys
 from Querys.carta import CartaQuerys
 from Querys.modificador import ModificadorQuerys
+from Models.producto_model import ProductoModel
+from Models.categoria_model import CategoriaModel
 from Querys.horario import HorarioQuerys
 from Models.orden_model import OrdenModel
 from Models.orden_item_model import OrdenItemModel
@@ -300,10 +302,14 @@ class Orden:
     def cancel_item(self, data: dict):
 
         item = self.querys.get_own(OrdenItemModel, data["orden_item_id"], "ítem", lock=True)
+        # Una parte de un combo no se quita sola: se cancela el combo completo
+        if item.combo_item_id:
+            item = self.querys.get_own(OrdenItemModel, item.combo_item_id, "ítem", lock=True)
         orden = self.querys.get_own(OrdenModel, item.orden_id, "orden", lock=True)
         check_zone_scope(self.ctx, orden.zona_id)
 
-        avanzado = item.estado in [EN_PROCESO, DESPACHADO, ENTREGADO]
+        partes = self.querys.componentes_de(item.id) if item.es_combo else []
+        avanzado = any(i.estado in [EN_PROCESO, DESPACHADO, ENTREGADO] for i in [item, *partes])
         requerido = "ordenes.cancelar_en_proceso" if avanzado else "ordenes.cancelar_nuevo"
         if requerido not in self.ctx["permisos"]:
             raise CustomException("Este ítem ya está en producción. Solo un administrador puede cancelarlo.", 403)
@@ -323,7 +329,7 @@ class Orden:
         self.close_external_session(orden)
         self.db.commit()
 
-        self.notify(orden, [item.punto_produccion_id], "orden.modificada")
+        self.notify(orden, [item.punto_produccion_id, *[p.punto_produccion_id for p in partes]], "orden.modificada")
         return self.tools.output(200, f"{item.nombre_producto} cancelado.", self.querys.format_orden(orden))
 
     # Confirmar que el cliente recibió lo despachado (doc 16)
@@ -359,7 +365,11 @@ class Orden:
         check_zone_scope(self.ctx, orden.zona_id)
         restaurante = self.querys.restaurante()
         detalle = self.querys.format_orden(orden)
-        detalle["items"] = [i for i in detalle["items"] if i["estado"] != CANCELADO]
+        vivos = [i for i in detalle["items"] if i["estado"] != CANCELADO]
+        # Las partes de un combo valen 0: se imprimen como detalle del combo
+        detalle["items"] = [{**i, "modificadores": i["modificadores"] + [
+            {"nombre": p["nombre"] + (f" ({', '.join(m['nombre'] for m in p['modificadores'])})" if p["modificadores"] else "")}
+            for p in vivos if p["combo_item_id"] == i["id"]]} for i in vivos if not i["combo_item_id"]]
         detalle["restaurante"] = {"nombre": restaurante.nombre, "direccion": restaurante.direccion,
                                   "telefono": restaurante.telefono}
         detalle["hora_local"] = self.querys.local_time(orden.creado_en)
@@ -410,6 +420,9 @@ class Orden:
             if producto.agotado:
                 agotados.append(producto.nombre)
                 continue
+            if producto.tipo == "combo":
+                lineas.append(self.price_combo(producto, categoria, item, cantidad, zona, puntos_activos, impuestos))
+                continue
             modificadores = self.validate_modifiers(producto, grupos.get(producto.id, []), item.get("modificadores"))
             unitario = producto.precio + sum(m["precio_extra"] for m in modificadores)
             lineas.append({
@@ -430,6 +443,48 @@ class Orden:
         if agotados:
             raise CustomException(f"Agotado: {', '.join(agotados)}. Retíralo de la orden para continuar.", 409)
         return lineas
+
+    def price_combo(self, combo, categoria, item, cantidad, zona, puntos_activos, impuestos):
+        """ Combo (doc 12, sección 4): la línea del combo cobra su precio más lo extra de lo elegido; cada componente
+            es una línea de valor 0 que va a su cocina o bar y descuenta su propio inventario. """
+        from Querys.combo import ComboQuerys
+        componentes = ComboQuerys(self.db, self.ctx).componentes_de([combo.id]).get(combo.id, [])
+        elegidos = {int(c["componente_id"]): c for c in item.get("componentes") or []}
+        opciones_ids = {o["producto_id"] for c in componentes for o in c["opciones"]}
+        productos = {p.id: (p, cat) for p, cat in self.querys.scoped(ProductoModel).join(
+            CategoriaModel, CategoriaModel.id == ProductoModel.categoria_id).filter(ProductoModel.id.in_(opciones_ids or [0])).add_columns(CategoriaModel).all()}
+        grupos = ModificadorQuerys(self.db, self.ctx).for_products(list(opciones_ids))
+        if set(elegidos) - {c["id"] for c in componentes}:
+            raise CustomException(f"El combo {combo.nombre} cambió. Vuelve a elegir sus componentes.", 409)
+
+        hijos, extra = [], 0
+        for componente in componentes:
+            elegido = elegidos.get(componente["id"])
+            opciones = {o["producto_id"]: o for o in componente["opciones"]}
+            if len(opciones) == 1 and not elegido:
+                elegido = {"producto_id": next(iter(opciones))}
+            if not elegido:
+                raise CustomException(f"Elige {componente['nombre'].lower()} del combo {combo.nombre}.")
+            opcion = opciones.get(int(elegido["producto_id"]))
+            if not opcion:
+                raise CustomException(f"Esa opción ya no está en {componente['nombre'].lower()} del combo {combo.nombre}.", 409)
+            if not opcion["disponible"]:
+                raise CustomException(f"Agotado: {opcion['nombre']}. Elige otra opción del combo {combo.nombre}.", 409)
+            producto, categoria_hijo = productos[opcion["producto_id"]]
+            modificadores = self.validate_modifiers(producto, grupos.get(producto.id, []), elegido.get("modificadores"))
+            por_unidad = componente["cantidad"]
+            extra += (opcion["precio_extra"] + sum(m["precio_extra"] for m in modificadores)) * por_unidad
+            hijos.append({
+                "producto": producto, "cantidad": cantidad * por_unidad, "nota": None, "precio_unitario": 0, "total": 0,
+                "modificadores": modificadores, "impuesto_id": None, "impuesto_porcentaje": None,
+                "punto_produccion_id": self.resolve_destination(producto, categoria_hijo, zona, puntos_activos),
+            })
+        unitario = combo.precio + extra
+        return {
+            "producto": combo, "cantidad": cantidad, "nota": clean_text(item.get("nota")), "precio_unitario": unitario,
+            "total": unitario * cantidad, "modificadores": [], "punto_produccion_id": None, "es_combo": True,
+            "componentes": hijos, **impuestos(combo, categoria),
+        }
 
     def tax_resolver(self):
         """ Impuesto del producto, si no el de su categoría, si no el impuesto por defecto,
@@ -478,11 +533,13 @@ class Orden:
                 return punto_id
         return None
 
-    def insert_items(self, orden, lineas: list, estado: str, lote: str):
+    def insert_items(self, orden, lineas: list, estado: str, lote: str, combo_item_id=None):
         nuevos = []
         for linea in lineas:
             producto = linea["producto"]
             item_id = self.querys.insert_data(OrdenItemModel, {
+                "es_combo": bool(linea.get("es_combo")),
+                "combo_item_id": combo_item_id,
                 "orden_id": orden.id,
                 "producto_id": producto.id,
                 "nombre_producto": producto.nombre,
@@ -501,6 +558,8 @@ class Orden:
             item = self.db.get(OrdenItemModel, item_id)
             self.querys.add_history(item, None, estado)
             nuevos.append(item)
+            if linea.get("componentes"):
+                nuevos += self.insert_items(orden, linea["componentes"], estado, lote, combo_item_id=item_id)
         return nuevos
 
     def split_into_commands(self, orden, items: list, es_adicion: bool):
@@ -508,6 +567,9 @@ class Orden:
             Lo que no tiene punto se despacha de inmediato (bebida de nevera). """
         grupos = {}
         for item in items:
+            # El combo no se prepara: avanza cuando avanzan sus componentes
+            if item.es_combo:
+                continue
             if item.punto_produccion_id is None:
                 self.querys.transition(item, DESPACHADO, "Despacho directo")
             else:

@@ -22,6 +22,12 @@ const form = ref(null)
 const cargado = ref(false)
 const importando = ref(false)
 const copia = ref(null)
+// Lo que puede ir dentro de un combo: productos simples
+const simples = computed(() => productos.value.filter((p) => p.tipo !== 'combo' && p.id !== form.value?.producto_id))
+
+function nuevoComponente() {
+  form.value.componentes.push({ nombre: '', cantidad: 1, opciones: [{ producto_id: null, precio_extra: 0 }] })
+}
 const fotoNueva = ref(null)
 const fotoError = ref('')
 
@@ -114,13 +120,19 @@ function nuevo() {
   form.value = {
     nombre: '', descripcion: '', precio: null, categoria_id: Number(categoriaId.value) || categorias.value[0]?.id,
     punto_produccion_id: null, impuesto_id: null, orden: 0, cartas: cartas.value.map((c) => c.id), grupos: [],
+    tipo: 'simple', componentes: [],
   }
 }
 
 function editar(producto) {
   fotoNueva.value = null
   fotoError.value = ''
-  form.value = { ...producto, producto_id: producto.id }
+  form.value = {
+    ...producto, producto_id: producto.id,
+    componentes: (producto.componentes || []).map((c) => ({
+      nombre: c.nombre, cantidad: c.cantidad, opciones: c.opciones.map((o) => ({ producto_id: o.producto_id, precio_extra: o.precio_extra })),
+    })),
+  }
 }
 
 async function duplicar(producto) {
@@ -140,7 +152,17 @@ async function copiarASede() {
 
 async function guardar() {
   const editando = !!form.value.producto_id
-  const ok = await attempt(() => postData(editando ? '/producto/update' : '/producto/create', { ...form.value, alergenos: form.value.alergenos?.trim() || null }),
+  const cuerpo = { ...form.value, alergenos: form.value.alergenos?.trim() || null }
+  if (cuerpo.tipo === 'combo') {
+    cuerpo.componentes = cuerpo.componentes.map((c) => ({
+      nombre: c.nombre.trim(), cantidad: Number(c.cantidad) || 1,
+      opciones: c.opciones.filter((o) => o.producto_id).map((o) => ({ producto_id: Number(o.producto_id), precio_extra: Number(o.precio_extra) || 0 })),
+    }))
+    cuerpo.grupos = []
+  } else {
+    delete cuerpo.componentes
+  }
+  const ok = await attempt(() => postData(editando ? '/producto/update' : '/producto/create', cuerpo),
     { success: 'Producto guardado.' })
   if (ok) {
     // Producto guardado aunque la foto falle: el error se ve y se puede volver a intentar
@@ -226,7 +248,7 @@ onMounted(load)
           <tr v-for="producto in visibles" :key="producto.id" :class="{ muted: !producto.activo }">
             <td class="con-foto">
               <img v-if="producto.imagen" class="miniatura" :src="mediaUrl(producto.imagen)" alt="" loading="lazy" width="40" height="40">
-              <span><strong>{{ producto.nombre }}</strong><span v-if="!producto.activo"> (inactivo)</span></span>
+              <span><strong>{{ producto.nombre }}</strong><span v-if="producto.tipo === 'combo'" class="etiqueta-combo">Combo</span><span v-if="!producto.activo"> (inactivo)</span></span>
             </td>
             <td>{{ producto.categoria }}</td>
             <td>{{ producto.punto_produccion || 'El de la categoría' }}</td>
@@ -267,6 +289,13 @@ onMounted(load)
             </select>
           </div>
           <div class="field">
+            <label for="p-tipo">Tipo</label>
+            <select id="p-tipo" v-model="form.tipo" class="select" @change="form.tipo === 'combo' && !form.componentes.length && nuevoComponente()">
+              <option value="simple">Producto</option>
+              <option value="combo">Combo: varios productos a un precio</option>
+            </select>
+          </div>
+          <div v-if="form.tipo !== 'combo'" class="field">
             <label for="p-punto">Se prepara en</label>
             <select id="p-punto" v-model="form.punto_produccion_id" class="select">
               <option :value="null">El de la categoría o la zona</option>
@@ -306,7 +335,30 @@ onMounted(load)
             <input v-model="form.cartas" type="checkbox" :value="carta.id"> {{ carta.nombre }}
           </label>
         </fieldset>
-        <fieldset v-if="grupos.length" class="cartas">
+        <fieldset v-if="form.tipo === 'combo'" class="cartas componentes">
+          <legend>Qué trae el combo</legend>
+          <p class="hint">Cada parte va a su cocina o bar y descuenta su inventario. Con una sola opción, la parte viene fija.</p>
+          <div v-for="(c, ci) in form.componentes" :key="ci" class="componente">
+            <div class="componente-cabeza">
+              <input v-model="c.nombre" class="input" maxlength="60" required placeholder="Bebida" :aria-label="`Nombre de la parte ${ci + 1}`">
+              <input v-model.number="c.cantidad" class="input cantidad" type="number" min="1" max="10" :aria-label="`Cantidad de ${c.nombre || 'la parte'}`">
+              <button class="btn btn-secundario btn-sm" type="button" :aria-label="`Quitar ${c.nombre || 'parte'}`" @click="form.componentes.splice(ci, 1)">Quitar</button>
+            </div>
+            <div v-for="(o, oi) in c.opciones" :key="oi" class="opcion-combo">
+              <select v-model="o.producto_id" class="select" required :aria-label="`Opción ${oi + 1} de ${c.nombre || 'la parte'}`">
+                <option :value="null" disabled>Elige un producto</option>
+                <option v-for="p in simples" :key="p.id" :value="p.id">{{ p.nombre }}</option>
+              </select>
+              <input v-model.number="o.precio_extra" class="input extra" type="number" min="0" step="100" inputmode="numeric"
+                     :aria-label="`Valor extra de la opción ${oi + 1}`" placeholder="Extra">
+              <button v-if="c.opciones.length > 1" class="btn btn-secundario btn-sm" type="button" :aria-label="`Quitar opción ${oi + 1}`"
+                      @click="c.opciones.splice(oi, 1)">×</button>
+            </div>
+            <button class="enlace" type="button" @click="c.opciones.push({ producto_id: null, precio_extra: 0 })">+ Otra opción para elegir</button>
+          </div>
+          <button class="btn btn-secundario btn-sm" type="button" @click="nuevoComponente">Agregar parte</button>
+        </fieldset>
+        <fieldset v-if="grupos.length && form.tipo !== 'combo'" class="cartas">
           <legend>Opciones que se pueden elegir</legend>
           <label v-for="grupo in grupos" :key="grupo.id" class="check">
             <input v-model="form.grupos" type="checkbox" :value="grupo.id">
@@ -350,6 +402,48 @@ onMounted(load)
   .filtros {
     grid-template-columns: 1fr;
   }
+}
+
+.etiqueta-combo {
+  margin-left: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: 999px;
+  background: var(--tinta);
+  color: #fff;
+  font-size: var(--text-sm);
+}
+
+.componentes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.componente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-sm);
+}
+
+.componente-cabeza,
+.opcion-combo {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.componente-cabeza .input:first-child,
+.opcion-combo .select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cantidad,
+.extra {
+  flex: 0 0 6rem;
 }
 
 .con-foto {

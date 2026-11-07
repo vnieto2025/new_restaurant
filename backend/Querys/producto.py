@@ -1,4 +1,5 @@
 from Querys.base import Querys
+from Querys.combo import ComboQuerys
 from Models.producto_model import ProductoModel
 from Models.categoria_model import CategoriaModel
 from Models.carta_model import CartaModel
@@ -68,4 +69,6 @@ class ProductoQuerys(Querys):
             "activo": producto.activo,
             "cartas": self.get_cartas_producto(producto.id),
             "grupos": ModificadorQuerys(self.db, self.ctx).grupos_de_producto(producto.id),
+            "tipo": producto.tipo,
+            "componentes": ComboQuerys(self.db, self.ctx).componentes_de([producto.id]).get(producto.id, []) if producto.tipo == "combo" else [],
         }

@@ -43,7 +43,8 @@ class ClienteQuerys(Querys):
     def favoritos(self, cliente_id, limite=5):
         filas = self.scoped(OrdenItemModel).join(OrdenModel, OrdenModel.id == OrdenItemModel.orden_id).with_entities(
             OrdenItemModel.nombre_producto, func.sum(OrdenItemModel.cantidad)
-        ).filter(OrdenModel.cliente_id == cliente_id, OrdenItemModel.estado != CANCELADO).group_by(
+        ).filter(OrdenModel.cliente_id == cliente_id, OrdenItemModel.estado != CANCELADO,
+                 OrdenItemModel.combo_item_id.is_(None)).group_by(
             OrdenItemModel.nombre_producto).order_by(func.sum(OrdenItemModel.cantidad).desc()).limit(limite).all()
         return [{"nombre": nombre, "unidades": int(unidades)} for nombre, unidades in filas]
 

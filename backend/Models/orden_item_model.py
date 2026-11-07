@@ -28,6 +28,10 @@ class OrdenItemModel(DeRestaurante, BASE):
     # Clave de idempotencia del envío que creó el ítem: un reintento no lo duplica (RG-20)
     lote = Column(String(80), nullable=False, index=True)
     estado = Column(String(25), nullable=False, index=True)
+    # Combo: la línea del combo lleva el precio; cada componente es un ítem hijo de valor 0 que va a su
+    # cocina y descuenta su inventario. El estado del combo sigue al de sus componentes
+    es_combo = Column(Boolean, nullable=False, default=False, server_default="false")
+    combo_item_id = Column(BigInteger, ForeignKey("orden_item.id", name="fk_orden_item_combo"), nullable=True, index=True)
     motivo_cancelacion = Column(String(200), nullable=True)
     # cancelacion o perdida: se distinguen por el motivo (doc 15, sección 6)
     tipo_cancelacion = Column(String(15), nullable=True)

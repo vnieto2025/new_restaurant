@@ -163,6 +163,8 @@ onMounted(async () => {
         <TablaDesglose titulo="Canales" columna="Canal" :filas="reporte.canales" archivo="canales" />
         <TablaDesglose v-if="reporte.medios.length" titulo="Medios de pago (con propina)" columna="Medio" :filas="reporte.medios" conteo="pagos" archivo="medios-de-pago" />
         <TablaDesglose titulo="Menos vendidos" columna="Producto" :filas="reporte.menos_vendidos" archivo="menos-vendidos" />
+        <TablaDesglose v-if="reporte.componentes_combo?.length" titulo="Lo que salió en combos" columna="Producto"
+                       :filas="reporte.componentes_combo" sin-valor archivo="componentes-combos" />
       </div>
 
       <AnalisisOperacion :desde="reporte.desde" :hasta="reporte.hasta" />

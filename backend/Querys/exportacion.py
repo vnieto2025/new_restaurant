@@ -38,7 +38,8 @@ class ExportacionQuerys(ReporteQuerys):
 
     def cancelados(self, desde, hasta):
         return self.scoped(OrdenItemModel).join(OrdenModel, OrdenModel.id == OrdenItemModel.orden_id).filter(
-            OrdenItemModel.estado == CANCELADO, OrdenModel.jornada >= desde, OrdenModel.jornada <= hasta
+            OrdenItemModel.estado == CANCELADO, OrdenModel.jornada >= desde, OrdenModel.jornada <= hasta,
+            OrdenItemModel.combo_item_id.is_(None)
         ).add_columns(OrdenModel).order_by(OrdenModel.jornada, OrdenModel.numero, OrdenItemModel.id).all()
 
     def cuentas(self, desde, hasta):

@@ -6,6 +6,7 @@ import { useDraft } from '@/composables/useDraft'
 import { useAction } from '@/composables/useAction'
 import { formatMoney, mediaUrl } from '@/utils/format'
 import OpcionesProducto from '@/components/OpcionesProducto.vue'
+import OpcionesCombo from '@/components/OpcionesCombo.vue'
 
 /*
   Carta digital del cliente (doc 11 y 10A): ligera, cero registro, contexto fijado por el token.
@@ -25,6 +26,7 @@ const carta = ref(null)
 const error = ref('')
 const verPedido = ref(false)
 const conOpciones = ref(null)
+const combo = ref(null)
 
 const piezas = computed(() => draft.lineas.value.reduce((s, l) => s + l.cantidad, 0))
 const total = computed(() => draft.lineas.value.reduce((s, l) => s + l.precio * l.cantidad, 0))
@@ -83,7 +85,8 @@ function quitarUno(producto) {
 }
 
 function agregar(producto) {
-  if (producto.grupos?.length) conOpciones.value = producto
+  if (producto.tipo === 'combo') combo.value = producto
+  else if (producto.grupos?.length) conOpciones.value = producto
   else draft.add(producto)
 }
 
@@ -220,6 +223,7 @@ onMounted(() => {
       </main>
 
       <OpcionesProducto :producto="conOpciones" @close="conOpciones = null" @confirm="confirmarOpciones" />
+      <OpcionesCombo :combo="combo" @close="combo = null" @confirm="(s) => { draft.add(combo, [], s); combo = null }" />
 
       <button v-if="piezas" class="carrito" type="button" @click="verPedido = true">
         <span>Ver pedido ({{ piezas }})</span>

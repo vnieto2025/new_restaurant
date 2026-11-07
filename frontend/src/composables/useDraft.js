@@ -21,13 +21,14 @@ export function useDraft(id) {
     return result
   })
 
-  // Misma combinación de producto y opciones = misma línea
-  function firma(productoId, opciones) {
-    return `${productoId}:${opciones.map((o) => o.id).sort((a, b) => a - b).join(',')}`
+  // Misma combinación de producto y opciones (o de lo elegido en un combo) = misma línea
+  function firma(productoId, opciones, combo) {
+    const partes = combo ? combo.componentes.map((c) => `${c.componente_id}=${c.producto_id}/${c.modificadores.join('.')}`).join('|') : ''
+    return `${productoId}:${opciones.map((o) => o.id).sort((a, b) => a - b).join(',')}:${partes}`
   }
 
-  function add(producto, opciones = []) {
-    const clave = firma(producto.id, opciones)
+  function add(producto, opciones = [], combo = null) {
+    const clave = firma(producto.id, opciones, combo)
     // Toques repetidos suman a la misma línea si no tiene nota propia
     const existente = draft.value.lineas.find((l) => l.firma === clave && !l.nota)
     if (existente) {
@@ -40,8 +41,10 @@ export function useDraft(id) {
       producto_id: producto.id,
       nombre: producto.nombre,
       // Precio estimado; el definitivo lo calcula el servidor (RN-ORD-01)
-      precio: producto.precio + opciones.reduce((sum, o) => sum + o.precio_extra, 0),
-      modificadores: opciones.map((o) => ({ id: o.id, nombre: o.nombre })),
+      precio: producto.precio + opciones.reduce((sum, o) => sum + o.precio_extra, 0) + (combo?.extra || 0),
+      // En un combo lo elegido se muestra como detalle de la línea; no son modificadores (no llevan id)
+      modificadores: combo ? combo.componentes.map((c) => ({ id: null, nombre: c.detalle })) : opciones.map((o) => ({ id: o.id, nombre: o.nombre })),
+      componentes: combo ? combo.componentes.map(({ componente_id, producto_id, modificadores }) => ({ componente_id, producto_id, modificadores })) : null,
       cantidad: 1,
       nota: '',
     })
@@ -61,7 +64,8 @@ export function useDraft(id) {
       producto_id: l.producto_id,
       cantidad: l.cantidad,
       nota: l.nota.trim() || null,
-      modificadores: (l.modificadores || []).map((m) => m.id),
+      modificadores: (l.modificadores || []).filter((m) => m.id).map((m) => m.id),
+      ...(l.componentes ? { componentes: l.componentes } : {}),
     }))
   }
 

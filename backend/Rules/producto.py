@@ -12,6 +12,8 @@ def campos_producto(params):
         campo("int", "orden", params.get("orden"), False),
         campo("list", "cartas", params.get("cartas"), False),
         campo("list", "grupos de modificadores", params.get("grupos"), False),
+        campo("opcion", "tipo", params.get("tipo"), False, opciones=["simple", "combo"]),
+        campo("list", "componentes", params.get("componentes"), False),
     ]
 
 

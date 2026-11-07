@@ -20,5 +20,7 @@ class ProductoModel(DeRestaurante, BorradoLogico, BASE):
     # Vacío = el de la categoría o, si tampoco tiene, el impuesto por defecto
     impuesto_id = Column(BigInteger, ForeignKey("impuesto.id"), nullable=True)
     orden = Column(Integer, nullable=False, default=0)
+    # simple o combo: un combo tiene componentes en vez de grupos de modificadores (doc 12, sección 4)
+    tipo = Column(String(10), nullable=False, default="simple", server_default="simple")
     agotado = Column(Boolean, nullable=False, default=False)
     activo = Column(Boolean, nullable=False, default=True)

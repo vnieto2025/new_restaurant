@@ -38,6 +38,12 @@ class CopiarProductos:
         modificadores = ModificadorQuerys(self.db, self.ctx)
         modificadores.set_grupos_producto(producto_id, modificadores.grupos_de_producto(original.id))
         self.copy_recipe(original.id, producto_id)
+        if original.tipo == "combo":
+            from Querys.combo import ComboQuerys
+            combos = ComboQuerys(self.db, self.ctx)
+            componentes = combos.componentes_de([original.id]).get(original.id, [])
+            combos.set_componentes(producto_id, componentes)
+            self.querys.db.get(ProductoModel, producto_id).tipo = "combo"
         self.querys.commit()
         return self.tools.output(201, f"Se creó {nombre}. Ajústale el nombre y el precio.",
                                  self.querys.format_producto(self.querys.get_own(ProductoModel, producto_id, "producto")))
@@ -90,6 +96,10 @@ class CopiarProductos:
         for producto in sorted(productos, key=lambda p: (p.orden, p.nombre)):
             if producto.nombre.lower() in existentes:
                 omitidos.append(producto.nombre)
+                continue
+            # Sus componentes son productos de este local: el combo se arma allá con los de allá
+            if producto.tipo == "combo":
+                omitidos.append(f"{producto.nombre} (combo: ármalo en la otra sede)")
                 continue
             categoria = self.db.get(CategoriaModel, producto.categoria_id)
             categoria_id = categorias.get(categoria.nombre.lower())

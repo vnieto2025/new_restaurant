@@ -110,7 +110,7 @@ def admin_ctx(empresa_id, restaurante_id):
 
 def demo_company(db, nombre, restaurante, admin, zonas, puntos_extra, categorias, personal, modificadores=(),
                  modulos=("pedidos",), facturacion=None, inventario=None, domicilios=None, pagos_linea=None,
-                 cupones=(), cobro=None, abierto=False):
+                 cupones=(), cobro=None, abierto=False, combos=()):
     """ Empresa de ejemplo armada con las mismas clases que usa la API """
     from Class.Plataforma import Plataforma
     from Class.Zona import Zona
@@ -194,6 +194,22 @@ def demo_company(db, nombre, restaurante, admin, zonas, puntos_extra, categorias
         # Pasarela simulada en ambiente de pruebas: su página de pago es una pantalla de la propia aplicación
         from Class.PagoLinea import PagoLinea
         PagoLinea(db, ctx).save_config(pagos_linea)
+    if combos:
+        # Combos de ejemplo (doc 12, sección 4): se arman con los productos ya creados, por nombre
+        from Class.Producto import Producto
+        from Models.producto_model import ProductoModel as Prod
+        from Models.categoria_model import CategoriaModel as Cat
+        ids = {p.nombre: p.id for p in db.query(Prod).filter(Prod.restaurante_id == restaurante_id).all()}
+        for combo in combos:
+            categoria = db.query(Cat).filter(Cat.restaurante_id == restaurante_id, Cat.nombre == combo["categoria"]).first()
+            if not categoria:
+                categoria = db.get(Cat, data_of(Categoria(db, ctx).create({"nombre": combo["categoria"], "orden": 0}))["id"])
+            Producto(db, ctx).create({
+                "categoria_id": categoria.id, "nombre": combo["nombre"], "precio": combo["precio"], "tipo": "combo",
+                "descripcion": combo.get("descripcion"),
+                "componentes": [{"nombre": nombre, "cantidad": 1, "opciones": [{"producto_id": ids[p], "precio_extra": extra} for p, extra in opciones]}
+                                for nombre, opciones in combo["componentes"]],
+            })
     if cupones:
         from Class.Cupon import Cupon
         ctx = {**ctx, "modulos": set(ctx["modulos"]) | {"fidelizacion"}}
@@ -317,6 +333,9 @@ def seed_demo(db):
         modulos=("pedidos", "caja", "facturacion", "inventario", "domicilios", "pagos_linea", "fidelizacion", "propinas"),
         cobro={"mensualidad": 250000, "vence_en_dias": 20},
         abierto=True,
+        combos=[{"nombre": "Combo clásico", "categoria": "Combos", "precio": 26000, "descripcion": "Hamburguesa clásica, papas y bebida",
+                 "componentes": [("Hamburguesa", [("Hamburguesa clásica", 0)]), ("Acompañamiento", [("Papas a la francesa", 0)]),
+                                 ("Bebida", [("Gaseosa 400 ml", 0), ("Limonada natural", 1500)])]}],
         # Cupones de ejemplo (doc 25A): uno general, uno de domicilio y la plantilla del cupón de la próxima visita
         cupones=[
             {"codigo": "BIENVENIDO", "nombre": "Bienvenida", "descripcion": "10 % en tu primera compra", "tipo": "porcentaje",

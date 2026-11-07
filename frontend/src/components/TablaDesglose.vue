@@ -9,6 +9,8 @@ const props = defineProps({
   filas: { type: Array, required: true }, // [{ nombre, unidades?, pagos?, valor }]
   conteo: { type: String, default: 'unidades' }, // unidades | pagos | ninguno
   archivo: { type: String, default: 'reporte' },
+  // Solo unidades: lo que va dentro de un combo no tiene valor propio, lo cobra el combo
+  sinValor: { type: Boolean, default: false },
 })
 
 const total = computed(() => props.filas.reduce((s, f) => s + f.valor, 0))
@@ -21,7 +23,7 @@ function porcentaje(valor) {
 function exportar() {
   const columnas = [{ titulo: props.columna, campo: 'nombre' }]
   if (etiquetaConteo.value) columnas.push({ titulo: etiquetaConteo.value, campo: props.conteo })
-  columnas.push({ titulo: 'Valor', campo: 'valor' })
+  if (!props.sinValor) columnas.push({ titulo: 'Valor', campo: 'valor' })
   downloadCsv(props.archivo, columnas, props.filas)
 }
 </script>
@@ -36,17 +38,19 @@ function exportar() {
     <div v-else class="table-wrap">
       <table class="table">
         <thead>
-          <tr><th>{{ columna }}</th><th v-if="etiquetaConteo" class="num">{{ etiquetaConteo }}</th><th class="num">Valor</th><th class="num">%</th></tr>
+          <tr><th>{{ columna }}</th><th v-if="etiquetaConteo" class="num">{{ etiquetaConteo }}</th><template v-if="!sinValor"><th class="num">Valor</th><th class="num">%</th></template></tr>
         </thead>
         <tbody>
           <tr v-for="fila in filas" :key="fila.nombre">
             <td>{{ fila.nombre }}</td>
             <td v-if="etiquetaConteo" class="num">{{ fila[conteo] }}</td>
-            <td class="num">{{ formatMoney(fila.valor) }}</td>
-            <td class="num participacion">
-              <span class="barra" :style="{ width: `${porcentaje(fila.valor)}%` }" aria-hidden="true"></span>
-              <span>{{ porcentaje(fila.valor) }}</span>
-            </td>
+            <template v-if="!sinValor">
+              <td class="num">{{ formatMoney(fila.valor) }}</td>
+              <td class="num participacion">
+                <span class="barra" :style="{ width: `${porcentaje(fila.valor)}%` }" aria-hidden="true"></span>
+                <span>{{ porcentaje(fila.valor) }}</span>
+              </td>
+            </template>
           </tr>
         </tbody>
       </table>

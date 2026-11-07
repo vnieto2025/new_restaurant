@@ -12,7 +12,7 @@ from Models.mesa_model import MesaModel
 from Models.zona_model import ZonaModel
 from Models.usuario_model import UsuarioModel
 from Models.restaurante_model import RestauranteModel
-from Utils.estados import validar_transicion, estado_derivado, ETIQUETAS, CANCELADO, PENDIENTES_DE_ENTREGA
+from Utils.estados import validar_transicion, estado_derivado, ETIQUETAS, CANCELADO, PENDIENTES_DE_ENTREGA, PENDIENTE, NUEVO, EN_PROCESO, DESPACHADO, ENTREGADO
 from Utils.tools import now, to_local
 from sqlalchemy import text
 from datetime import timedelta
@@ -99,6 +99,9 @@ class OrdenQuerys(Querys):
 
     # Cambia el estado de un ítem respetando la máquina de estados y deja el historial (doc 16)
     def transition(self, item, nuevo: str, motivo: str = None):
+        # Ya lo canceló su combo en cascada: cancelarlo otra vez no hace nada
+        if item.estado == CANCELADO and nuevo == CANCELADO:
+            return
         validar_transicion(item.estado, nuevo)
         anterior = item.estado
         item.estado = nuevo
@@ -109,6 +112,43 @@ class OrdenQuerys(Querys):
             if nuevo == "cancelado" and motivo and not item.motivo_cancelacion:
                 item.motivo_cancelacion = motivo
             al_cambiar_estado(self.db, self.ctx, item, nuevo)
+        if item.es_combo and nuevo == CANCELADO:
+            for parte in self.componentes_de(item.id):
+                if parte.estado != CANCELADO:
+                    parte.motivo_cancelacion = parte.motivo_cancelacion or item.motivo_cancelacion or motivo
+                    parte.tipo_cancelacion = parte.tipo_cancelacion or item.tipo_cancelacion
+                    self.transition(parte, CANCELADO, motivo or "Combo cancelado")
+        elif item.combo_item_id:
+            self.follow_components(self.db.get(OrdenItemModel, item.combo_item_id), nuevo, motivo)
+
+    def componentes_de(self, combo_item_id):
+        return self.scoped(OrdenItemModel).filter(OrdenItemModel.combo_item_id == combo_item_id).order_by(OrdenItemModel.id).all()
+
+    def follow_components(self, combo, nuevo, motivo):
+        """ El combo está listo (o entregado) cuando todas sus partes lo están, y en preparación si alguna arrancó.
+            Si se cancela un componente (por ejemplo, se agotó) se cancela el combo completo, que es lo que se cobra. """
+        if combo.estado == CANCELADO:
+            return
+        if nuevo == CANCELADO:
+            self.transition(combo, CANCELADO, motivo or "Se canceló una parte del combo")
+            return
+        rangos = [PENDIENTE, NUEVO, EN_PROCESO, DESPACHADO, ENTREGADO]
+        vivos = [p.estado for p in self.componentes_de(combo.id) if p.estado != CANCELADO]
+        if not vivos:
+            return
+        objetivo = min(vivos, key=rangos.index)
+        # Si alguna parte ya empezó, el combo está en preparación aunque otra no haya arrancado
+        if rangos.index(objetivo) <= rangos.index(NUEVO) and any(rangos.index(e) > rangos.index(NUEVO) for e in vivos):
+            objetivo = EN_PROCESO
+        actual = combo.estado
+        if rangos.index(objetivo) > rangos.index(actual):
+            # Avanza por los pasos permitidos, uno a uno
+            for paso in rangos[rangos.index(actual) + 1: rangos.index(objetivo) + 1]:
+                if paso == EN_PROCESO and objetivo != EN_PROCESO and combo.estado == NUEVO:
+                    continue
+                self.transition(combo, paso, "Avanza con sus componentes")
+        elif objetivo == EN_PROCESO and actual == DESPACHADO:
+            self.transition(combo, EN_PROCESO, "Se reabrió un componente")
 
     def add_history(self, item, anterior, nuevo, motivo=None):
         self.insert_data(HistorialEstadoModel, {
@@ -160,6 +200,8 @@ class OrdenQuerys(Querys):
             "punto_produccion_id": item.punto_produccion_id,
             "punto_produccion": (puntos or {}).get(item.punto_produccion_id) if item.punto_produccion_id else "Despacho directo",
             "comanda_id": item.comanda_id,
+            "es_combo": item.es_combo,
+            "combo_item_id": item.combo_item_id,
             "motivo_cancelacion": item.motivo_cancelacion,
             "tipo_cancelacion": item.tipo_cancelacion,
             "actualizado_en": item.actualizado_en,

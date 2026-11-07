@@ -25,9 +25,11 @@ class ReporteQuerys(Querys):
         self.con_caja = con_caja
 
     # Ítems vendidos en el periodo, con su orden, listos para agrupar
-    def items_vendidos(self, desde, hasta):
+    def items_vendidos(self, desde, hasta, componentes=False):
+        """ Lo vendido son las líneas que se cobran; los componentes de los combos (valor 0) se piden aparte """
         query = self.scoped(OrdenItemModel).join(OrdenModel, OrdenModel.id == OrdenItemModel.orden_id).filter(
-            OrdenItemModel.estado != CANCELADO)
+            OrdenItemModel.estado != CANCELADO,
+            OrdenItemModel.combo_item_id.isnot(None) if componentes else OrdenItemModel.combo_item_id.is_(None))
         if self.con_caja:
             query = query.join(CuentaModel, and_(CuentaModel.sesion_mesa_id == OrdenModel.sesion_mesa_id,
                                                  CuentaModel.estado == "pagada")).filter(
@@ -86,6 +88,12 @@ class ReporteQuerys(Querys):
             query = query.limit(limite)
         return [(clave, int(unidades or 0), int(valor or 0)) for clave, unidades, valor in query.all()]
 
+    def componentes_vendidos(self, desde, hasta):
+        filas = self.items_vendidos(desde, hasta, componentes=True).with_entities(
+            OrdenItemModel.nombre_producto, func.sum(OrdenItemModel.cantidad)).group_by(OrdenItemModel.nombre_producto).order_by(
+            func.sum(OrdenItemModel.cantidad).desc()).all()
+        return [(nombre, int(unidades or 0), 0) for nombre, unidades in filas]
+
     def por_producto(self, desde, hasta, limite=None, orden="valor"):
         return self.agrupar(desde, hasta, OrdenItemModel.nombre_producto, limite, orden)
 
@@ -126,7 +134,8 @@ class ReporteQuerys(Querys):
 
     def cancelaciones(self, desde, hasta, mesero_id=None):
         query = self.scoped(OrdenItemModel).join(OrdenModel, OrdenModel.id == OrdenItemModel.orden_id).filter(
-            OrdenItemModel.estado == CANCELADO, OrdenModel.jornada >= desde, OrdenModel.jornada <= hasta)
+            OrdenItemModel.estado == CANCELADO, OrdenModel.jornada >= desde, OrdenModel.jornada <= hasta,
+            OrdenItemModel.combo_item_id.is_(None))
         if mesero_id:
             query = query.filter(OrdenModel.mesero_id == mesero_id)
         items = query.add_columns(OrdenModel).order_by(OrdenItemModel.actualizado_en.desc()).limit(300).all()

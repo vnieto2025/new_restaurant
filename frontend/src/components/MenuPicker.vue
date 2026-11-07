@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { formatMoney } from '@/utils/format'
 import OpcionesProducto from '@/components/OpcionesProducto.vue'
+import OpcionesCombo from '@/components/OpcionesCombo.vue'
 
 /*
   Selector de productos para tomar órdenes (doc 34): categorías, búsqueda y botones grandes.
@@ -15,12 +16,19 @@ const emit = defineEmits(['add'])
 
 const categoriaId = ref(null)
 const conOpciones = ref(null)
+const combo = ref(null)
 const buscar = ref('')
 
 // Un toque agrega; si el producto tiene modificadores, primero se eligen
 function elegir(producto) {
-  if (producto.grupos?.length) conOpciones.value = producto
+  if (producto.tipo === 'combo') combo.value = producto
+  else if (producto.grupos?.length) conOpciones.value = producto
   else emit('add', producto, [])
+}
+
+function confirmarCombo(seleccion) {
+  emit('add', combo.value, [], seleccion)
+  combo.value = null
 }
 
 function confirmar(opciones) {
@@ -71,6 +79,7 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
       </p>
     </div>
     <OpcionesProducto :producto="conOpciones" @close="conOpciones = null" @confirm="confirmar" />
+    <OpcionesCombo :combo="combo" @close="combo = null" @confirm="confirmarCombo" />
   </section>
 </template>
 

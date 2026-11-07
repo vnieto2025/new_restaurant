@@ -2,12 +2,16 @@ from Utils.tools import Tools, CustomException, clean_text
 from Utils.realtime import realtime
 from Querys.producto import ProductoQuerys
 from Querys.modificador import ModificadorQuerys
+from Querys.combo import ComboQuerys
 from Models.producto_model import ProductoModel
 from Models.categoria_model import CategoriaModel
 from Models.punto_produccion_model import PuntoProduccionModel
 from Models.impuesto_model import ImpuestoModel
 
 MAX_PRECIO = 100_000_000
+MAX_COMPONENTES = 10
+MAX_OPCIONES = 20
+TIPOS_PRODUCTO = ["simple", "combo"]
 
 
 class Producto:
@@ -30,9 +34,13 @@ class Producto:
         if self.querys.name_exists(fields["nombre"]):
             raise CustomException("Ya existe un producto con ese nombre.")
 
+        fields["tipo"] = self.clean_type(data.get("tipo") or "simple")
         producto_id = self.querys.insert_data(ProductoModel, fields, commit=False)
         self.querys.set_cartas_producto(producto_id, self.clean_menus(data))
-        self.set_groups(producto_id, data)
+        if fields["tipo"] == "combo":
+            ComboQuerys(self.querys.db, self.ctx).set_componentes(producto_id, self.clean_components(data, producto_id))
+        else:
+            self.set_groups(producto_id, data)
         self.querys.commit()
 
         producto = self.querys.get_own(ProductoModel, producto_id, "producto")
@@ -51,11 +59,23 @@ class Producto:
         if fields["precio"] != precio_anterior and "catalogo.precios" not in self.ctx["permisos"]:
             raise CustomException("No tiene permiso para cambiar precios.", 403)
 
+        fields["tipo"] = self.clean_type(data.get("tipo") or producto.tipo)
+        if fields["tipo"] == "combo" and producto.tipo != "combo":
+            usado = ComboQuerys(self.querys.db, self.ctx).combos_que_usan(producto.id)
+            if usado:
+                raise CustomException(f"{producto.nombre} está dentro de {', '.join(usado)}: un combo no puede ir dentro de otro.")
         self.querys.update_data(ProductoModel, producto.id, fields, "producto", commit=False)
         if "cartas" in data:
             self.querys.set_cartas_producto(producto.id, self.clean_menus(data))
-        if "grupos" in data:
-            self.set_groups(producto.id, data)
+        combos = ComboQuerys(self.querys.db, self.ctx)
+        if fields["tipo"] == "combo":
+            if "componentes" in data or producto.tipo != "combo":
+                combos.set_componentes(producto.id, self.clean_components(data, producto.id))
+            ModificadorQuerys(self.querys.db, self.ctx).set_grupos_producto(producto.id, [])
+        else:
+            combos.set_componentes(producto.id, [])
+            if "grupos" in data:
+                self.set_groups(producto.id, data)
 
         # Los cambios de precio se auditan siempre (RG-14)
         if fields["precio"] != precio_anterior:
@@ -122,6 +142,45 @@ class Producto:
         if set(ids) - modificadores.valid_grupos(ids):
             raise CustomException("Alguno de los grupos de modificadores no existe.")
         modificadores.set_grupos_producto(producto_id, ids)
+
+    def clean_type(self, tipo):
+        if tipo not in TIPOS_PRODUCTO:
+            raise CustomException("El tipo debe ser producto o combo.")
+        return tipo
+
+    def clean_components(self, data: dict, combo_id):
+        """ Cada componente con al menos una opción. Las opciones son productos simples del restaurante:
+            un combo dentro de otro haría imposible saber qué se prepara y qué se cobra. """
+        componentes = data.get("componentes") or []
+        if not componentes:
+            raise CustomException("Un combo necesita al menos un componente, por ejemplo «Bebida».")
+        if len(componentes) > MAX_COMPONENTES:
+            raise CustomException(f"Un combo puede tener máximo {MAX_COMPONENTES} componentes.")
+        limpios = []
+        for posicion, componente in enumerate(componentes, start=1):
+            nombre = clean_text(componente.get("nombre"))
+            if not nombre or len(nombre) > 60:
+                raise CustomException(f"Escribe el nombre del componente {posicion}, por ejemplo «Bebida».")
+            cantidad = int(componente.get("cantidad") or 1)
+            if not 1 <= cantidad <= 10:
+                raise CustomException(f"La cantidad de {nombre} debe estar entre 1 y 10.")
+            opciones = componente.get("opciones") or []
+            if not opciones or len(opciones) > MAX_OPCIONES:
+                raise CustomException(f"Elige de 1 a {MAX_OPCIONES} productos para {nombre}.")
+            vistos, limpias = set(), []
+            for opcion in opciones:
+                producto = self.querys.get_own(ProductoModel, opcion.get("producto_id"), "producto")
+                if producto.id == combo_id or producto.tipo == "combo":
+                    raise CustomException(f"{producto.nombre} es un combo: un combo no puede ir dentro de otro.")
+                if producto.id in vistos:
+                    raise CustomException(f"{producto.nombre} está repetido en {nombre}.")
+                extra = int(opcion.get("precio_extra") or 0)
+                if extra < 0 or extra > MAX_PRECIO:
+                    raise CustomException(f"El valor extra de {producto.nombre} no es válido.")
+                vistos.add(producto.id)
+                limpias.append({"producto_id": producto.id, "precio_extra": extra})
+            limpios.append({"nombre": nombre, "cantidad": cantidad, "opciones": limpias})
+        return limpios
 
     def clean_menus(self, data: dict):
         if data.get("cartas") is None:

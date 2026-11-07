@@ -82,3 +82,5 @@ from Models.liquidacion_linea_model import LiquidacionLineaModel  # noqa: F401
 from Models.liquidacion_ajuste_model import LiquidacionAjusteModel  # noqa: F401
 from Models.pago_suscripcion_model import PagoSuscripcionModel  # noqa: F401
 from Models.domicilio_web_model import DomicilioWebModel  # noqa: F401
+from Models.combo_componente_model import ComboComponenteModel  # noqa: F401
+from Models.combo_opcion_model import ComboOpcionModel  # noqa: F401

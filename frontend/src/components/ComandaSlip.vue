@@ -89,6 +89,7 @@ function despachar() {
         <span class="cant">{{ item.cantidad }}</span>
         <div class="desc">
           <span class="nombre">{{ item.nombre }}</span>
+          <span v-if="item.combo" class="combo">Del {{ item.combo }}</span>
           <span v-for="mod in item.modificadores" :key="mod" class="mod">+ {{ mod }}</span>
           <span v-if="item.nota" class="nota">{{ item.nota }}</span>
           <span v-if="item.estado === 'cancelado'" class="nota">Cancelado: {{ item.motivo_cancelacion }}</span>
@@ -344,5 +345,10 @@ function despachar() {
   border: 1.5px solid var(--tinta);
   font-size: var(--text-base);
   min-height: var(--toque);
+}
+.combo {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--acero);
 }
 </style>

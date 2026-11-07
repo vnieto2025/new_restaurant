@@ -19,5 +19,6 @@ def items_orden(items):
             campo("int", f"cantidad del ítem {posicion}", item["cantidad"]),
             campo("string", f"nota del ítem {posicion}", item.get("nota"), False, limite={"min": 1, "max": 200}),
             campo("list", f"modificadores del ítem {posicion}", item.get("modificadores"), False),
+            campo("list", f"componentes del ítem {posicion}", item.get("componentes"), False),
         ]
     return reglas
