@@ -11,6 +11,7 @@ from Utils.realtime import realtime
 from Router.Auth import auth_router
 from Router.Plataforma import plataforma_router
 from Router.Restaurante import restaurante_router
+from Router.Practica import practica_router
 from Router.Usuario import usuario_router
 from Router.Zona import zona_router
 from Router.Mesa import mesa_router
@@ -91,6 +92,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(plataforma_router)
 app.include_router(restaurante_router)
+app.include_router(practica_router)
 app.include_router(usuario_router)
 app.include_router(zona_router)
 app.include_router(mesa_router)

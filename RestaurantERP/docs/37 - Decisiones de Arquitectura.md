@@ -631,7 +631,7 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:**
   - No impide operar: es una guía, no un candado. La regla RN-ONB-01 se cumple por acompañamiento, no por bloqueo.
   - Las órdenes y ventas del ensayo quedan en los reportes de ese día; no hay modo de prueba ni forma de borrarlas. La pantalla avisa, y que el cierre de jornada bloquea más órdenes ese día.
-- **Cuándo revisar:** con el primer piloto, si el ensayo ensucia reportes o facturación: un modo de prueba sería el siguiente paso.
+- **Cuándo revisar:** con el primer piloto, si el ensayo ensucia reportes o facturación: un modo de prueba sería el siguiente paso. *(Hecho en ADR-053: el ensayo se recomienda en el restaurante de práctica.)*
 
 ## ADR-047: Reportes de la fase 2
 
@@ -717,6 +717,21 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - **Al cerrar la jornada** en caja, si el dueño dejó su celular en `restaurante.resumen_diario`, el resumen queda como aviso `resumen_diario` en la misma cola de WhatsApp de los clientes: en modo manual lo envía quien atiende Mostrador o Entregas con un toque; en automático sale por el proveedor. Una falla nunca frena el cierre. Sin el módulo de pedidos (donde viven los avisos), queda el botón "Enviar por WhatsApp" de la página.
 - **Consecuencias:** un restaurante sin caja no cierra jornada, así que no recibe el resumen automático: lo abre o lo envía desde la página. El resumen a la hora del cierre no se repite si la jornada se consulta después; la página siempre muestra las cifras actuales de esa jornada.
 - **Cuándo revisar:** cuando haya proveedor de correo, o si el dueño de varias sedes pide un resumen consolidado de la empresa.
+
+## ADR-053: Restaurante de práctica
+
+- **Estado:** Aprobada (2026-11-07). Doc 33, sección 7; doc 41 (capacitación y ensayo en vacío).
+- **Decisión:**
+  - **Un restaurante de práctica por restaurante real** (`restaurante.practica_de`), no una marca en cada orden: el sistema ya separa todo por restaurante, así que órdenes, cobros, turnos, inventario, reportes, cierres, alertas y tiempo real de la práctica quedan aparte sin tocar ninguna consulta.
+  - **Se crea copiando la configuración** (`Utils/practica.py`): carta, categorías, productos y combos, modificadores, mesas y zonas con QR nuevos, puntos de producción, horarios, impuestos, medios de pago, numeración POS desde cero, domiciliarios, proveedores, insumos y recetas. La copia es genérica por tabla, traduciendo las referencias a los ids nuevos. Las existencias entran como un ajuste, así el inventario de práctica arranca igual y las sugerencias de agotados funcionan.
+  - **No se copia** lo de la operación (órdenes, turnos, compras, avisos, auditoría) ni la configuración de facturación electrónica, pagos en línea, avisos por WhatsApp y domicilio web.
+  - **Módulos:** los del contrato del real, **sin facturación electrónica ni pagos en línea**, que tocarían la DIAN o dinero de verdad. La práctica no tiene contrato propio ni aparece en la consola de plataforma ni en el comparativo entre sedes.
+  - **Personal:** entra con su mismo usuario quien tiene acceso al real, con los mismos permisos; sus zonas y puntos se buscan por nombre en la práctica, así el personal nuevo no necesita nada extra. No aparece en la lista de restaurantes: se entra con "Entrar a la práctica" (inicio y puesta en marcha) y una franja con rayas en todas las pantallas dice que nada cuenta y lleva de vuelta al real. Las tirillas salen con el nombre "… · Práctica".
+  - **Clientes:** son de la empresa; los creados en la práctica llevan `cliente.practica_restaurante_id`, solo se ven allí y no chocan con el celular de un cliente real (índices únicos parciales).
+  - **Reiniciar** borra todo lo de la práctica, de las tablas hijas a las padres, y vuelve a copiar el real. Se niega a correr sobre un restaurante que no sea de práctica. Crear y reiniciar piden `restaurante.configurar` y quedan en la auditoría del real.
+  - **Fotos:** la práctica usa los mismos archivos; subir o quitar una foto allí se bloquea para no borrar la del real.
+- **Consecuencias:** un cambio en la carta del real no llega a la práctica hasta reiniciarla. Si el real cambia o borra una foto, la práctica puede mostrarla rota hasta reiniciar. Los avisos por WhatsApp en la práctica son manuales: alguien podría escribirle de verdad a un cliente si usa su celular real.
+- **Cuándo revisar:** si hace falta practicar facturación electrónica (con el proveedor simulado forzado) o si se quiere sincronizar la carta sin borrar lo practicado.
 
 ## ADR-005 (avance): impresión desde el navegador
 

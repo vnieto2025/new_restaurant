@@ -83,7 +83,7 @@ Principios de experiencia de uso para **todas** las aplicaciones. Los componente
 - **Asistente inicial** para configurar un restaurante (`28`, `41`).
 - Estados vacíos con una acción clara ("Aún no tienes mesas. Crear mesas").
 - Ayuda contextual breve y enlaces a guías cortas.
-- Modo de **práctica** o datos de ejemplo para entrenar al personal sin afectar la operación (fase 2).
+- Modo de **práctica** para entrenar al personal sin afectar la operación: restaurante de práctica con la configuración del real, franja visible en todas las pantallas y reinicio (ADR-053).
 
 ## 9. Rendimiento percibido
 

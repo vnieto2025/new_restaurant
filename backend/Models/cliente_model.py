@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import DeEmpresa, BorradoLogico
-from sqlalchemy import Column, String, Text, Integer, BigInteger, Boolean, ForeignKey, DateTime, Date, UniqueConstraint
+from sqlalchemy import Column, String, Text, Integer, BigInteger, Boolean, ForeignKey, DateTime, Date, Index, text
 
 ESTADOS_CLIENTE = ["activo", "inactivo", "bloqueado"]
 
@@ -8,9 +8,16 @@ ESTADOS_CLIENTE = ["activo", "inactivo", "bloqueado"]
 class ClienteModel(DeEmpresa, BorradoLogico, BASE):
 
     __tablename__ = "cliente"
-    # El teléfono es el identificador principal y es único en la empresa (RN-CLI-02)
-    __table_args__ = (UniqueConstraint("empresa_id", "telefono", name="uq_cliente_telefono"),)
+    # El teléfono es el identificador principal y es único en la empresa (RN-CLI-02); los clientes
+    # de un restaurante de práctica van aparte para no chocar con los reales (ADR-053)
+    __table_args__ = (
+        Index("uq_cliente_telefono", "empresa_id", "telefono", unique=True, postgresql_where=text("practica_restaurante_id IS NULL")),
+        Index("uq_cliente_telefono_practica", "practica_restaurante_id", "telefono", unique=True,
+              postgresql_where=text("practica_restaurante_id IS NOT NULL")),
+    )
 
+    # Cliente creado en un restaurante de práctica: solo se ve allí y se borra al reiniciarla
+    practica_restaurante_id = Column(BigInteger, ForeignKey("restaurante.id", name="fk_cliente_practica"), nullable=True)
     nombre = Column(String(120), nullable=False)
     # Solo dígitos, con indicativo de país (573001234567)
     telefono = Column(String(20), nullable=True)

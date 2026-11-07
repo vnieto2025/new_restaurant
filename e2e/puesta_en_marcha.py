@@ -69,7 +69,7 @@ with sync_playwright() as p:
     expect(pasos.filter(has_text="Códigos QR")).to_contain_text("Dueña Fonda")
     ensayo = page.get_by_role("button", name="Ya hicimos el ensayo")
     expect(ensayo).to_be_enabled()
-    expect(page.get_by_text("mínimo un día antes")).to_be_visible()
+    expect(page.get_by_text("Hazlo en el restaurante de práctica")).to_be_visible()
     shot(page, "m03-listo-para-ensayo")
     ensayo.click()
     expect(page.get_by_text("¡Listo para abrir!")).to_be_visible()

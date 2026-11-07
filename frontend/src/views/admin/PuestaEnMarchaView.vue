@@ -5,6 +5,7 @@ import { useAction } from '@/composables/useAction'
 import { formatDateTime, plural } from '@/utils/format'
 import AppModal from '@/components/AppModal.vue'
 import ImportarProductos from '@/components/ImportarProductos.vue'
+import PracticaPanel from '@/components/PracticaPanel.vue'
 
 /*
   Asistente de configuración inicial (doc 41, sección 2). Cada paso se deduce de los datos: lo hecho en su pantalla
@@ -81,7 +82,7 @@ onMounted(load)
                 <li>Que lleguen a cocina, se despachen y se entreguen.</li>
                 <li>Cobro, arqueo y cierre de la jornada.</li>
               </ul>
-              <p class="aviso">Hazlo mínimo un día antes de abrir: cerrar la jornada no deja recibir más órdenes ese día, y las ventas de prueba quedan en los reportes de esa fecha.</p>
+              <p class="aviso">Hazlo en el restaurante de práctica (abajo): ahí puedes cobrar y cerrar la jornada sin que nada quede en los reportes ni bloquee el día real.</p>
             </template>
             <p v-if="p.marca" class="muted confirmado">{{ p.marca.por }} · {{ formatDateTime(p.marca.en) }}</p>
             <p class="visually-hidden">{{ p.hecho ? 'Hecho' : 'Pendiente' }}</p>
@@ -98,6 +99,8 @@ onMounted(load)
         </li>
       </ol>
     </template>
+
+    <PracticaPanel class="practica" />
 
     <ImportarProductos :open="importando" @close="importando = false" @imported="load" />
 
@@ -151,6 +154,10 @@ onMounted(load)
   display: block;
   height: 100%;
   background: var(--estado-entregado);
+}
+
+.practica {
+  margin-top: var(--space-5);
 }
 
 .pasos {

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import ToastHost from '@/components/ToastHost.vue'
 import PrintHost from '@/components/PrintHost.vue'
 import AvisoAcceso from '@/components/AvisoAcceso.vue'
+import AvisoPractica from '@/components/AvisoPractica.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { useInactivity } from '@/composables/useInactivity'
@@ -30,6 +31,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <AvisoPractica />
   <AvisoAcceso />
   <RouterView />
   <ToastHost />

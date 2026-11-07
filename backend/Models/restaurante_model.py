@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import DeEmpresa
-from sqlalchemy import Column, String, Time, Integer, Boolean, JSON
+from sqlalchemy import Column, String, Time, Integer, BigInteger, Boolean, JSON, ForeignKey
 
 TIPOS_RESTAURANTE = ["restaurante", "comida_rapida", "bar", "panaderia", "cocina_oculta", "otro"]
 ESTADOS_RESTAURANTE = ["activo", "pausado", "cerrado", "inactivo"]
@@ -35,3 +35,5 @@ class RestauranteModel(DeEmpresa, BASE):
     alertas = Column(JSON, nullable=True)
     # Resumen del día al cerrar la jornada: {"activo": bool, "telefono": digitos, "nombre": texto} (doc 31B)
     resumen_diario = Column(JSON, nullable=True)
+    # Restaurante de práctica: copia del real para entrenar al personal sin tocar su operación (ADR-053)
+    practica_de = Column(BigInteger, ForeignKey("restaurante.id", name="fk_restaurante_practica"), nullable=True, unique=True)

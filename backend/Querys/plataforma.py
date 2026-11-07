@@ -18,8 +18,9 @@ class PlataformaQuerys(Querys):
         return self.db.query(EmpresaModel).order_by(EmpresaModel.id.asc()).all()
 
     def list_restaurantes(self, empresa_id):
+        # Los de práctica no se contratan ni se cobran (ADR-053)
         return self.db.query(RestauranteModel).filter(
-            RestauranteModel.empresa_id == empresa_id
+            RestauranteModel.empresa_id == empresa_id, RestauranteModel.practica_de.is_(None)
         ).order_by(RestauranteModel.id.asc()).all()
 
     def usuario_exists(self, usuario: str):

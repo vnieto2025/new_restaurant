@@ -14,6 +14,8 @@ from Models.contrato_model import ContratoModel
 from Models.contrato_modulo_model import ContratoModuloModel
 from Models.modulo_model import ModuloModel
 from Models.dispositivo_model import DispositivoModel
+from Models.zona_model import ZonaModel
+from Models.punto_produccion_model import PuntoProduccionModel
 from Utils.tools import jornada
 from Utils.acceso import acceso_de, COMPLETO, LECTURA, EXPORTACION, MENSAJES, PERMISOS_EXPORTACION, RUTAS_POR_MODO
 
@@ -43,11 +45,13 @@ def permisos_de_roles(db, rol_ids):
     ).filter(RolPermisoModel.rol_id.in_(rol_ids)).distinct().all()
 
 
-# Restaurantes a los que entra un usuario: todos los de su empresa si es admin de empresa
+# Restaurantes a los que entra un usuario: todos los de su empresa si es admin de empresa.
+# Los de práctica no se listan: se entra a uno desde su restaurante real (ADR-053)
 def restaurantes_de_usuario(db, usuario, roles):
     query = db.query(RestauranteModel).filter(
         RestauranteModel.empresa_id == usuario.empresa_id,
         RestauranteModel.estado != "inactivo",
+        RestauranteModel.practica_de.is_(None),
     )
     if not any(rol.alcance == "empresa" for rol in roles):
         query = query.join(
@@ -58,6 +62,11 @@ def restaurantes_de_usuario(db, usuario, roles):
 
 # Módulos con los que opera hoy el restaurante según su contrato
 def modulos_activos(db, restaurante):
+    # La práctica opera con los módulos del real, menos los que tocan dinero o la DIAN (ADR-053)
+    if restaurante.practica_de:
+        from Utils.practica import SIN_MODULOS
+        modulos, estado = modulos_activos(db, db.get(RestauranteModel, restaurante.practica_de))
+        return modulos - SIN_MODULOS, estado
     contrato = db.query(ContratoModel).filter(ContratoModel.restaurante_id == restaurante.id).first()
     obligatorios = {m.codigo for m in db.query(ModuloModel).filter(ModuloModel.obligatorio.is_(True)).all()}
     if not contrato:
@@ -130,8 +139,15 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
         restaurante_id = token_data.get("restaurante_id")
         restaurantes = restaurantes_de_usuario(db, usuario, roles)
         restaurante = next((r for r in restaurantes if r.id == restaurante_id), None)
-        if not restaurante:
+        # A la práctica entra quien tiene acceso a su restaurante real; contrato, módulos y plazos son los del real
+        real = restaurante
+        if not restaurante and restaurante_id:
+            restaurante = db.query(RestauranteModel).filter(RestauranteModel.id == restaurante_id,
+                                                            RestauranteModel.practica_de.isnot(None)).first()
+            real = next((r for r in restaurantes if restaurante and r.id == restaurante.practica_de), None)
+        if not restaurante or not real:
             raise sesion_invalida("No tiene acceso a este restaurante.")
+        practica = restaurante.id != real.id
 
         dispositivo = None
         if token_data.get("dispositivo_id"):
@@ -144,8 +160,8 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
             if not dispositivo:
                 raise sesion_invalida("Este dispositivo ya no está autorizado.")
 
-        modulos, contrato_estado = modulos_activos(db, restaurante)
-        contrato = db.query(ContratoModel).filter(ContratoModel.restaurante_id == restaurante.id).first()
+        modulos, contrato_estado = modulos_activos(db, real)
+        contrato = db.query(ContratoModel).filter(ContratoModel.restaurante_id == real.id).first()
         hoy = jornada(tz_name=restaurante.zona_horaria, inicio=restaurante.hora_inicio_jornada)
         modo, acceso_hasta = acceso_de(empresa, contrato, hoy)
         if modo is None:
@@ -153,6 +169,9 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
         # Suspendido o cancelado conserva sus módulos para consultarlos o descargarlos: lo que bloquea es la ruta
         if modo != COMPLETO:
             modulos = modulos_contratados(db, contrato)
+        if practica:
+            from Utils.practica import SIN_MODULOS
+            modulos = modulos - SIN_MODULOS
 
         ctx.update({
             "restaurante_id": restaurante.id,
@@ -166,6 +185,8 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
             "permisos": {p.codigo for p in permisos if p.modulo in modulos},
             "acceso": modo,
             "acceso_hasta": acceso_hasta,
+            "practica": practica,
+            "real_id": real.id,
         })
         if modo == EXPORTACION:
             ctx["permisos"] &= PERMISOS_EXPORTACION
@@ -176,17 +197,26 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
         if not alcance_total:
             ctx["zonas"] = [z for (z,) in db.query(UsuarioZonaModel.zona_id).filter(
                 UsuarioZonaModel.usuario_id == usuario.id,
-                UsuarioZonaModel.restaurante_id == restaurante.id,
+                UsuarioZonaModel.restaurante_id == real.id,
             ).all()]
             ctx["puntos"] = [p for (p,) in db.query(UsuarioPuntoModel.punto_produccion_id).filter(
                 UsuarioPuntoModel.usuario_id == usuario.id,
-                UsuarioPuntoModel.restaurante_id == restaurante.id,
+                UsuarioPuntoModel.restaurante_id == real.id,
             ).all()]
+            if practica:
+                # En la práctica atiende las mismas zonas y puntos que en el real, buscados por nombre
+                ctx["zonas"] = equivalentes(db, ZonaModel, ctx["zonas"], restaurante.id)
+                ctx["puntos"] = equivalentes(db, PuntoProduccionModel, ctx["puntos"], restaurante.id)
 
         return ctx
     finally:
         if own_session:
             db.close()
+
+
+def equivalentes(db, model, ids: list, restaurante_id):
+    nombres = [n for (n,) in db.query(model.nombre).filter(model.id.in_(ids or [0])).all()]
+    return [i for (i,) in db.query(model.id).filter(model.restaurante_id == restaurante_id, model.nombre.in_(nombres or [""])).all()]
 
 
 def exigir_acceso(ctx: dict, ruta: str):

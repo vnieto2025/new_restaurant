@@ -115,6 +115,13 @@ class Auth:
             TurnoMesero(self.db, ctx).ensure_open(dispositivo_id)
         return {"token": create_token(token_data), **self.summary(ctx)}
 
+    def practice_of(self, ctx: dict):
+        from Models.restaurante_model import RestauranteModel
+        real = self.db.get(RestauranteModel, ctx["real_id"])
+        copia = self.db.query(RestauranteModel).filter(RestauranteModel.practica_de == real.id).first()
+        return {"real": {"id": real.id, "nombre": real.nombre},
+                "practica": {"id": copia.id, "nombre": copia.nombre} if copia else None}
+
     def summary(self, ctx: dict):
         user = self.querys.get_usuario(ctx["usuario_id"])
         result = {
@@ -142,7 +149,10 @@ class Auth:
                 "zona_horaria": restaurante.zona_horaria,
                 "moneda": restaurante.moneda,
                 "contrato_estado": ctx.get("contrato_estado"),
+                "practica": bool(ctx.get("practica")),
             },
+            # Restaurante de práctica (ADR-053): a cuál volver desde ella, o a cuál entrar desde el real
+            "practica": self.practice_of(ctx),
             "acceso": {"modo": ctx["acceso"], "mensaje": MENSAJES.get(ctx["acceso"]), "hasta": ctx.get("acceso_hasta")},
             "restaurantes": [
                 {"id": r.id, "nombre": r.nombre} for r in restaurantes_de_usuario(self.db, user, roles)

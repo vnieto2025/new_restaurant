@@ -38,6 +38,16 @@ class Querys:
     def restaurante_id(self):
         return self.ctx.get("restaurante_id")
 
+    @property
+    def en_practica(self):
+        """ Si el restaurante de la petición es de práctica (ADR-053). Se consulta una vez: los contextos
+            públicos (carta por QR, pagos) no lo traen calculado. """
+        if "practica" not in self.ctx:
+            from Models.restaurante_model import RestauranteModel
+            restaurante = self.db.get(RestauranteModel, self.restaurante_id) if self.restaurante_id else None
+            self.ctx["practica"] = bool(restaurante and restaurante.practica_de)
+        return self.ctx["practica"]
+
     # Fija empresa y restaurante del contexto en los datos a guardar (no se aceptan los que mande el cliente)
     def _with_tenant(self, model: any, data: dict):
         columns = model.__table__.columns.keys()
@@ -46,6 +56,8 @@ class Querys:
             data["empresa_id"] = self.empresa_id
         if "restaurante_id" in columns and self.restaurante_id:
             data["restaurante_id"] = self.restaurante_id
+        if "practica_restaurante_id" in columns:
+            data["practica_restaurante_id"] = self.restaurante_id if self.en_practica else None
         return data
 
     # Consulta de un modelo limitada a la empresa y el restaurante de la petición
@@ -56,6 +68,10 @@ class Querys:
             query = query.filter(model.empresa_id == self.empresa_id)
         if "restaurante_id" in columns and self.restaurante_id:
             query = query.filter(model.restaurante_id == self.restaurante_id)
+        # Los clientes son de la empresa, salvo los de un restaurante de práctica, que solo se ven allí
+        if "practica_restaurante_id" in columns:
+            query = query.filter(model.practica_restaurante_id == self.restaurante_id if self.en_practica
+                                 else model.practica_restaurante_id.is_(None))
         if "eliminado_en" in columns and not include_deleted:
             query = query.filter(model.eliminado_en.is_(None))
         return query

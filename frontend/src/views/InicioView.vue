@@ -33,6 +33,10 @@ onMounted(async () => {
   if (trabajo.length === 1 && !router.currentRoute.value.query.menu) router.replace({ name: trabajo[0].name })
 })
 
+async function practicar() {
+  await attempt(() => auth.changeRestaurant(auth.practica.practica.id), { success: 'Estás en el restaurante de práctica.' })
+}
+
 async function changeRestaurant(event) {
   await attempt(() => auth.changeRestaurant(Number(event.target.value)), { success: 'Restaurante cambiado.' })
 }
@@ -53,6 +57,11 @@ async function changeRestaurant(event) {
         <button class="btn btn-secundario" type="button" @click="auth.logout()">Salir</button>
       </div>
     </header>
+
+    <section v-if="auth.practica?.practica && !auth.enPractica" class="practicar">
+      <p><strong>¿Quieres practicar?</strong> Entra al restaurante de práctica: misma carta y mesas, nada cuenta de verdad.</p>
+      <button class="btn btn-secundario" type="button" :disabled="busy" @click="practicar">Entrar a la práctica</button>
+    </section>
 
     <p v-if="auth.restaurante?.contrato_estado === 'suspendido'" class="aviso">
       El contrato de este restaurante está suspendido. Puedes consultar, pero no tomar órdenes.
@@ -128,4 +137,17 @@ h1 {
   border-radius: var(--radio);
   background: var(--estado-proceso-suave);
 }
+.practicar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 2px dashed var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
 </style>

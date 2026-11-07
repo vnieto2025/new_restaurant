@@ -16,7 +16,13 @@ class FotoProducto:
         self.tools = Tools()
         self.querys = ProductoQuerys(db, ctx)
 
+    # La práctica usa los mismos archivos del real: cambiarlos o borrarlos allí dañaría las fotos de verdad
+    def no_en_practica(self):
+        if self.querys.en_practica:
+            raise CustomException("Las fotos se cambian en el restaurante real; la práctica usa las mismas.", 409)
+
     def upload(self, data: dict):
+        self.no_en_practica()
         producto = self.querys.get_own(ProductoModel, data["producto_id"], "producto")
         archivo = str(data["archivo"])
         if len(archivo) > imagenes.MAX_ARCHIVO * 4 / 3 + 4:
@@ -38,6 +44,7 @@ class FotoProducto:
         return self.tools.output(200, "Foto guardada.", {**self.querys.format_producto(producto), "peso": len(comprimida)})
 
     def remove(self, data: dict):
+        self.no_en_practica()
         producto = self.querys.get_own(ProductoModel, data["producto_id"], "producto")
         anterior = producto.imagen
         self.querys.update_data(ProductoModel, producto.id, {"imagen": None}, "producto")

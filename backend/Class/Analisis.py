@@ -169,7 +169,7 @@ class Analisis:
         dias = (hasta - desde).days + 1
         filas = []
         restaurantes = self.db.query(RestauranteModel).filter(RestauranteModel.empresa_id == self.ctx["empresa_id"],
-                                                              RestauranteModel.estado != "inactivo").order_by(RestauranteModel.nombre).all()
+                                                              RestauranteModel.estado != "inactivo", RestauranteModel.practica_de.is_(None)).order_by(RestauranteModel.nombre).all()
         for restaurante in restaurantes:
             modulos, _ = modulos_activos(self.db, restaurante)
             querys = ReporteQuerys(self.db, {**self.ctx, "restaurante_id": restaurante.id}, "caja" in modulos)
