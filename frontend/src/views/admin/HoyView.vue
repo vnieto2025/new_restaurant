@@ -8,6 +8,7 @@ import { formatMoney, formatTime, formatChange, plural, CANALES } from '@/utils/
 import StatusChip from '@/components/StatusChip.vue'
 import ConnectionBanner from '@/components/ConnectionBanner.vue'
 import SugerirAgotados from '@/components/SugerirAgotados.vue'
+import AlertasHoy from '@/components/AlertasHoy.vue'
 
 // Lo que está pasando ahora en el restaurante: órdenes con algo pendiente y estado de recepción
 const auth = useAuthStore()
@@ -19,6 +20,7 @@ const restaurante = ref(null)
 const error = ref('')
 const tablero = ref(null)
 const sugerencias = ref(null)
+const alertas = ref(null)
 
 const GRUPOS = [
   { estado: 'pendiente_aprobacion', titulo: 'Por aprobar' },
@@ -32,6 +34,7 @@ const vendido = computed(() => ordenes.value.filter((o) => o.estado !== 'cancela
 
 async function load() {
   sugerencias.value?.load()
+  alertas.value?.load()
   if (auth.can('reportes.ver')) {
     tablero.value = await postData('/reporte/dashboard').catch(() => tablero.value)
   }
@@ -115,6 +118,7 @@ onMounted(load)
       </div>
     </section>
 
+    <AlertasHoy ref="alertas" class="avisos" />
     <SugerirAgotados ref="sugerencias" class="avisos" completo />
 
     <p v-if="!auth.can('ordenes.ver')" class="empty">Tu rol no incluye ver las órdenes. Usa el menú para administrar.</p>

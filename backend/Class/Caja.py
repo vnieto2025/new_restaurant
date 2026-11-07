@@ -212,6 +212,14 @@ class Caja:
         self.querys.audit("jornada_cerrada", "cierre_jornada", None,
                           despues={"jornada": str(dia), "ventas": resumen["ventas"], "agotados_reiniciados": reiniciados})
         realtime.publish(self.ctx["restaurante_id"], ["ordenes"], {"tipo": "jornada.cerrada", "jornada": str(dia)})
+        # Resumen para el dueño: queda en los avisos de WhatsApp (doc 31B)
+        from Class.ResumenDiario import ResumenDiario
+        if ResumenDiario(self.db, self.ctx).queue(dia):
+            self.db.commit()
+            from Utils.mensajeria import cola_mensajes
+            cola_mensajes.despertar()
+        else:
+            self.db.commit()
 
         return self.tools.output(200, "Jornada cerrada. No se reciben más órdenes ni cobros hasta la próxima.",
                                  {"jornada": dia, "resumen": resumen})

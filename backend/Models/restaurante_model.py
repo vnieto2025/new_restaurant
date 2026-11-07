@@ -31,3 +31,7 @@ class RestauranteModel(DeEmpresa, BASE):
     politica_url = Column(String(250), nullable=True)
     # Pasos confirmados a mano del asistente inicial: {"qr": {"en", "por"}, "ensayo": {...}} (doc 41)
     puesta_en_marcha = Column(JSON, nullable=True)
+    # Alertas del dueño (doc 27): {"umbrales": {codigo: n}, "apagadas": [codigo], "silenciadas": {codigo: jornada}}
+    alertas = Column(JSON, nullable=True)
+    # Resumen del día al cerrar la jornada: {"activo": bool, "telefono": digitos, "nombre": texto} (doc 31B)
+    resumen_diario = Column(JSON, nullable=True)

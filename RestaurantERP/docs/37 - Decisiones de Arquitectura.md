@@ -706,6 +706,18 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** las opciones de modificador con insumo ("Queso extra") no se sugieren: un modificador no se puede marcar agotado. Una merma registrada desde Existencias no avisa en tiempo real; se ve en la siguiente consulta de la pantalla.
 - **Cuándo revisar:** si los restaurantes piden agotar opciones de modificador o que el umbral de "se están acabando" sea configurable.
 
+## ADR-052: Alertas del dueño y resumen del día
+
+- **Estado:** Aprobada (2026-11-07). Docs 27 (secciones 2 y RN-DAS-03), 26 y 31B.
+- **Decisión:**
+  - **Alertas calculadas al consultar,** sin tablas de eventos: comandas que pasan el tiempo objetivo del punto (o el umbral si no tiene), platos listos sin entregar, mesas abiertas muchas horas, una persona con muchas cancelaciones en la jornada, turnos con diferencia de caja, stock bajo o negativo, y numeración por agotarse o vencerse. Cada una aparece solo si el restaurante tiene contratado su módulo.
+  - **Umbrales con valores sugeridos** y configurables en `restaurante.alertas` (JSON), que también guarda las apagadas y las silenciadas. **Silenciar vale por la jornada:** al día siguiente vuelve a aparecer si sigue pasando.
+  - **En Hoy,** se revisan cada minuto y con cada evento de órdenes. Verlas pide `reportes.ver`; silenciarlas y configurarlas, `restaurante.configurar`. El nivel urgente usa un borde doble de tinta, no los colores de estado de las órdenes (RN-EST-06).
+  - **Resumen del día** (`/reporte/resumen_diario`): ventas con comparativo del mismo día de la semana pasada, cuentas y ticket, propinas y descuentos, medios de pago, lo más pedido, cancelaciones, turnos abiertos o con diferencia, inventario bajo y agotados. Sale en pantalla y como texto listo para WhatsApp; se puede consultar cualquier jornada pasada.
+  - **Al cerrar la jornada** en caja, si el dueño dejó su celular en `restaurante.resumen_diario`, el resumen queda como aviso `resumen_diario` en la misma cola de WhatsApp de los clientes: en modo manual lo envía quien atiende Mostrador o Entregas con un toque; en automático sale por el proveedor. Una falla nunca frena el cierre. Sin el módulo de pedidos (donde viven los avisos), queda el botón "Enviar por WhatsApp" de la página.
+- **Consecuencias:** un restaurante sin caja no cierra jornada, así que no recibe el resumen automático: lo abre o lo envía desde la página. El resumen a la hora del cierre no se repite si la jornada se consulta después; la página siempre muestra las cifras actuales de esa jornada.
+- **Cuándo revisar:** cuando haya proveedor de correo, o si el dueño de varias sedes pide un resumen consolidado de la empresa.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

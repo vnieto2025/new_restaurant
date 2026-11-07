@@ -13,6 +13,8 @@ from Models.usuario_model import UsuarioModel
 
 # Reintentos ante una caída del proveedor: después del último, el aviso pasa a manual
 ESPERAS_MINUTOS = [1, 5, 15]
+# Avisos al propio restaurante, no a clientes: no tienen plantilla configurable
+INTERNOS = {"resumen_diario": "Resumen del día"}
 ESTADOS_TEXTO = {"pendiente": "En cola", "manual": "Por enviar", "enviada": "Enviada", "fallida": "No se pudo enviar",
                  "omitida": "No se envió", "descartada": "Descartada"}
 
@@ -215,7 +217,7 @@ class Notificacion:
         orden = self.db.get(OrdenModel, aviso.orden_id) if aviso.orden_id else None
         usuario = self.db.get(UsuarioModel, aviso.enviada_por) if aviso.enviada_por else None
         return {
-            "id": aviso.id, "evento": aviso.evento, "evento_texto": EVENTOS.get(aviso.evento, {}).get("nombre", aviso.evento),
+            "id": aviso.id, "evento": aviso.evento, "evento_texto": EVENTOS.get(aviso.evento, {}).get("nombre") or INTERNOS.get(aviso.evento, aviso.evento),
             "orden_id": aviso.orden_id, "orden": f"#{orden.numero:03d}" if orden else None,
             "nombre": aviso.nombre, "telefono": aviso.telefono, "telefono_legible": telefono_legible(aviso.telefono),
             "mensaje": aviso.mensaje, "modo": aviso.modo, "estado": aviso.estado, "estado_texto": ESTADOS_TEXTO[aviso.estado],

@@ -58,5 +58,5 @@ Empresas activas, restaurantes, módulos, estado de salud del sistema, errores, 
 ## 8. Preguntas abiertas
 
 - ¿Qué tres números mira primero un dueño al abrir? Preguntar en entrevistas.
-- ¿Se envía un resumen diario por WhatsApp o correo? (Fase 2.)
-- ¿Los umbrales de alerta tienen valores sugeridos por defecto?
+- ~~¿Se envía un resumen diario por WhatsApp o correo?~~ Resuelto en ADR-052: página "Resumen del día" y aviso por WhatsApp al cerrar la jornada; correo pendiente de proveedor.
+- ~~¿Los umbrales de alerta tienen valores sugeridos por defecto?~~ Sí (ADR-052): 20 min de comanda, 10 min listo sin entregar, 3 h de mesa abierta, 5 cancelaciones, $ 5.000 de diferencia de caja, 15 días para vencer la numeración.

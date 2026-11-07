@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Reporte import Reporte
 from Class.Analisis import Analisis
+from Class.Alertas import Alertas
+from Class.ResumenDiario import ResumenDiario
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -54,4 +56,53 @@ def analysis(request: Request, db: Session = Depends(get_db)):
 def branches(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Analisis(db, request.state.user).branches(data)
+    return response
+
+@reporte_router.post('/alerta/list', tags=["Alertas"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["reportes.ver"]))])
+@http_decorator
+def alerts(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Alertas(db, request.state.user).list(data)
+    return response
+
+@reporte_router.post('/alerta/silenciar', tags=["Alertas"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def silence_alert(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Alertas(db, request.state.user).silence(data)
+    return response
+
+@reporte_router.post('/alerta/config/get', tags=["Alertas"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def alerts_config(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Alertas(db, request.state.user).get_config(data)
+    return response
+
+@reporte_router.post('/alerta/config/save', tags=["Alertas"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def save_alerts_config(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Alertas(db, request.state.user).save_config(data)
+    return response
+
+@reporte_router.post('/reporte/resumen_diario', tags=["Reportes"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["reportes.ver"]))])
+@http_decorator
+def daily_summary(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = ResumenDiario(db, request.state.user).get(data)
+    return response
+
+@reporte_router.post('/reporte/resumen_diario/config/get', tags=["Reportes"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def daily_summary_config(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = ResumenDiario(db, request.state.user).get_config(data)
+    return response
+
+@reporte_router.post('/reporte/resumen_diario/config/save', tags=["Reportes"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def save_daily_summary_config(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = ResumenDiario(db, request.state.user).save_config(data)
     return response

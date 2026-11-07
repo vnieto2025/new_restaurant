@@ -59,6 +59,7 @@ const router = createRouter({
         { path: 'proveedores', name: 'admin-proveedores', component: () => import('@/views/admin/ProveedoresView.vue'), meta: { permiso: ['compras.ver', 'proveedores.gestionar'] } },
         { path: 'impuestos', name: 'admin-impuestos', component: () => import('@/views/admin/ImpuestosView.vue'), meta: { permiso: 'impuestos.configurar' } },
         { path: 'facturacion', name: 'admin-facturacion', component: () => import('@/views/admin/FacturacionView.vue'), meta: { permiso: ['facturacion.ver', 'facturacion.configurar'] } },
+        { path: 'resumen', name: 'admin-resumen', component: () => import('@/views/admin/ResumenView.vue'), meta: { permiso: 'reportes.ver' } },
         { path: 'reportes', name: 'admin-reportes', component: () => import('@/views/admin/ReportesView.vue'), meta: { permiso: 'reportes.ver' } },
         { path: 'reportes/mesero', name: 'informe-mesero', component: () => import('@/views/InformeMeseroView.vue'), meta: { permiso: 'reportes.ver' } },
         { path: 'auditoria', name: 'admin-auditoria', component: () => import('@/views/admin/AuditoriaView.vue'), meta: { permiso: 'auditoria.ver' } },
