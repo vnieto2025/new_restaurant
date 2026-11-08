@@ -203,15 +203,15 @@ onMounted(load)
         <p>El precio es el que ve el cliente, con impuestos incluidos.</p>
       </div>
       <div class="actions">
-        <button v-if="otrasSedes.length" class="btn btn-secundario" type="button" :disabled="!visibles.length"
+        <button v-escribe v-if="otrasSedes.length" class="btn btn-secundario" type="button" :disabled="!visibles.length"
                 @click="copia = { restaurante_id: otrasSedes[0].id }">Copiar a otra sede</button>
-        <button class="btn btn-secundario" type="button" @click="importando = true">Importar</button>
-        <button class="btn" type="button" :disabled="!categorias.length" @click="nuevo">Crear producto</button>
+        <button v-escribe class="btn btn-secundario" type="button" @click="importando = true">Importar</button>
+        <button v-escribe class="btn" type="button" :disabled="!categorias.length" @click="nuevo">Crear producto</button>
       </div>
     </header>
     <ImportarProductos :open="importando" @close="importando = false" @imported="load" />
     <AppModal :open="!!copia" title="Copiar a otra sede" width="30rem" @close="copia = null">
-      <form v-if="copia" @submit.prevent="copiarASede">
+      <form v-escribe v-if="copia" @submit.prevent="copiarASede">
         <p>Se {{ visibles.length === 1 ? 'copia' : 'copian' }} <strong>{{ visibles.length === 1 ? '1 producto' : `${visibles.length} productos` }}</strong> de la lista actual. Usa los filtros para pasar solo una categoría.</p>
         <div class="field copia-sede">
           <label for="copia-sede">Hacia</label>
@@ -254,13 +254,13 @@ onMounted(load)
             <td>{{ producto.punto_produccion || 'El de la categoría' }}</td>
             <td class="num">{{ formatMoney(producto.precio) }}</td>
             <td>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-pressed="producto.agotado"
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-pressed="producto.agotado"
                       @click="agotado(producto)">{{ producto.agotado ? 'Agotado' : 'Disponible' }}</button>
             </td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(producto)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-label="`Duplicar ${producto.nombre}`" @click="duplicar(producto)">Duplicar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(producto)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(producto)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-label="`Duplicar ${producto.nombre}`" @click="duplicar(producto)">Duplicar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(producto)">
                 {{ producto.activo ? 'Desactivar' : 'Activar' }}
               </button>
             </td>
@@ -271,7 +271,7 @@ onMounted(load)
     </div>
 
     <AppModal :open="!!form" :title="form?.producto_id ? `Editar ${form.nombre}` : 'Crear producto'" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="p-nombre">Nombre</label>
@@ -318,7 +318,7 @@ onMounted(load)
                 {{ fotoNueva || form.imagen ? 'Cambiar foto' : 'Agregar foto' }}
                 <input class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Foto del producto" @change="elegirFoto">
               </label>
-              <button v-if="fotoNueva || form.imagen" class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="quitarFoto">Quitar foto</button>
+              <button v-escribe v-if="fotoNueva || form.imagen" class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="quitarFoto">Quitar foto</button>
               <span class="hint">Opcional. Se comprime sola para que la carta cargue rápido.</span>
               <p v-if="fotoError" class="foto-error" role="alert">{{ fotoError }}</p>
             </div>
@@ -356,7 +356,7 @@ onMounted(load)
             </div>
             <button class="enlace" type="button" @click="c.opciones.push({ producto_id: null, precio_extra: 0 })">+ Otra opción para elegir</button>
           </div>
-          <button class="btn btn-secundario btn-sm" type="button" @click="nuevoComponente">Agregar parte</button>
+          <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="nuevoComponente">Agregar parte</button>
         </fieldset>
         <fieldset v-if="grupos.length && form.tipo !== 'combo'" class="cartas">
           <legend>Opciones que se pueden elegir</legend>

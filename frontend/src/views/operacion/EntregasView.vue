@@ -184,7 +184,7 @@ onMounted(load)
           <span class="muted">Revisa la dirección y la zona antes de confirmar.</span>
           <div v-if="despacha" class="actions">
             <button class="btn btn-secundario" type="button" :disabled="busy" @click="rechazo = { entrega: e, motivo: '' }">Rechazar</button>
-            <button class="btn" type="button" :disabled="busy" @click="confirmar(e)">Confirmar y enviar a cocina</button>
+            <button v-escribe class="btn" type="button" :disabled="busy" @click="confirmar(e)">Confirmar y enviar a cocina</button>
           </div>
         </footer>
         <footer v-else class="pie">
@@ -195,17 +195,17 @@ onMounted(load)
               <option v-for="d in datos.domiciliarios" :key="d.id" :value="d.id">
                 {{ d.codigo }} · {{ d.nombre }}{{ d.en_camino ? ` (en camino: ${d.en_camino})` : '' }}</option>
             </select>
-            <button class="btn btn-secundario" type="button" :disabled="busy || !asignando[e.id]" @click="asignar(e)">
+            <button v-escribe class="btn btn-secundario" type="button" :disabled="busy || !asignando[e.id]" @click="asignar(e)">
               {{ e.domiciliario ? 'Cambiar' : 'Asignar' }}</button>
           </template>
           <span v-else-if="e.domiciliario && !datos.propio" class="muted">{{ e.domiciliario.codigo }} · {{ e.domiciliario.nombre }}</span>
           <div class="actions">
             <button v-if="despacha && e.estado !== 'fallida'" class="btn btn-secundario" type="button" :disabled="busy" @click="imprimir(e)">Tirilla</button>
-            <button v-if="e.estado === 'asignada'" class="btn" type="button" :disabled="busy || !e.lista" @click="accion('/entrega/salir', e)">
+            <button v-escribe v-if="e.estado === 'asignada'" class="btn" type="button" :disabled="busy || !e.lista" @click="accion('/entrega/salir', e)">
               Salió</button>
             <template v-if="e.estado === 'en_camino'">
               <button class="btn btn-secundario" type="button" :disabled="busy" @click="abrirFallo(e)">No se pudo entregar</button>
-              <button class="btn" type="button" :disabled="busy" @click="accion('/entrega/entregar', e)">Entregada</button>
+              <button v-escribe class="btn" type="button" :disabled="busy" @click="accion('/entrega/entregar', e)">Entregada</button>
             </template>
             <button v-if="despacha && (e.estado === 'pendiente_asignacion' || e.estado === 'asignada')" class="btn btn-secundario"
                     type="button" :disabled="busy" @click="abrirFallo(e)">Cancelar</button>
@@ -251,7 +251,7 @@ onMounted(load)
     </main>
 
     <AppModal :open="!!fallo" :title="fallo?.entrega.estado === 'en_camino' ? 'No se pudo entregar' : 'Cancelar domicilio'" width="30rem" @close="fallo = null">
-      <form v-if="fallo" @submit.prevent="registrarFallo">
+      <form v-escribe v-if="fallo" @submit.prevent="registrarFallo">
         <div class="motivos" role="group" aria-label="Motivos frecuentes">
           <button v-for="m in datos.motivos_fallo" :key="m" type="button" class="opcion" :aria-pressed="fallo.motivo === m" @click="fallo.motivo = m">{{ m }}</button>
         </div>
@@ -275,7 +275,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!rechazo" :title="rechazo ? `Rechazar ${rechazo.entrega.orden}` : ''" width="30rem" @close="rechazo = null">
-      <form v-if="rechazo" @submit.prevent="rechazar">
+      <form v-escribe v-if="rechazo" @submit.prevent="rechazar">
         <p>El cliente verá el motivo en el seguimiento de su pedido. No se cobra nada.</p>
         <div class="motivos espacio" role="group" aria-label="Motivos frecuentes">
           <button v-for="m in ['Dirección fuera de cobertura', 'No contesta el celular', 'Producto agotado', 'Pedido duplicado']" :key="m"
@@ -293,7 +293,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!rendicion" :title="rendicion ? `Efectivo de ${rendicion.grupo.nombre}` : ''" width="28rem" @close="rendicion = null">
-      <form v-if="rendicion" @submit.prevent="rendir">
+      <form v-escribe v-if="rendicion" @submit.prevent="rendir">
         <p>Debe entregar <strong>{{ formatMoney(rendicion.grupo.esperado) }}</strong> por {{ plural(rendicion.grupo.entregas.length, 'entrega') }}.</p>
         <div class="field espacio">
           <label for="rd-monto">Efectivo que entregó</label>

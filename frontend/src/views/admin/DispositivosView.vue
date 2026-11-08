@@ -95,10 +95,10 @@ onMounted(load)
             <td>{{ !d.activo ? 'Desautorizado' : d.emparejado ? 'Autorizado' : d.codigo_pendiente ? 'Esperando código' : 'Sin emparejar' }}</td>
             <td>{{ d.ultimo_uso ? formatDateTime(d.ultimo_uso) : '—' }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="nuevoCodigo(d)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="nuevoCodigo(d)">
                 {{ d.emparejado ? 'Cambiar de tablet' : 'Nuevo código' }}
               </button>
-              <button v-if="d.activo" class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="desautorizar(d)">Desautorizar</button>
+              <button v-escribe v-if="d.activo" class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="desautorizar(d)">Desautorizar</button>
             </td>
           </tr>
         </tbody>
@@ -106,7 +106,7 @@ onMounted(load)
     </div>
 
     <AppModal :open="!!form" title="Autorizar dispositivo" width="30rem" @close="form = null">
-      <form v-if="form" @submit.prevent="crear">
+      <form v-escribe v-if="form" @submit.prevent="crear">
         <div class="form-grid">
           <div class="field">
             <label for="d-nombre">Nombre</label>

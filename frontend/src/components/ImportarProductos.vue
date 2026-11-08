@@ -94,7 +94,7 @@ async function aplicar() {
     <ol class="pasos">
       <li>
         Descarga la plantilla y llénala. Producto, categoría y precio son obligatorios; las categorías que no existan se crean.
-        <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="plantilla">Descargar plantilla</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="plantilla">Descargar plantilla</button>
       </li>
       <li>
         Súbela en Excel o CSV, hasta 1.000 productos.
@@ -142,7 +142,7 @@ async function aplicar() {
 
     <div class="form-actions">
       <button class="btn btn-secundario" type="button" @click="cerrar">Cancelar</button>
-      <button class="btn" type="button" :disabled="busy || !aplicable" @click="aplicar">
+      <button v-escribe class="btn" type="button" :disabled="busy || !aplicable" @click="aplicar">
         {{ aplicable ? `Importar ${plural(revision.crear + revision.actualizar, 'producto')}` : 'Importar' }}
       </button>
     </div>

@@ -49,7 +49,7 @@ onMounted(load)
         <h1>Cocina y bar</h1>
         <p>Los lugares donde se prepara. Cada uno tiene su propia pantalla y recibe solo lo suyo.</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Crear punto</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Crear punto</button>
     </header>
 
     <div class="panel table-wrap">
@@ -65,8 +65,8 @@ onMounted(load)
             <td>{{ punto.salta_en_proceso ? 'Despacha sin "en proceso"' : 'Abrir y despachar' }}</td>
             <td>{{ punto.tiempo_objetivo ? `${punto.tiempo_objetivo} min` : '—' }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(punto)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(punto)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(punto)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(punto)">
                 {{ punto.activo ? 'Desactivar' : 'Activar' }}
               </button>
             </td>
@@ -77,7 +77,7 @@ onMounted(load)
 
     <AppModal :open="!!form" :title="form?.punto_produccion_id ? `Editar ${form.nombre}` : 'Crear punto de producción'"
               @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="p-nombre">Nombre</label>

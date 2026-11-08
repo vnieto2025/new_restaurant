@@ -195,10 +195,10 @@ onMounted(async () => {
               <td class="num">{{ c.usos }}<template v-if="c.usos_maximos"> / {{ c.usos_maximos }}</template></td>
               <td><StatusChip :estado="c.estado_actual" size="sm" /></td>
               <td><div class="actions">
-                <button v-if="c.estado !== 'anulado'" class="btn btn-secundario btn-sm" type="button" @click="editar(c)">Editar</button>
-                <button v-if="c.estado === 'activo'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(c, 'pausado')">Pausar</button>
-                <button v-if="c.estado === 'pausado'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(c, 'activo')">Activar</button>
-                <button v-if="c.cliente_contactable && ['activo', 'programado'].includes(c.estado_actual)" class="btn btn-secundario btn-sm"
+                <button v-escribe v-if="c.estado !== 'anulado'" class="btn btn-secundario btn-sm" type="button" @click="editar(c)">Editar</button>
+                <button v-escribe v-if="c.estado === 'activo'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(c, 'pausado')">Pausar</button>
+                <button v-escribe v-if="c.estado === 'pausado'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(c, 'activo')">Activar</button>
+                <button v-escribe v-if="c.cliente_contactable && ['activo', 'programado'].includes(c.estado_actual)" class="btn btn-secundario btn-sm"
                         type="button" @click="enviar(c)">{{ c.enviado_en ? 'Reenviar' : 'Enviar' }} por WhatsApp</button>
               </div></td>
             </tr>
@@ -223,9 +223,9 @@ onMounted(async () => {
               <td>{{ p.dias_validez }} días</td>
               <td><StatusChip :estado="p.estado_actual" size="sm" /></td>
               <td><div class="actions">
-                <button v-if="p.estado !== 'anulado'" class="btn btn-secundario btn-sm" type="button" @click="editar(p)">Editar</button>
-                <button v-if="p.estado === 'activo'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(p, 'pausado')">Pausar</button>
-                <button v-if="p.estado === 'pausado'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(p, 'activo')">Activar</button>
+                <button v-escribe v-if="p.estado !== 'anulado'" class="btn btn-secundario btn-sm" type="button" @click="editar(p)">Editar</button>
+                <button v-escribe v-if="p.estado === 'activo'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(p, 'pausado')">Pausar</button>
+                <button v-escribe v-if="p.estado === 'pausado'" class="btn btn-secundario btn-sm" type="button" @click="cambiarEstado(p, 'activo')">Activar</button>
               </div></td>
             </tr>
           </tbody>
@@ -279,7 +279,7 @@ onMounted(async () => {
     </section>
 
     <AppModal :open="!!form" :title="form?.cupon_id ? 'Editar' : esPlantilla ? 'Nueva plantilla' : 'Nuevo cupón'" width="44rem" @close="form = null">
-      <form v-if="form" class="cupon-form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" class="cupon-form" @submit.prevent="guardar">
         <fieldset class="tipos">
           <legend>Qué da</legend>
           <div class="opciones">

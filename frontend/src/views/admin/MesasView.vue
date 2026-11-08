@@ -67,9 +67,9 @@ onMounted(load)
         <p>Cada mesa nueva recibe su código QR automáticamente.</p>
       </div>
       <div class="actions">
-        <button class="btn btn-secundario" type="button" :disabled="!zonasMesa.length"
+        <button v-escribe class="btn btn-secundario" type="button" :disabled="!zonasMesa.length"
                 @click="lote = { zona_id: zonaId, desde: 1, hasta: 10, prefijo: 'Mesa' }">Crear varias</button>
-        <button class="btn" type="button" :disabled="!zonasMesa.length" @click="nueva">Crear mesa</button>
+        <button v-escribe class="btn" type="button" :disabled="!zonasMesa.length" @click="nueva">Crear mesa</button>
       </div>
     </header>
 
@@ -88,11 +88,11 @@ onMounted(load)
             <td>{{ mesa.capacidad || '—' }}</td>
             <td>{{ !mesa.activo ? 'Inactiva' : mesa.bloqueada ? 'Bloqueada' : mesa.estado === 'libre' ? 'Libre' : 'En uso' }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(mesa)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiar(mesa, 'bloqueada')">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(mesa)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiar(mesa, 'bloqueada')">
                 {{ mesa.bloqueada ? 'Desbloquear' : 'Bloquear' }}
               </button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiar(mesa, 'activo')">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiar(mesa, 'activo')">
                 {{ mesa.activo ? 'Desactivar' : 'Activar' }}
               </button>
             </td>
@@ -102,12 +102,12 @@ onMounted(load)
       <p v-if="!cargado" class="empty">Cargando mesas…</p>
       <div v-else-if="!visibles.length" class="empty">
         <p>Aún no hay mesas en esta zona.</p>
-        <button class="btn" type="button" @click="lote = { zona_id: zonaId, desde: 1, hasta: 10, prefijo: 'Mesa' }">Crear mesas 1 a 10</button>
+        <button v-escribe class="btn" type="button" @click="lote = { zona_id: zonaId, desde: 1, hasta: 10, prefijo: 'Mesa' }">Crear mesas 1 a 10</button>
       </div>
     </div>
 
     <AppModal :open="!!form" :title="form?.mesa_id ? `Editar ${form.nombre}` : 'Crear mesa'" width="28rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="m-nombre">Nombre</label>
@@ -132,7 +132,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!lote" title="Crear varias mesas" width="28rem" @close="lote = null">
-      <form v-if="lote" @submit.prevent="crearLote">
+      <form v-escribe v-if="lote" @submit.prevent="crearLote">
         <div class="form-grid">
           <div class="field">
             <label for="l-zona">Zona</label>

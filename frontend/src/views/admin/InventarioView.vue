@@ -111,7 +111,7 @@ onMounted(load)
       </div>
       <div class="actions">
         <RouterLink v-if="auth.can('inventario.contar')" :to="{ name: 'bodega', query: { vista: 'conteos' } }" class="btn btn-secundario">Conteos</RouterLink>
-        <button v-if="puedeGestionar" class="btn" type="button" @click="nuevo">Crear insumo</button>
+        <button v-escribe v-if="puedeGestionar" class="btn" type="button" @click="nuevo">Crear insumo</button>
       </div>
     </header>
 
@@ -162,15 +162,15 @@ onMounted(load)
               <td class="num">{{ formatMoney(insumo.valor_stock) }}</td>
               <td class="actions">
                 <button v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" :disabled="!insumo.activo"
-                        @click="movimiento = { tipo: 'entrada', insumo }">Entrada</button>
+                        v-escribe @click="movimiento = { tipo: 'entrada', insumo }">Entrada</button>
                 <button v-if="auth.can('inventario.movimientos')" class="btn btn-secundario btn-sm" type="button" :disabled="!insumo.activo"
-                        @click="movimiento = { tipo: 'merma', insumo }">Merma</button>
+                        v-escribe @click="movimiento = { tipo: 'merma', insumo }">Merma</button>
                 <button v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" :disabled="!insumo.activo"
-                        @click="movimiento = { tipo: 'ajuste', insumo }">Ajustar</button>
+                        v-escribe @click="movimiento = { tipo: 'ajuste', insumo }">Ajustar</button>
                 <button v-if="insumo.es_preparacion && insumo.tiene_receta && auth.can('inventario.movimientos')" class="btn btn-secundario btn-sm"
-                        type="button" :disabled="!insumo.activo" @click="movimiento = { tipo: 'producir', insumo }">Producir</button>
+                        type="button" :disabled="!insumo.activo" v-escribe @click="movimiento = { tipo: 'producir', insumo }">Producir</button>
                 <button class="btn btn-secundario btn-sm" type="button" @click="verMovimientos(insumo)">Movimientos</button>
-                <button v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" @click="editar(insumo)">Editar</button>
+                <button v-escribe v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" @click="editar(insumo)">Editar</button>
               </td>
             </tr>
           </tbody>
@@ -218,7 +218,7 @@ onMounted(load)
                       @close="movimiento = null" @done="onMovido" />
 
     <AppModal :open="!!form" :title="form?.insumo_id ? `Editar ${form.nombre}` : 'Crear insumo'" width="38rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field"><label for="in-nombre">Nombre</label>
             <input id="in-nombre" v-model="form.nombre" class="input" required maxlength="100"></div>
@@ -247,12 +247,12 @@ onMounted(load)
             <span class="muted">{{ form.unidad }}</span>
             <button class="btn btn-secundario btn-sm" type="button" @click="form.presentaciones.splice(i, 1)">Quitar</button>
           </div>
-          <button v-if="form.presentaciones.length < 6" class="btn btn-secundario btn-sm" type="button"
+          <button v-escribe v-if="form.presentaciones.length < 6" class="btn btn-secundario btn-sm" type="button"
                   @click="form.presentaciones.push({ nombre: '', factor: null })">Agregar presentación</button>
         </fieldset>
 
         <div class="form-actions">
-          <button v-if="form.insumo_id" class="btn btn-secundario" type="button" :disabled="busy" @click="cambiarEstado(form); form = null">
+          <button v-escribe v-if="form.insumo_id" class="btn btn-secundario" type="button" :disabled="busy" @click="cambiarEstado(form); form = null">
             {{ form.activo ? 'Inactivar' : 'Activar' }}</button>
           <button class="btn btn-secundario" type="button" @click="form = null">Cancelar</button>
           <button class="btn" type="submit" :disabled="busy">Guardar</button>

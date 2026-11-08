@@ -64,13 +64,13 @@ onMounted(load)
         <p>Estado actual: <strong>{{ ESTADOS[restaurante.estado] || restaurante.estado }}</strong></p>
       </div>
       <div v-if="auth.can('restaurante.pausar')" class="actions">
-        <button v-for="(label, estado) in ESTADOS" :key="estado" class="btn btn-secundario" type="button"
+        <button v-escribe v-for="(label, estado) in ESTADOS" :key="estado" class="btn btn-secundario" type="button"
                 :aria-pressed="restaurante.estado === estado" :disabled="busy || restaurante.estado === estado"
                 @click="cambiarEstado(estado)">{{ label }}</button>
       </div>
     </header>
 
-    <form v-if="auth.can('restaurante.configurar')" class="panel bloque" @submit.prevent="guardar">
+    <form v-escribe v-if="auth.can('restaurante.configurar')" class="panel bloque" @submit.prevent="guardar">
       <div class="form-grid">
         <div class="field">
           <label for="r-nombre">Nombre</label>
@@ -135,7 +135,7 @@ onMounted(load)
     <section v-if="medios.length" class="panel bloque">
       <div class="page-head">
         <h2>Medios de pago</h2>
-        <button class="btn btn-secundario" type="button" @click="medioForm = { nombre: '', tipo: 'otro', pide_referencia: false, activo: true }">Agregar medio</button>
+        <button v-escribe class="btn btn-secundario" type="button" @click="medioForm = { nombre: '', tipo: 'otro', pide_referencia: false, activo: true }">Agregar medio</button>
       </div>
       <div class="table-wrap">
         <table class="table">
@@ -146,7 +146,7 @@ onMounted(load)
               <td>{{ TIPOS_MEDIO[medio.tipo] }}</td>
               <td>{{ medio.pide_referencia ? 'Sí' : 'No' }}</td>
               <td class="actions">
-                <button class="btn btn-secundario btn-sm" type="button" @click="medioForm = { ...medio, medio_pago_id: medio.id }">Editar</button>
+                <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="medioForm = { ...medio, medio_pago_id: medio.id }">Editar</button>
               </td>
             </tr>
           </tbody>
@@ -156,7 +156,7 @@ onMounted(load)
 
     <AppModal :open="!!medioForm" :title="medioForm?.medio_pago_id ? `Editar ${medioForm.nombre}` : 'Agregar medio de pago'" width="28rem"
               @close="medioForm = null">
-      <form v-if="medioForm" @submit.prevent="guardarMedio">
+      <form v-escribe v-if="medioForm" @submit.prevent="guardarMedio">
         <div class="form-grid">
           <div class="field">
             <label for="mp-nombre">Nombre</label>

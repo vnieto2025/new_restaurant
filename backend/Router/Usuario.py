@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Usuario import Usuario
+from Class.DobleFactor import DobleFactor
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -55,4 +56,18 @@ def set_pin(request: Request, db: Session = Depends(get_db)):
 def change_status(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Usuario(db, request.state.user).change_status(data)
+    return response
+
+@usuario_router.post('/usuario/2fa/quitar', tags=["Usuario"], response_model=dict, dependencies=[Depends(GESTIONAR)])
+@http_decorator
+def remove_two_factor(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).reset_user(data)
+    return response
+
+@usuario_router.post('/usuario/2fa/exigir', tags=["Usuario"], response_model=dict, dependencies=[Depends(GESTIONAR)])
+@http_decorator
+def require_two_factor(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).require(data)
     return response

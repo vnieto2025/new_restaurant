@@ -70,7 +70,7 @@ async function eliminar() {
 
 <template>
   <AppModal :open="true" :title="receta ? `Receta: ${receta.nombre}` : 'Receta'" width="46rem" @close="emit('close')">
-    <form v-if="receta" @submit.prevent="guardar">
+    <form v-escribe v-if="receta" @submit.prevent="guardar">
       <div class="cabecera">
         <div class="field rendimiento">
           <label for="rc-rend">Rinde ({{ receta.unidad_rendimiento }})</label>
@@ -105,7 +105,7 @@ async function eliminar() {
           </tbody>
         </table>
       </div>
-      <button class="btn btn-secundario btn-sm espacio" type="button" @click="agregar">Agregar ingrediente</button>
+      <button v-escribe class="btn btn-secundario btn-sm espacio" type="button" @click="agregar">Agregar ingrediente</button>
 
       <dl class="totales">
         <div><dt>Costo por {{ productoId ? 'porción' : receta.unidad_rendimiento.replace(/s$/, '') }}</dt>
@@ -119,7 +119,7 @@ async function eliminar() {
       <p class="muted">La merma es la pérdida normal al limpiar o cocinar: con 10 % se descuenta un 10 % más. La receta no cambia el precio.</p>
 
       <div class="form-actions">
-        <button v-if="receta.existe" class="btn btn-secundario" type="button" :disabled="busy" @click="eliminar">Eliminar receta</button>
+        <button v-escribe v-if="receta.existe" class="btn btn-secundario" type="button" :disabled="busy" @click="eliminar">Eliminar receta</button>
         <button class="btn btn-secundario" type="button" @click="emit('close')">Cancelar</button>
         <button class="btn" type="submit" :disabled="busy || !listo">Guardar</button>
       </div>

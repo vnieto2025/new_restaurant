@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import Registro, BorradoLogico
-from sqlalchemy import Column, String, Text, Boolean, BigInteger, ForeignKey, DateTime, Index, text
+from sqlalchemy import Column, String, Text, Boolean, BigInteger, ForeignKey, DateTime, Index, JSON, text
 
 class UsuarioModel(Registro, BorradoLogico, BASE):
 
@@ -21,3 +21,9 @@ class UsuarioModel(Registro, BorradoLogico, BASE):
     pin_hash = Column(Text, nullable=True)
     activo = Column(Boolean, nullable=False, default=True)
     ultimo_acceso = Column(DateTime(timezone=True), nullable=True)
+    # Verificación en dos pasos (ADR-054): secreto cifrado, activa desde cuándo, último código usado
+    # (no se acepta dos veces) y huellas de los códigos de respaldo que quedan
+    totp_secreto = Column(Text, nullable=True)
+    totp_activo_en = Column(DateTime(timezone=True), nullable=True)
+    totp_ultimo_paso = Column(BigInteger, nullable=True)
+    codigos_respaldo = Column(JSON, nullable=True)

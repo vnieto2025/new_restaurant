@@ -65,13 +65,13 @@ onMounted(load)
         <h1>Modificadores</h1>
         <p>Opciones que el cliente o el mesero eligen al pedir: término, adicionales, quitar ingredientes.</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Crear grupo</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Crear grupo</button>
     </header>
 
     <p v-if="!cargado" class="empty">Cargando…</p>
     <div v-else-if="!grupos.length" class="empty">
       <p>Aún no hay grupos. Un grupo reúne opciones como "Queso extra" o "Sin cebolla".</p>
-      <button class="btn" type="button" @click="nuevo">Crear el primero</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Crear el primero</button>
     </div>
 
     <div v-else class="panel table-wrap">
@@ -84,8 +84,8 @@ onMounted(load)
             <td>{{ grupo.opciones.map((o) => o.precio_extra ? `${o.nombre} (+${formatMoney(o.precio_extra)})` : o.nombre).join(', ') }}</td>
             <td class="num">{{ grupo.productos }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(grupo)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(grupo)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(grupo)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(grupo)">
                 {{ grupo.activo ? 'Desactivar' : 'Activar' }}
               </button>
             </td>
@@ -96,7 +96,7 @@ onMounted(load)
 
     <AppModal :open="!!form" :title="form?.grupo_id ? `Editar ${form.nombre}` : 'Crear grupo de modificadores'" width="36rem"
               @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="g-nombre">Nombre del grupo</label>
@@ -122,7 +122,7 @@ onMounted(load)
             <button class="btn btn-secundario btn-sm" type="button" :disabled="form.opciones.length === 1"
                     :aria-label="`Quitar opción ${index + 1}`" @click="quitarOpcion(index)">Quitar</button>
           </div>
-          <button class="btn btn-secundario btn-sm" type="button" @click="agregarOpcion">Agregar opción</button>
+          <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="agregarOpcion">Agregar opción</button>
           <p class="hint">El precio extra se suma al del producto. Déjalo en 0 si no cambia el precio.</p>
         </fieldset>
 

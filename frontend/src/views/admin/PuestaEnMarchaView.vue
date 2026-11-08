@@ -88,12 +88,12 @@ onMounted(load)
             <p class="visually-hidden">{{ p.hecho ? 'Hecho' : 'Pendiente' }}</p>
           </div>
           <div class="actions">
-            <button v-if="p.accion === 'mesas'" class="btn btn-sm" :class="{ 'btn-secundario': p.hecho }" type="button" :disabled="busy" @click="abrirMesas">Crear mesas</button>
-            <button v-if="p.accion === 'importar'" class="btn btn-sm" :class="{ 'btn-secundario': p.hecho }" type="button" @click="importando = true">Importar productos</button>
+            <button v-escribe v-if="p.accion === 'mesas'" class="btn btn-sm" :class="{ 'btn-secundario': p.hecho }" type="button" :disabled="busy" @click="abrirMesas">Crear mesas</button>
+            <button v-escribe v-if="p.accion === 'importar'" class="btn btn-sm" :class="{ 'btn-secundario': p.hecho }" type="button" @click="importando = true">Importar productos</button>
             <RouterLink v-if="p.ruta" class="btn btn-secundario btn-sm" :to="{ name: p.ruta }">Abrir</RouterLink>
             <template v-if="p.manual">
               <button v-if="!p.hecho" class="btn btn-sm" type="button" :disabled="busy || (p.clave === 'ensayo' && faltan > 1)" @click="marcar(p, true)">{{ p.boton }}</button>
-              <button v-else class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="marcar(p, false)">Reabrir</button>
+              <button v-escribe v-else class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="marcar(p, false)">Reabrir</button>
             </template>
           </div>
         </li>
@@ -105,7 +105,7 @@ onMounted(load)
     <ImportarProductos :open="importando" @close="importando = false" @imported="load" />
 
     <AppModal :open="!!lote" title="Crear mesas" width="30rem" @close="lote = null">
-      <form v-if="lote" @submit.prevent="crearMesas">
+      <form v-escribe v-if="lote" @submit.prevent="crearMesas">
         <div class="form-grid">
           <div class="field">
             <label for="lote-zona">Zona</label>

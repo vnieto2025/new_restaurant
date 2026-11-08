@@ -50,7 +50,7 @@ async function guardar() {
 
 <template>
   <AppModal :open="true" :title="`${TITULOS[tipo]}: ${insumo.nombre}`" width="30rem" @close="emit('close')">
-    <form @submit.prevent="guardar">
+    <form v-escribe @submit.prevent="guardar">
       <p class="muted">Hay {{ formatCantidad(insumo.stock, insumo.unidad) }}.</p>
 
       <template v-if="tipo === 'ajuste'">

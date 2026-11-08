@@ -65,7 +65,7 @@ onMounted(load)
         <h1>Cartas</h1>
         <p>Asigna una carta a cada zona desde Zonas. Los productos nuevos entran en todas las cartas.</p>
       </div>
-      <button class="btn" type="button" @click="nueva">Crear carta</button>
+      <button v-escribe class="btn" type="button" @click="nueva">Crear carta</button>
     </header>
 
     <div class="panel table-wrap">
@@ -78,7 +78,7 @@ onMounted(load)
             <td>{{ carta.zonas.join(', ') || 'Ninguna' }}</td>
             <td class="actions">
               <button class="btn btn-secundario btn-sm" type="button" @click="editar(carta)">Elegir productos</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(carta)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(carta)">
                 {{ carta.activo ? 'Desactivar' : 'Activar' }}
               </button>
             </td>
@@ -88,7 +88,7 @@ onMounted(load)
     </div>
 
     <AppModal :open="!!form" :title="form?.carta_id ? `Carta: ${form.nombre}` : 'Crear carta'" width="40rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="field">
           <label for="ca-nombre">Nombre</label>
           <input id="ca-nombre" v-model="form.nombre" class="input" required maxlength="80" placeholder="Bar, Almuerzos…">

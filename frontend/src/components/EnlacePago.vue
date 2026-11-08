@@ -45,7 +45,7 @@ onMounted(async () => {
       <input id="enlace-pago" class="input espacio" :value="url" readonly @focus="$event.target.select()">
       <p class="muted espacio">El cliente elige la propina y paga en la página de la pasarela. El pago aparece en la cuenta apenas se confirme.</p>
       <div class="form-actions">
-        <button class="btn btn-secundario" type="button" @click="copiar">{{ copiado ? 'Copiado' : 'Copiar enlace' }}</button>
+        <button v-escribe class="btn btn-secundario" type="button" @click="copiar">{{ copiado ? 'Copiado' : 'Copiar enlace' }}</button>
         <a v-if="datos.telefono" class="btn" :href="enlaceWhatsapp(datos.telefono, mensaje)" target="_blank" rel="noopener">Enviar por WhatsApp</a>
       </div>
     </template>

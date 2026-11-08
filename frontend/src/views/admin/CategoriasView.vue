@@ -56,7 +56,7 @@ onMounted(load)
         <h1>Categorías</h1>
         <p>Agrupan la carta. Si una categoría tiene punto de producción, sus productos van allí.</p>
       </div>
-      <button class="btn" type="button" @click="nueva">Crear categoría</button>
+      <button v-escribe class="btn" type="button" @click="nueva">Crear categoría</button>
     </header>
 
     <div class="panel table-wrap">
@@ -69,8 +69,8 @@ onMounted(load)
             <td>{{ categoria.punto_produccion || 'El de la zona' }}</td>
             <td class="num">{{ categoria.productos }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(categoria)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(categoria)">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(categoria)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(categoria)">
                 {{ categoria.activo ? 'Ocultar' : 'Mostrar' }}
               </button>
             </td>
@@ -82,7 +82,7 @@ onMounted(load)
 
     <AppModal :open="!!form" :title="form?.categoria_id ? `Editar ${form.nombre}` : 'Crear categoría'" width="28rem"
               @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="c-nombre">Nombre</label>

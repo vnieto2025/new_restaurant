@@ -171,7 +171,7 @@ onMounted(() => Promise.all([loadCostos(), loadInsumos()]))
             <strong>{{ o.nombre }}</strong>
             <span class="muted"> · {{ (opcionInsumos[o.id] || []).map((l) => `${l.cantidad > 0 ? '+' : ''}${formatCantidad(l.cantidad, l.unidad)} ${l.insumo}`).join(', ') || 'no mueve inventario' }}</span>
           </span>
-          <button v-if="puedeEditar" class="btn btn-secundario btn-sm" type="button" @click="editarOpcion(o)">Editar</button>
+          <button v-escribe v-if="puedeEditar" class="btn btn-secundario btn-sm" type="button" @click="editarOpcion(o)">Editar</button>
         </p>
       </div>
       <p v-if="!grupos.length" class="empty">No hay modificadores.</p>
@@ -181,7 +181,7 @@ onMounted(() => Promise.all([loadCostos(), loadInsumos()]))
                   @close="editor = null" @saved="onSaved" />
 
     <AppModal :open="!!opcion" :title="`Insumos de «${opcion?.nombre || ''}»`" width="32rem" @close="opcion = null">
-      <form v-if="opcion" @submit.prevent="guardarOpcion">
+      <form v-escribe v-if="opcion" @submit.prevent="guardarOpcion">
         <p class="muted">Usa un número negativo para restar (opciones como «Sin cebolla»).</p>
         <div v-for="(l, i) in opcion.lineas" :key="i" class="linea-opcion">
           <select v-model="l.insumo_id" class="select" :aria-label="`Insumo ${i + 1}`">
@@ -192,7 +192,7 @@ onMounted(() => Promise.all([loadCostos(), loadInsumos()]))
           <span class="muted">{{ unidadDe(l.insumo_id) }}</span>
           <button class="btn btn-secundario btn-sm" type="button" @click="opcion.lineas.splice(i, 1)">Quitar</button>
         </div>
-        <button class="btn btn-secundario btn-sm" type="button" @click="opcion.lineas.push({ insumo_id: '', cantidad: null })">Agregar insumo</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="opcion.lineas.push({ insumo_id: '', cantidad: null })">Agregar insumo</button>
         <div class="form-actions">
           <button class="btn btn-secundario" type="button" @click="opcion = null">Cancelar</button>
           <button class="btn" type="submit" :disabled="busy">Guardar</button>

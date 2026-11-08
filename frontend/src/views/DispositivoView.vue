@@ -100,7 +100,7 @@ onMounted(cargarInfo)
       <button class="olvidar" type="button" @click="olvidar">Este dispositivo ya no es del restaurante</button>
     </section>
 
-    <form v-else class="emparejar" @submit.prevent="emparejar">
+    <form v-escribe v-else class="emparejar" @submit.prevent="emparejar">
       <h1>Autorizar este dispositivo</h1>
       <p>El administrador crea el dispositivo en Administración → Dispositivos y te da un código de 6 números.</p>
       <label class="field">

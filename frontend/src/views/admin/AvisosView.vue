@@ -86,7 +86,7 @@ onMounted(() => {
       <button role="tab" type="button" :aria-selected="vista === 'historial'" @click="vista = 'historial'; loadHistorial()">Historial</button>
     </div>
 
-    <form v-if="vista === 'config' && form" class="config" @submit.prevent="guardar">
+    <form v-escribe v-if="vista === 'config' && form" class="config" @submit.prevent="guardar">
       <fieldset class="panel bloque">
         <legend>¿Cómo se envían?</legend>
         <label class="opcion-modo" :class="{ elegida: form.modo === 'manual' }">
@@ -147,7 +147,7 @@ onMounted(() => {
         <div class="probar">
           <label class="visually-hidden" for="av-prueba">Celular para la prueba</label>
           <input id="av-prueba" v-model="prueba.telefono" class="input" inputmode="tel" placeholder="Celular para la prueba">
-          <button class="btn btn-secundario" type="button" :disabled="busy || prueba.telefono.length < 7" @click="probar">Enviar prueba</button>
+          <button v-escribe class="btn btn-secundario" type="button" :disabled="busy || prueba.telefono.length < 7" @click="probar">Enviar prueba</button>
         </div>
         <p v-if="prueba.resultado?.modo === 'manual'">
           <a :href="enlaceWhatsapp(prueba.resultado.telefono, prueba.resultado.mensaje)" target="_blank" rel="noopener">Abrir WhatsApp con el mensaje de prueba</a>
@@ -174,7 +174,7 @@ onMounted(() => {
               <td>{{ a.nombre || '—' }}<small class="muted bloque-texto">{{ a.telefono_legible || 'Sin teléfono' }}</small></td>
               <td>{{ a.estado_texto }}<small v-if="a.error" class="muted bloque-texto">{{ a.error }}</small>
                 <small v-else-if="a.enviada_por" class="muted bloque-texto">por {{ a.enviada_por }}</small></td>
-              <td><button v-if="a.estado === 'fallida' && config?.modo === 'automatico'" class="btn btn-secundario btn-sm" type="button"
+              <td><button v-escribe v-if="a.estado === 'fallida' && config?.modo === 'automatico'" class="btn btn-secundario btn-sm" type="button"
                           @click="reintentar(a)">Reintentar</button></td>
             </tr>
           </tbody>

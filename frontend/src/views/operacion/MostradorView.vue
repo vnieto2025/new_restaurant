@@ -181,7 +181,7 @@ onMounted(load)
           <p v-if="esDomicilio && tarifa" class="envio total-envio">
             <span>Total con domicilio</span><strong>{{ formatMoney(valorPedido + tarifa) }}</strong>
           </p>
-          <button class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !online"
+          <button v-escribe class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !online"
                   :aria-busy="busy" @click="enviar">{{ busy ? 'Enviando…' : 'Enviar a cocina' }}</button>
         </CartPanel>
       </aside>

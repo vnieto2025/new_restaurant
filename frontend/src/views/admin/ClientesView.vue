@@ -98,7 +98,7 @@ onMounted(load)
         <h1>Clientes</h1>
         <p>{{ total !== null ? `${plural(total, 'cliente registrado', 'clientes registrados')}.` : 'Resultados de la búsqueda.' }} Se registran con su autorización de datos.</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Registrar cliente</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Registrar cliente</button>
     </header>
 
     <form class="buscar" @submit.prevent="load">
@@ -141,12 +141,12 @@ onMounted(load)
             <span><strong>{{ d.nombre || 'Dirección' }}:</strong> {{ d.direccion }}<template v-if="d.barrio">, {{ d.barrio }}</template>
               <small v-if="d.indicaciones" class="muted"> · {{ d.indicaciones }}</small></span>
             <span class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="direccion = { ...d, direccion_id: d.id }">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="quitarDireccion(d)">Quitar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="direccion = { ...d, direccion_id: d.id }">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="quitarDireccion(d)">Quitar</button>
             </span>
           </li>
         </ul>
-        <button class="btn btn-secundario btn-sm" type="button" @click="direccion = { nombre: '', direccion: '', barrio: '', indicaciones: '' }">Agregar dirección</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="direccion = { nombre: '', direccion: '', barrio: '', indicaciones: '' }">Agregar dirección</button>
 
         <h3>Últimas órdenes</h3>
         <p v-if="!ficha.historial.ultimas.length" class="muted">Aún no tiene órdenes.</p>
@@ -171,13 +171,13 @@ onMounted(load)
         <div class="form-actions">
           <button v-if="auth.can('clientes.gestionar')" class="btn btn-secundario" type="button" @click="anonimizar = true">Eliminar sus datos</button>
           <button v-if="auth.can('clientes.exportar')" class="btn btn-secundario" type="button" :disabled="busy" @click="exportar">Exportar sus datos</button>
-          <button v-if="auth.can('clientes.gestionar')" class="btn" type="button" @click="editar">Editar</button>
+          <button v-escribe v-if="auth.can('clientes.gestionar')" class="btn" type="button" @click="editar">Editar</button>
         </div>
       </div>
     </AppModal>
 
     <AppModal :open="!!form" :title="form?.cliente_id ? `Editar ${form.nombre}` : 'Registrar cliente'" width="34rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field"><label for="c-nombre">Nombre</label><input id="c-nombre" v-model="form.nombre" class="input" required maxlength="120"></div>
           <div class="field"><label for="c-tel">Celular</label><input id="c-tel" v-model="form.telefono" class="input" type="tel" inputmode="tel" required></div>
@@ -206,7 +206,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!direccion" title="Dirección" width="30rem" @close="direccion = null">
-      <form v-if="direccion" @submit.prevent="guardarDireccion">
+      <form v-escribe v-if="direccion" @submit.prevent="guardarDireccion">
         <div class="form-grid">
           <div class="field"><label for="d-nom">Nombre</label><input id="d-nom" v-model="direccion.nombre" class="input" placeholder="Casa, Trabajo" maxlength="40"></div>
           <div class="field"><label for="d-barrio">Barrio</label><input id="d-barrio" v-model="direccion.barrio" class="input" maxlength="80"></div>

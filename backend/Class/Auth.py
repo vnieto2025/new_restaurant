@@ -8,6 +8,7 @@ from Utils.acceso import COMPLETO, MENSAJES
 from Querys.auth import AuthQuerys
 from Models.dispositivo_model import DispositivoModel
 from Class.TurnoMesero import TurnoMesero
+from Class.DobleFactor import comprobar, es_admin
 
 MIN_PASSWORD_LENGTH = 8
 
@@ -50,6 +51,21 @@ class Auth:
                 "dispositivo": (dispositivo or "")[:250],
             }).audit("login_fallido", "usuario", user.id if user else None, despues={"usuario": usuario})
             raise CustomException("Usuario o contraseña incorrectos.")
+
+        # Verificación en dos pasos (ADR-054): con la clave correcta se pide el código; sin él no hay sesión
+        if user.totp_activo_en:
+            if not str(data.get("codigo") or "").strip():
+                return self.tools.output(200, "Escribe el código de tu aplicación de verificación.", {"requiere_codigo": True})
+            try:
+                usado = comprobar(self.db, user, data["codigo"])
+            except CustomException:
+                AuthQuerys(self.db, {"empresa_id": user.empresa_id, "ip": ip, "dispositivo": (dispositivo or "")[:250]}).audit(
+                    "2fa_fallido", "usuario", user.id)
+                raise
+            if usado == "respaldo":
+                AuthQuerys(self.db, {"empresa_id": user.empresa_id, "usuario_id": user.id, "ip": ip}).audit(
+                    "2fa_codigo_respaldo", "usuario", user.id, despues={"quedan": len(user.codigos_respaldo or [])}, commit=False)
+            self.db.commit()
 
         limiter.reset(key)
 
@@ -135,9 +151,15 @@ class Auth:
             "zonas": [],
             "puntos": [],
             "dispositivo": None,
+            # Verificación en dos pasos: si la tiene, si debe activarla para seguir y si se le recomienda
+            "seguridad": {"doble_factor": user.totp_activo_en is not None, "debe_activar": bool(ctx.get("debe_activar_2fa")),
+                          "recomendado": es_admin(ctx["roles"]) and user.totp_activo_en is None},
         }
         if ctx.get("plataforma"):
             return result
+        if "admin_empresa" in ctx["roles"]:
+            from Models.empresa_model import EmpresaModel
+            result["seguridad"]["exigir_empresa"] = self.db.get(EmpresaModel, user.empresa_id).exigir_2fa
 
         roles = roles_de_usuario(self.db, user.id)
         restaurante = self.querys.get_restaurante(ctx["restaurante_id"])

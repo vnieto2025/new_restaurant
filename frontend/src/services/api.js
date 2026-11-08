@@ -56,7 +56,7 @@ function checkErrors(response, json) {
   if (response.status === 403 && json.detail) {
     const detail = typeof json.detail === 'object' ? json.detail : { mensaje: json.detail }
     // Suspendieron el servicio con la sesión abierta: se actualiza para que aparezca el aviso
-    if (['solo_lectura', 'solo_exportacion'].includes(detail.codigo)) onAccessChanged()
+    if (['solo_lectura', 'solo_exportacion', 'activar_2fa'].includes(detail.codigo)) onAccessChanged()
     throw new ApiError(detail.mensaje || 'No tienes permiso para esto.', 403, null, detail.codigo)
   }
 

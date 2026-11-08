@@ -124,7 +124,7 @@ onMounted(loadJornada)
           <li v-if="jornada.bloqueos.mesas_abiertas">{{ plural(jornada.bloqueos.mesas_abiertas, 'mesa') }} sin cobrar.</li>
           <li v-if="jornada.bloqueos.pedidos_externos_abiertos">{{ plural(jornada.bloqueos.pedidos_externos_abiertos, 'pedido para llevar', 'pedidos para llevar') }} sin cobrar.</li>
         </ul>
-        <button class="btn" type="button" :disabled="busy || Object.values(jornada.bloqueos).some(Boolean)" @click="cerrarJornada">
+        <button v-escribe class="btn" type="button" :disabled="busy || Object.values(jornada.bloqueos).some(Boolean)" @click="cerrarJornada">
           Cerrar la jornada
         </button>
         <p class="muted nota">Al cerrar no se reciben más órdenes ni cobros hasta la próxima jornada.</p>
@@ -132,7 +132,7 @@ onMounted(loadJornada)
     </section>
 
     <AppModal :open="!!movimiento" :title="movimiento ? MOVIMIENTOS[movimiento.tipo] : ''" width="26rem" @close="movimiento = null">
-      <form v-if="movimiento" @submit.prevent="guardarMovimiento">
+      <form v-escribe v-if="movimiento" @submit.prevent="guardarMovimiento">
         <div class="field">
           <label for="mov-monto">Valor</label>
           <input id="mov-monto" v-model.number="movimiento.monto" class="input" type="number" min="1" required inputmode="numeric">
@@ -149,7 +149,7 @@ onMounted(loadJornada)
     </AppModal>
 
     <AppModal :open="!!cierre" title="Cerrar turno" width="28rem" @close="cierre = null">
-      <form v-if="cierre" @submit.prevent="cerrarTurno(false)">
+      <form v-escribe v-if="cierre" @submit.prevent="cerrarTurno(false)">
         <p class="muted">Cuenta el efectivo del cajón, incluida la base.</p>
         <div class="field espacio">
           <label for="contado">Efectivo contado</label>
@@ -163,7 +163,7 @@ onMounted(loadJornada)
           <input id="obs" v-model="cierre.observacion" class="input" maxlength="250" placeholder="Opcional">
         </div>
         <div class="form-actions">
-          <button class="btn btn-secundario" type="button" :disabled="busy" @click="cerrarTurno(true)">Cerrar con cuentas a medio pagar</button>
+          <button v-escribe class="btn btn-secundario" type="button" :disabled="busy" @click="cerrarTurno(true)">Cerrar con cuentas a medio pagar</button>
           <button class="btn btn-peligro" type="submit" :disabled="busy">Cerrar turno</button>
         </div>
       </form>

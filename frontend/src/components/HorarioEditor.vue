@@ -60,9 +60,9 @@ async function guardar() {
       <button class="btn btn-secundario btn-sm" type="button" :aria-label="`Quitar franja ${index + 1}`" @click="franjas.splice(index, 1)">Quitar</button>
     </div>
     <div class="actions">
-      <button class="btn btn-secundario btn-sm" type="button" @click="agregar">Agregar franja</button>
+      <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="agregar">Agregar franja</button>
       <button class="btn btn-secundario btn-sm" type="button" @click="todosLosDias">Igual todos los días</button>
-      <button class="btn btn-sm" type="button" :disabled="busy" @click="guardar">Guardar horario</button>
+      <button v-escribe class="btn btn-sm" type="button" :disabled="busy" @click="guardar">Guardar horario</button>
     </div>
   </div>
 </template>

@@ -121,7 +121,7 @@ onMounted(() => {
 <template>
   <AppModal :open="true" width="62rem" @close="emit('close')"
             :title="rapida ? 'Compra rápida' : editando ? `Editar compra ${compra.numero}` : 'Orden de compra'">
-    <form @submit.prevent="guardar(false)">
+    <form v-escribe @submit.prevent="guardar(false)">
       <p v-if="rapida" class="muted intro">Para lo que ya se compró en la plaza o la tienda: entra de una vez al inventario.</p>
       <div class="form-grid">
         <div class="field">
@@ -207,7 +207,7 @@ onMounted(() => {
         </table>
       </div>
       <div class="pie-lineas">
-        <button class="btn btn-secundario btn-sm" type="button" @click="agregar">Agregar insumo</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="agregar">Agregar insumo</button>
         <p class="total">Total <strong>{{ formatMoney(total) }}</strong></p>
       </div>
       <p v-if="bajoMinimo" class="aviso">El pedido mínimo de {{ proveedor.nombre }} es {{ formatMoney(proveedor.pedido_minimo) }}.</p>
@@ -229,7 +229,7 @@ onMounted(() => {
         </template>
         <template v-else>
           <button class="btn btn-secundario" type="submit" :disabled="busy || !listo">Guardar borrador</button>
-          <button class="btn" type="button" :disabled="busy || !listo" @click="guardar(true)">Guardar como solicitada</button>
+          <button v-escribe class="btn" type="button" :disabled="busy || !listo" @click="guardar(true)">Guardar como solicitada</button>
         </template>
       </div>
     </form>

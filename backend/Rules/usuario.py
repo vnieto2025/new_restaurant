@@ -42,6 +42,8 @@ def val_pin(params):
 
 
 RULES = {
+    "/usuario/2fa/quitar": lambda p: [campo("int", "usuario", p["usuario_id"])],
+    "/usuario/2fa/exigir": lambda p: [campo("bool", "exigir", p["exigir"])],
     "/usuario/pin": val_pin,
     "/usuario/create": val_create,
     "/usuario/update": val_update,

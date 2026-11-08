@@ -111,6 +111,7 @@ class UsuarioQuerys(Querys):
             "correo": usuario.correo,
             "activo": usuario.activo,
             "tiene_pin": usuario.pin_hash is not None,
+            "doble_factor": usuario.totp_activo_en is not None,
             "ultimo_acceso": usuario.ultimo_acceso,
             "roles": [rol.codigo for rol in self.get_roles_usuario(usuario.id)],
             "zonas": self.get_zonas_usuario(usuario.id),

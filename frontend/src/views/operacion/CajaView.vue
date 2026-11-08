@@ -96,7 +96,7 @@ onMounted(load)
 
     <p v-if="estado?.jornada_cerrada" class="franja">La jornada de hoy ya se cerró. Los cobros se reanudan en la próxima jornada.</p>
 
-    <form v-else-if="estado && !turnoAbierto && auth.can('caja.turno')" class="abrir panel" @submit.prevent="abrirTurno">
+    <form v-escribe v-else-if="estado && !turnoAbierto && auth.can('caja.turno')" class="abrir panel" @submit.prevent="abrirTurno">
       <div>
         <h2>Abre el turno para empezar a cobrar</h2>
         <p class="muted">Cuenta la base de efectivo con la que arrancas.</p>

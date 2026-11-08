@@ -54,6 +54,7 @@ async function changeRestaurant(event) {
                 aria-label="Restaurante" @change="changeRestaurant">
           <option v-for="r in auth.restaurantes" :key="r.id" :value="r.id">{{ r.nombre }}</option>
         </select>
+        <RouterLink class="btn btn-secundario" :to="{ name: 'cuenta' }">Mi cuenta</RouterLink>
         <button class="btn btn-secundario" type="button" @click="auth.logout()">Salir</button>
       </div>
     </header>

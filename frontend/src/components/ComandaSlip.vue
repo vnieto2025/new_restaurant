@@ -96,7 +96,7 @@ function despachar() {
           <span v-else-if="comanda.pestana === 'en_proceso' && item.estado === 'despachado'" class="listo">Ya despachado</span>
         </div>
         <button v-if="['nuevo', 'en_proceso'].includes(item.estado)" class="agotado" type="button"
-                :disabled="busy" @click.stop="emit('agotado', item)">Agotado</button>
+                v-escribe :disabled="busy" @click.stop="emit('agotado', item)">Agotado</button>
       </li>
     </ul>
 
@@ -110,13 +110,13 @@ function despachar() {
       <button class="btn-icono" type="button" :disabled="busy" @click="emit('imprimir')">Imprimir</button>
     </footer>
 
-    <button v-if="accion === 'abrir'" class="accion abrir" type="button" :disabled="busy" @click="emit('abrir')">
+    <button v-if="accion === 'abrir'" v-escribe class="accion abrir" type="button" :disabled="busy" @click="emit('abrir')">
       Abrir
     </button>
-    <button v-else-if="accion === 'despachar'" class="accion despachar" type="button" :disabled="busy" @click="despachar">
+    <button v-else-if="accion === 'despachar'" v-escribe class="accion despachar" type="button" :disabled="busy" @click="despachar">
       {{ seleccion.size ? `Despachar ${seleccion.size} de ${despachables.length}` : 'Despachar' }}
     </button>
-    <button v-else-if="comanda.pestana === 'listos'" class="accion reabrir" type="button" :disabled="busy" @click="emit('reabrir')">
+    <button v-else-if="comanda.pestana === 'listos'" v-escribe class="accion reabrir" type="button" :disabled="busy" @click="emit('reabrir')">
       Reabrir
     </button>
   </article>

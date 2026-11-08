@@ -64,7 +64,7 @@ onMounted(load)
         <h1>Zonas</h1>
         <p>Cada zona tiene su carta, su punto de producción y su forma de recibir pedidos por QR.</p>
       </div>
-      <button class="btn" type="button" @click="nueva">Crear zona</button>
+      <button v-escribe class="btn" type="button" @click="nueva">Crear zona</button>
     </header>
 
     <div class="panel table-wrap">
@@ -80,9 +80,9 @@ onMounted(load)
             <td>{{ MODOS[zona.modo_qr] }}</td>
             <td class="num">{{ zona.es_mostrador ? '—' : zona.mesas }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(zona)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(zona)">Editar</button>
               <button class="btn btn-secundario btn-sm" type="button" @click="horario = zona">Horario</button>
-              <button v-if="!zona.es_mostrador" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+              <button v-escribe v-if="!zona.es_mostrador" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                       @click="cambiarEstado(zona)">{{ zona.activo ? 'Desactivar' : 'Activar' }}</button>
             </td>
           </tr>
@@ -101,7 +101,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!form" :title="form?.zona_id ? `Editar ${form.nombre}` : 'Crear zona'" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="z-nombre">Nombre</label>

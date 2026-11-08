@@ -67,6 +67,7 @@ const router = createRouter({
     },
 
     { path: '/mis-liquidaciones', name: 'mis-liquidaciones', component: () => import('@/views/MisLiquidacionesView.vue'), meta: { permiso: 'liquidaciones.ver_propia' } },
+    { path: '/cuenta', name: 'cuenta', component: () => import('@/views/CuentaView.vue') },
     { path: '/mi-informe', name: 'mi-informe', component: () => import('@/views/InformeMeseroView.vue'), meta: { permiso: 'reportes.propio' } },
 
     // Consola del proveedor del software
@@ -86,6 +87,8 @@ router.beforeEach((to) => {
     if (auth.deviceToken) return { name: 'dispositivo' }
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : {} }
   }
+  // La empresa exige verificación en dos pasos y esta persona no la tiene: primero la activa (ADR-054)
+  if (auth.seguridad.debe_activar && to.name !== 'cuenta') return { name: 'cuenta' }
   // Contrato cancelado: lo único que queda es descargar los datos
   if (auth.acceso?.modo === 'exportacion' && to.name !== 'admin-exportar') return { name: 'admin-exportar' }
   // Cada ruta exige su permiso; la del padre y la de la hija

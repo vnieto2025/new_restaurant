@@ -23,6 +23,7 @@ python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 | `DB_PASS`, `DB_APP_PASS`, `MY_SECRET_KEY` | Claves generadas. `MY_SECRET_KEY` debe tener mínimo 32 caracteres o el backend no arranca |
 | `RESPALDO_HORA`, `RESPALDO_DIAS` | Hora del respaldo diario y cuántos días se conservan |
 | `RESPALDOS_DIR` | Carpeta del servidor donde quedan los respaldos |
+| `EXIGIR_2FA_PLATAFORMA` | Ya viene en `1`: al entrar por primera vez, el superadministrador activa la verificación en dos pasos en Mi cuenta. Guarda sus códigos de respaldo fuera del servidor |
 
 Levanta todo y crea el superadministrador:
 

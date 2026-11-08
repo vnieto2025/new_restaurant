@@ -78,7 +78,7 @@ defineExpose({ load })
             <span v-if="p.combos?.length" class="motivo">También deja sin {{ enLista(p.combos) }}.</span>
           </div>
           <div class="acciones">
-            <button class="btn btn-sm" type="button" :disabled="busy" :aria-label="`Marcar agotado ${p.nombre}`" @click="marcar(p, true)">
+            <button v-escribe class="btn btn-sm" type="button" :disabled="busy" :aria-label="`Marcar agotado ${p.nombre}`" @click="marcar(p, true)">
               Marcar agotado
             </button>
             <button class="btn btn-secundario btn-sm" type="button" :aria-label="`Todavía hay ${p.nombre}`" @click="ocultar(p)">
@@ -110,7 +110,7 @@ defineExpose({ load })
             <span class="motivo">Alcanza para {{ p.porciones }} con lo que hay en inventario.</span>
           </div>
           <div class="acciones">
-            <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-label="`Volver a ofrecer ${p.nombre}`"
+            <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" :aria-label="`Volver a ofrecer ${p.nombre}`"
                     @click="marcar(p, false)">
               Volver a ofrecer
             </button>

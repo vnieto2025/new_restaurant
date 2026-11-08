@@ -1,6 +1,6 @@
 from Config.db import BASE
 from Models.base import Registro
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Boolean
 
 ESTADOS_EMPRESA = ["prueba", "activa", "suspendida", "cancelada"]
 
@@ -20,3 +20,5 @@ class EmpresaModel(Registro, BASE):
     # prueba, activa, suspendida, cancelada (doc 06)
     estado = Column(String(15), nullable=False, default="prueba")
     cancelada_en = Column(DateTime(timezone=True), nullable=True)
+    # Los administradores deben activar la verificación en dos pasos para usar el sistema (ADR-054)
+    exigir_2fa = Column(Boolean, nullable=False, default=False, server_default="false")

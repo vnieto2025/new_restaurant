@@ -69,7 +69,7 @@ defineExpose({ load })
   <section v-if="auth.can('reportes.ver')" class="alertas" aria-labelledby="alertas-titulo">
     <div class="cabeza">
       <h2 id="alertas-titulo">Alertas</h2>
-      <button v-if="configura" class="enlace" type="button" @click="abrirConfig">Configurar alertas</button>
+      <button v-escribe v-if="configura" class="enlace" type="button" @click="abrirConfig">Configurar alertas</button>
     </div>
 
     <p v-if="!activas.length" class="calma">Nada que atender por ahora.</p>
@@ -85,7 +85,7 @@ defineExpose({ load })
         </div>
         <div class="acciones">
           <RouterLink v-if="enlace(alerta)" :to="enlace(alerta)" class="btn btn-secundario btn-sm">Revisar</RouterLink>
-          <button v-if="configura" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+          <button v-escribe v-if="configura" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                   :aria-label="`Silenciar hoy ${alerta.nombre}`" @click="silenciar(alerta)">Silenciar hoy</button>
         </div>
       </li>
@@ -101,14 +101,14 @@ defineExpose({ load })
             <strong>{{ alerta.titulo }}</strong>
             <span class="nombre">{{ alerta.nombre }}</span>
           </div>
-          <button v-if="configura" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+          <button v-escribe v-if="configura" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                   :aria-label="`Volver a mostrar ${alerta.nombre}`" @click="silenciar(alerta, false)">Volver a mostrar</button>
         </li>
       </ul>
     </div>
 
     <AppModal :open="!!config" title="Configurar alertas" width="40rem" @close="config = null">
-      <form v-if="config" @submit.prevent="guardarConfig">
+      <form v-escribe v-if="config" @submit.prevent="guardarConfig">
         <p class="muted">Cada alerta aparece en Hoy cuando pasa su umbral. Apaga las que no te sirvan.</p>
         <div v-for="fila in config" :key="fila.codigo" class="config-fila">
           <label class="check"><input v-model="fila.activa" type="checkbox"> {{ fila.nombre }}</label>

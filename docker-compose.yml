@@ -51,6 +51,8 @@ services:
       # La app corre con un rol sin privilegios para que RLS la limite; seed.py lo crea
       DB_APP_USER: ${DB_APP_USER:?Falta DB_APP_USER en .env}
       DB_APP_PASS: ${DB_APP_PASS:?Falta DB_APP_PASS en .env}
+      # El superadministrador debe activar la verificación en dos pasos (ADR-054); 0 solo para pruebas
+      EXIGIR_2FA_PLATAFORMA: ${EXIGIR_2FA_PLATAFORMA:-1}
     volumes:
       - media_data:/app/media
     depends_on:

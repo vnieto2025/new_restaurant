@@ -152,7 +152,7 @@ onMounted(() => {
       </details>
     </template>
 
-    <form v-if="envio" class="panel envio-config no-print" @submit.prevent="guardarEnvio">
+    <form v-escribe v-if="envio" class="panel envio-config no-print" @submit.prevent="guardarEnvio">
       <h2>Enviar al cerrar la jornada</h2>
       <p v-if="envio.puede_enviar" class="muted">
         Al cerrar la jornada en caja, el resumen queda en Avisos por enviar. Si los avisos son automáticos, sale solo.

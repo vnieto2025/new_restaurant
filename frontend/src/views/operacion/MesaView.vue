@@ -152,7 +152,7 @@ onMounted(async () => {
               <label for="notas">Nota para cocina</label>
               <input id="notas" v-model="draft.draft.value.notas" class="input" maxlength="300" placeholder="Opcional">
             </div>
-            <button class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !online"
+            <button v-escribe class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !online"
                     :aria-busy="busy" @click="enviar">
               {{ busy ? 'Enviando…' : 'Enviar a cocina' }}
             </button>
@@ -181,18 +181,18 @@ onMounted(async () => {
               </li>
             </ul>
             <div class="actions">
-              <button v-if="orden.estado === 'pendiente_aprobacion'" class="btn btn-sm" type="button" :disabled="busy"
+              <button v-escribe v-if="orden.estado === 'pendiente_aprobacion'" class="btn btn-sm" type="button" :disabled="busy"
                       @click="aprobar(orden)">Aprobar orden de QR</button>
               <button v-if="orden.items.some((i) => i.estado === 'despachado')" class="btn btn-sm" type="button"
                       :disabled="busy" @click="entregar(orden)">Marcar entregado</button>
               <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="precuenta(orden)">Imprimir</button>
             </div>
           </article>
-          <button v-if="conCaja && ordenes.length && auth.can('ordenes.pedir_cuenta')" class="btn btn-bloque" type="button"
+          <button v-escribe v-if="conCaja && ordenes.length && auth.can('ordenes.pedir_cuenta')" class="btn btn-bloque" type="button"
                   :disabled="busy" @click="pedirCuenta">
             Pedir la cuenta e imprimir precuenta ({{ formatMoney(totalMesa) }})
           </button>
-          <button v-if="puedeCerrar" class="btn btn-secundario btn-bloque" type="button" :disabled="busy" @click="cerrarMesa">
+          <button v-escribe v-if="puedeCerrar" class="btn btn-secundario btn-bloque" type="button" :disabled="busy" @click="cerrarMesa">
             Cerrar mesa ({{ formatMoney(totalMesa) }})
           </button>
         </div>

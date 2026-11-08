@@ -15,6 +15,8 @@ const zonas = ref([])
 const puntos = ref([])
 const form = ref(null)
 const pinForm = ref(null)
+// Verificación en dos pasos (ADR-054): a quién se le quita y si la empresa la exige a los administradores
+const quitarDosPasos = ref(null)
 
 const nombreZona = (id) => zonas.value.find((z) => z.id === id)?.nombre
 const nombrePunto = (id) => puntos.value.find((p) => p.id === id)?.nombre
@@ -64,6 +66,21 @@ async function guardarPin(quitar = false) {
   }
 }
 
+async function confirmarQuitarDosPasos() {
+  const ok = await attempt(() => postData('/usuario/2fa/quitar', { usuario_id: quitarDosPasos.value.id }),
+    { success: `Listo: ${quitarDosPasos.value.nombre} debe activarla de nuevo al entrar.` })
+  quitarDosPasos.value = null
+  if (ok !== undefined) load()
+}
+
+async function exigirDosPasos(event) {
+  const ok = await attempt(() => postData('/usuario/2fa/exigir', { exigir: event.target.checked }), {
+    success: event.target.checked ? 'Los administradores deberán activarla para usar el sistema.' : 'Ya no es obligatoria.',
+  })
+  if (ok === undefined) event.target.checked = !event.target.checked
+  await auth.refresh()
+}
+
 async function cambiarEstado(usuario) {
   await attempt(() => postData('/usuario/change_status', { usuario_id: usuario.id, activo: !usuario.activo }),
     { success: usuario.activo ? 'Usuario desactivado. Su sesión se cerró.' : 'Usuario activado.' })
@@ -80,12 +97,12 @@ onMounted(load)
         <h1>Personal</h1>
         <p>Cada persona entra con su propio usuario: así cada orden queda a nombre de quien la tomó.</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Crear usuario</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Crear usuario</button>
     </header>
 
     <div class="panel table-wrap">
       <table class="table">
-        <thead><tr><th>Nombre</th><th>Usuario</th><th>Roles</th><th>Atiende</th><th>Último ingreso</th><th></th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Roles</th><th>Atiende</th><th>Último ingreso</th><th>Dos pasos</th><th></th></tr></thead>
         <tbody>
           <tr v-for="usuario in usuarios" :key="usuario.id" :class="{ muted: !usuario.activo }">
             <td><strong>{{ usuario.nombre }}</strong><span v-if="!usuario.activo"> (inactivo)</span></td>
@@ -93,12 +110,15 @@ onMounted(load)
             <td>{{ usuario.roles.map((r) => ROLES[r] || r).join(', ') }}</td>
             <td>{{ [...usuario.zonas.map(nombreZona), ...usuario.puntos.map(nombrePunto)].filter(Boolean).join(', ') || 'Todo el restaurante' }}</td>
             <td>{{ usuario.ultimo_acceso ? formatDateTime(usuario.ultimo_acceso) : 'Nunca' }}</td>
+            <td>{{ usuario.doble_factor ? 'Activa' : '—' }}</td>
             <td class="actions">
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(usuario)">Editar</button>
-              <button class="btn btn-secundario btn-sm" type="button" @click="pinForm = { id: usuario.id, nombre: usuario.nombre, pin: '', tiene: usuario.tiene_pin }">
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(usuario)">Editar</button>
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="pinForm = { id: usuario.id, nombre: usuario.nombre, pin: '', tiene: usuario.tiene_pin }">
                 {{ usuario.tiene_pin ? 'Cambiar PIN' : 'Asignar PIN' }}
               </button>
-              <button v-if="usuario.id !== auth.user?.id" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+              <button v-if="usuario.doble_factor && usuario.id !== auth.user?.id" v-escribe class="btn btn-secundario btn-sm" type="button"
+                      :aria-label="`Quitar verificación en dos pasos a ${usuario.nombre}`" @click="quitarDosPasos = usuario">Quitar dos pasos</button>
+              <button v-escribe v-if="usuario.id !== auth.user?.id" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                       @click="cambiarEstado(usuario)">{{ usuario.activo ? 'Desactivar' : 'Activar' }}</button>
             </td>
           </tr>
@@ -106,22 +126,38 @@ onMounted(load)
       </table>
     </div>
 
+    <section v-if="auth.seguridad.exigir_empresa !== undefined" class="panel dos-pasos">
+      <h2>Verificación en dos pasos</h2>
+      <p class="muted">Pide un código del celular además de la clave. Recomendada para quien administra precios, usuarios y caja.</p>
+      <label class="check"><input v-escribe type="checkbox" :checked="auth.seguridad.exigir_empresa" :disabled="busy" @change="exigirDosPasos">
+        Exigirla a los administradores de la empresa y de los restaurantes</label>
+      <p class="muted">Quien no la tenga, al entrar solo podrá activarla. Meseros, cocina y caja no se ven afectados.</p>
+    </section>
+
+    <AppModal :open="!!quitarDosPasos" :title="`¿Quitar la verificación a ${quitarDosPasos?.nombre}?`" width="30rem" @close="quitarDosPasos = null">
+      <p>Hazlo solo si perdió el celular y sus códigos de respaldo. Entrará con su clave y deberá activarla de nuevo.</p>
+      <div class="form-actions">
+        <button class="btn btn-secundario" type="button" @click="quitarDosPasos = null">Cancelar</button>
+        <button class="btn" type="button" :disabled="busy" @click="confirmarQuitarDosPasos">Quitar</button>
+      </div>
+    </AppModal>
+
     <AppModal :open="!!pinForm" :title="`PIN de ${pinForm?.nombre}`" width="24rem" @close="pinForm = null">
-      <form v-if="pinForm" @submit.prevent="guardarPin(false)">
+      <form v-escribe v-if="pinForm" @submit.prevent="guardarPin(false)">
         <div class="field">
           <label for="u-pin">PIN de 4 a 6 números</label>
           <input id="u-pin" v-model="pinForm.pin" class="input" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" required autocomplete="off">
           <span class="hint">Sirve solo en tablets y pantallas autorizadas del restaurante.</span>
         </div>
         <div class="form-actions">
-          <button v-if="pinForm.tiene" class="btn btn-secundario" type="button" :disabled="busy" @click="guardarPin(true)">Quitar PIN</button>
+          <button v-escribe v-if="pinForm.tiene" class="btn btn-secundario" type="button" :disabled="busy" @click="guardarPin(true)">Quitar PIN</button>
           <button class="btn" type="submit" :disabled="busy">Guardar</button>
         </div>
       </form>
     </AppModal>
 
     <AppModal :open="!!form" :title="form?.usuario_id ? `Editar ${form.nombre}` : 'Crear usuario'" width="40rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field">
             <label for="u-nombre">Nombre</label>
@@ -176,6 +212,14 @@ onMounted(load)
 </template>
 
 <style scoped>
+.dos-pasos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+}
+
 .grupo {
   margin: var(--space-4) 0 0;
   padding: var(--space-2) var(--space-3);

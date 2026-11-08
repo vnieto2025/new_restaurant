@@ -138,7 +138,7 @@ onMounted(() => {
       <p class="muted nota">Para devolver un pago que ya está abonado a una cuenta, primero anula ese pago o la cuenta en caja.</p>
     </section>
 
-    <form v-else-if="form" class="panel config" @submit.prevent="guardar">
+    <form v-escribe v-else-if="form" class="panel config" @submit.prevent="guardar">
       <p v-if="!config.contratado" class="aviso">El restaurante no tiene contratado el módulo de pagos en línea.</p>
       <label class="check"><input v-model="form.activo" type="checkbox"> Recibir pagos en línea</label>
       <div class="form-grid">
@@ -166,7 +166,7 @@ onMounted(() => {
     </form>
 
     <AppModal :open="!!reembolso" title="Reembolsar pago en línea" width="28rem" @close="reembolso = null">
-      <form v-if="reembolso" @submit.prevent="reembolsar">
+      <form v-escribe v-if="reembolso" @submit.prevent="reembolsar">
         <p>Se puede devolver hasta <strong>{{ formatMoney(reembolso.pago.reembolsable) }}</strong> por la pasarela.</p>
         <div class="field espacio"><label for="rb-monto">Valor a devolver</label>
           <input id="rb-monto" v-model.number="reembolso.monto" class="input" type="number" min="1" :max="reembolso.pago.reembolsable"></div>
@@ -180,7 +180,7 @@ onMounted(() => {
     </AppModal>
 
     <AppModal :open="!!conciliacion" title="Conciliar con la pasarela" width="28rem" @close="conciliacion = null">
-      <form v-if="conciliacion" @submit.prevent="conciliar">
+      <form v-escribe v-if="conciliacion" @submit.prevent="conciliar">
         <p class="muted">Según el reporte de la pasarela: cuándo abonó este pago y cuánto cobró de comisión.</p>
         <div class="field espacio"><label for="cn-fecha">Fecha de abono</label>
           <input id="cn-fecha" v-model="conciliacion.fecha_abono" class="input" type="date" required></div>

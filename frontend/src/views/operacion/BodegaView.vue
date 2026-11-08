@@ -139,7 +139,7 @@ onMounted(load)
         <p class="ayuda">Toca lo que se dañó, venció o se perdió. Queda registrado con tu nombre.</p>
         <input v-model="buscar" class="input buscar" type="search" placeholder="Buscar insumo" aria-label="Buscar insumo">
         <div class="cuadricula">
-          <button v-for="i in visibles" :key="i.id" type="button" class="tarjeta" @click="movimiento = { tipo: 'merma', insumo: i }">
+          <button v-for="i in visibles" :key="i.id" type="button" class="tarjeta" v-escribe @click="movimiento = { tipo: 'merma', insumo: i }">
             <strong>{{ i.nombre }}</strong>
             <span class="muted">Hay {{ formatCantidad(i.stock, i.unidad) }}</span>
           </button>
@@ -150,7 +150,7 @@ onMounted(load)
       <section v-else-if="vista === 'producir'">
         <p class="ayuda">Registra lo que preparaste: se descuentan sus ingredientes y entra la preparación.</p>
         <div class="cuadricula">
-          <button v-for="i in preparaciones" :key="i.id" type="button" class="tarjeta" @click="movimiento = { tipo: 'producir', insumo: i }">
+          <button v-for="i in preparaciones" :key="i.id" type="button" class="tarjeta" v-escribe @click="movimiento = { tipo: 'producir', insumo: i }">
             <strong>{{ i.nombre }}</strong>
             <span class="muted">Hay {{ formatCantidad(i.stock, i.unidad) }}</span>
           </button>
@@ -175,7 +175,7 @@ onMounted(load)
       <section v-else-if="vista === 'conteos' && !conteo">
         <div class="barra">
           <p class="ayuda">Contar poco y seguido es más fácil que un inventario completo cada mes.</p>
-          <button class="btn" type="button" @click="nuevo = { categoria: '', nombre: '' }">Nuevo conteo</button>
+          <button v-escribe class="btn" type="button" @click="nuevo = { categoria: '', nombre: '' }">Nuevo conteo</button>
         </div>
         <div class="lista-conteos">
           <button v-for="c in conteos" :key="c.id" type="button" class="tarjeta fila" @click="abrirConteo(c)">
@@ -224,9 +224,9 @@ onMounted(load)
           </table>
         </div>
         <div v-if="conteo.estado === 'abierto'" class="form-actions">
-          <button v-if="auth.can('inventario.gestionar')" class="btn btn-secundario" type="button" :disabled="busy" @click="descartarConteo">Descartar</button>
-          <button class="btn btn-secundario" type="button" :disabled="busy" @click="guardarConteo">Guardar</button>
-          <button v-if="auth.can('inventario.gestionar')" class="btn" type="button" :disabled="busy || !contados" @click="aplicarConteo">Aplicar al inventario</button>
+          <button v-escribe v-if="auth.can('inventario.gestionar')" class="btn btn-secundario" type="button" :disabled="busy" @click="descartarConteo">Descartar</button>
+          <button v-escribe class="btn btn-secundario" type="button" :disabled="busy" @click="guardarConteo">Guardar</button>
+          <button v-escribe v-if="auth.can('inventario.gestionar')" class="btn" type="button" :disabled="busy || !contados" @click="aplicarConteo">Aplicar al inventario</button>
         </div>
         <p v-if="conteo.estado === 'abierto' && !auth.can('inventario.gestionar')" class="muted">Guarda lo contado; el administrador lo revisa y lo aplica.</p>
       </section>
@@ -237,7 +237,7 @@ onMounted(load)
                       @close="movimiento = null" @done="onMovido" />
 
     <AppModal :open="!!nuevo" title="Nuevo conteo" width="26rem" @close="nuevo = null">
-      <form v-if="nuevo" @submit.prevent="crearConteo">
+      <form v-escribe v-if="nuevo" @submit.prevent="crearConteo">
         <div class="field">
           <label for="ct-cat">Qué contar</label>
           <select id="ct-cat" v-model="nuevo.categoria" class="select">

@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
   <div class="mesero">
     <OpsBar title="Mesas">
       <button v-if="auth.dispositivo" class="barra-btn" type="button" @click="auth.logout()">Cambiar de mesero</button>
-      <button v-if="auth.roles.includes('mesero')" class="barra-btn" type="button" :disabled="busy" @click="terminarTurno">Terminar mi turno</button>
+      <button v-escribe v-if="auth.roles.includes('mesero')" class="barra-btn" type="button" :disabled="busy" @click="terminarTurno">Terminar mi turno</button>
     </OpsBar>
     <ConnectionBanner :status="status" :online="online" />
 
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
           </div>
           <div class="actions">
             <button class="btn btn-secundario" type="button" :disabled="busy" @click="rechazo = { open: true, orden }">Rechazar</button>
-            <button class="btn" type="button" :disabled="busy" @click="aprobar(orden)">Aprobar</button>
+            <button v-escribe class="btn" type="button" :disabled="busy" @click="aprobar(orden)">Aprobar</button>
           </div>
         </article>
       </section>
@@ -156,7 +156,7 @@ onBeforeUnmount(() => {
             <strong>{{ orden.mesa }}</strong>
             <span>{{ orden.items.filter((i) => i.estado === 'despachado').map((i) => `${i.cantidad} ${i.nombre}`).join(', ') }}</span>
           </div>
-          <button class="btn" type="button" :disabled="busy" @click="entregar(orden)">Entregado</button>
+          <button v-escribe class="btn" type="button" :disabled="busy" @click="entregar(orden)">Entregado</button>
         </article>
       </section>
 

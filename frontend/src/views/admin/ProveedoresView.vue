@@ -115,7 +115,7 @@ onMounted(load)
         <p>A quién se le compra, en qué condiciones y a qué precio.</p>
       </div>
       <div v-if="puedeGestionar" class="actions">
-        <button class="btn" type="button" @click="nuevo">Crear proveedor</button>
+        <button v-escribe class="btn" type="button" @click="nuevo">Crear proveedor</button>
       </div>
     </header>
 
@@ -136,7 +136,7 @@ onMounted(load)
             <td class="num">{{ formatMoney(p.comprado_90_dias) }}<small class="muted bloque">{{ p.compras_90_dias }} compras</small></td>
             <td class="actions">
               <button class="btn btn-secundario btn-sm" type="button" @click="abrir(p)">Ver</button>
-              <button v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" @click="editar(p)">Editar</button>
+              <button v-escribe v-if="puedeGestionar" class="btn btn-secundario btn-sm" type="button" @click="editar(p)">Editar</button>
             </td>
           </tr>
         </tbody>
@@ -198,7 +198,7 @@ onMounted(load)
             </div>
             <p class="muted">El preferido es a quien se sugiere comprar cuando el insumo baja de su mínimo. Solo hay uno por insumo.</p>
             <div class="form-actions">
-              <button class="btn btn-secundario" type="button" @click="agregarInsumo">Agregar insumo</button>
+              <button v-escribe class="btn btn-secundario" type="button" @click="agregarInsumo">Agregar insumo</button>
               <button class="btn" type="button" :disabled="busy" @click="guardarInsumos">Guardar insumos</button>
             </div>
           </template>
@@ -247,7 +247,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!form" :title="form?.proveedor_id ? `Editar ${form.nombre}` : 'Crear proveedor'" width="42rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field"><label for="pv-nombre">Nombre comercial</label>
             <input id="pv-nombre" v-model="form.nombre" class="input" required maxlength="100"></div>
@@ -285,7 +285,7 @@ onMounted(load)
         <div class="field espacio"><label for="pv-notas">Notas</label>
           <input id="pv-notas" v-model="form.notas" class="input" maxlength="500" placeholder="Calidad, trato, cumplimiento"></div>
         <div class="form-actions">
-          <button v-if="form.proveedor_id" class="btn btn-secundario" type="button" :disabled="busy" @click="cambiarEstado({ id: form.proveedor_id, activo: form.activo }); form = null">
+          <button v-escribe v-if="form.proveedor_id" class="btn btn-secundario" type="button" :disabled="busy" @click="cambiarEstado({ id: form.proveedor_id, activo: form.activo }); form = null">
             {{ form.activo ? 'Inactivar' : 'Activar' }}</button>
           <button class="btn btn-secundario" type="button" @click="form = null">Cancelar</button>
           <button class="btn" type="submit" :disabled="busy">Guardar</button>

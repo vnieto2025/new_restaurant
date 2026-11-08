@@ -181,7 +181,7 @@ onMounted(() => {
           Si el proveedor falla se sigue vendiendo y el documento se reintenta.
         </p>
       </div>
-      <button v-if="puedeGestionar && estado?.documentos?.pendiente" class="btn" type="button" :disabled="busy" @click="enviarPendientes">
+      <button v-escribe v-if="puedeGestionar && estado?.documentos?.pendiente" class="btn" type="button" :disabled="busy" @click="enviarPendientes">
         Enviar {{ estado.documentos.pendiente }} en cola
       </button>
     </header>
@@ -197,7 +197,7 @@ onMounted(() => {
       <p class="muted">Quedaron así porque no había resolución vigente al cobrar. Genera su documento ahora.</p>
       <p v-for="cuenta in estado.cuentas_sin_documento" :key="cuenta.id" class="fila-cuenta">
         <span>C-{{ String(cuenta.numero).padStart(5, '0') }} · {{ formatDate(cuenta.jornada) }} · {{ formatMoney(cuenta.total) }}</span>
-        <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="generar(cuenta)">Generar documento</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="generar(cuenta)">Generar documento</button>
       </p>
     </div>
 
@@ -254,7 +254,7 @@ onMounted(() => {
     <section v-else-if="vista === 'resoluciones'">
       <div class="barra">
         <p class="muted">Los rangos autorizados para cada tipo de documento. El número se asigna al cobrar, sin saltos.</p>
-        <button v-if="puedeConfigurar" class="btn" type="button" @click="nuevaResolucion">Agregar resolución</button>
+        <button v-escribe v-if="puedeConfigurar" class="btn" type="button" @click="nuevaResolucion">Agregar resolución</button>
       </div>
       <div class="panel table-wrap">
         <table class="table">
@@ -270,8 +270,8 @@ onMounted(() => {
                 <strong v-if="r.vencida"> · vencida</strong></td>
               <td class="actions">
                 <template v-if="puedeConfigurar">
-                  <button class="btn btn-secundario btn-sm" type="button" @click="editarResolucion(r)">Editar</button>
-                  <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarResolucion(r)">
+                  <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editarResolucion(r)">Editar</button>
+                  <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarResolucion(r)">
                     {{ r.activo ? 'Desactivar' : 'Activar' }}</button>
                 </template>
               </td>
@@ -318,7 +318,7 @@ onMounted(() => {
 
     <!-- Proveedor -->
     <section v-else-if="vista === 'configuracion' && config">
-      <form class="panel config" @submit.prevent="guardarConfig">
+      <form v-escribe class="panel config" @submit.prevent="guardarConfig">
         <div class="form-grid">
           <div class="field"><label for="c-prov">Proveedor tecnológico</label>
             <select id="c-prov" v-model="config.proveedor" class="select">
@@ -409,7 +409,7 @@ onMounted(() => {
         </dl>
         <p v-if="documento.cufe" class="cufe"><span class="muted">CUFE</span> {{ documento.cufe }}</p>
 
-        <form v-if="correccion" class="correccion" @submit.prevent="reenviar">
+        <form v-escribe v-if="correccion" class="correccion" @submit.prevent="reenviar">
           <h3>Datos del cliente</h3>
           <div class="form-grid">
             <div class="field"><label for="r-tipo">Tipo</label>
@@ -428,9 +428,9 @@ onMounted(() => {
         </form>
 
         <div v-else class="form-actions">
-          <button v-if="documento.estado === 'rechazada' && puedeGestionar && documento.tipo !== 'nota_credito'" class="btn" type="button" @click="corregir">Corregir</button>
-          <button v-if="documento.estado === 'rechazada' && puedeGestionar && documento.tipo === 'nota_credito'" class="btn" type="button" :disabled="busy" @click="reenviar">Reenviar</button>
-          <button v-if="documento.estado === 'pendiente' && (puedeGestionar || auth.can('facturacion.facturar'))" class="btn" type="button" :disabled="busy"
+          <button v-escribe v-if="documento.estado === 'rechazada' && puedeGestionar && documento.tipo !== 'nota_credito'" class="btn" type="button" @click="corregir">Corregir</button>
+          <button v-escribe v-if="documento.estado === 'rechazada' && puedeGestionar && documento.tipo === 'nota_credito'" class="btn" type="button" :disabled="busy" @click="reenviar">Reenviar</button>
+          <button v-escribe v-if="documento.estado === 'pendiente' && (puedeGestionar || auth.can('facturacion.facturar'))" class="btn" type="button" :disabled="busy"
                   @click="enviarAhora(documento)">Enviar ahora</button>
         </div>
       </div>
@@ -438,7 +438,7 @@ onMounted(() => {
 
     <!-- Resolución -->
     <AppModal :open="!!resolucion" :title="resolucion?.resolucion_id ? 'Editar resolución' : 'Agregar resolución'" width="36rem" @close="resolucion = null">
-      <form v-if="resolucion" @submit.prevent="guardarResolucion">
+      <form v-escribe v-if="resolucion" @submit.prevent="guardarResolucion">
         <div class="form-grid">
           <div class="field"><label for="re-tipo">Documento</label>
             <select id="re-tipo" v-model="resolucion.tipo_documento" class="select" :disabled="resolucion.ultimo != null">

@@ -79,7 +79,7 @@ onMounted(load)
       <p>El QR impreso dejará de funcionar de inmediato y se genera uno nuevo. Úsalo si alguien está pidiendo con una foto del código desde fuera del local.</p>
       <div class="form-actions">
         <button class="btn btn-secundario" type="button" @click="revocar = null">Volver</button>
-        <button class="btn btn-peligro" type="button" :disabled="busy" @click="confirmarRevocar">Revocar y generar otro</button>
+        <button v-escribe class="btn btn-peligro" type="button" :disabled="busy" @click="confirmarRevocar">Revocar y generar otro</button>
       </div>
     </AppModal>
   </div>

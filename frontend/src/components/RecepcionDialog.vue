@@ -46,7 +46,7 @@ async function recibir() {
 
 <template>
   <AppModal :open="true" :title="`Recibir compra ${compra.numero} · ${compra.proveedor}`" width="48rem" @close="emit('close')">
-    <form @submit.prevent="recibir">
+    <form v-escribe @submit.prevent="recibir">
       <p class="muted intro">Escribe lo que llegó de verdad. Si algo llegó dañado o faltó, anótalo en la novedad.</p>
       <ul class="lineas">
         <li v-for="l in lineas" :key="l.id" class="linea">

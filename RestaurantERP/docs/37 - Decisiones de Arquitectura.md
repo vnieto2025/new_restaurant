@@ -733,6 +733,31 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** un cambio en la carta del real no llega a la práctica hasta reiniciarla. Si el real cambia o borra una foto, la práctica puede mostrarla rota hasta reiniciar. Los avisos por WhatsApp en la práctica son manuales: alguien podría escribirle de verdad a un cliente si usa su celular real.
 - **Cuándo revisar:** si hace falta practicar facturación electrónica (con el proveedor simulado forzado) o si se quiere sincronizar la carta sin borrar lo practicado.
 
+## ADR-054: Verificación en dos pasos
+
+- **Estado:** Aprobada (2026-11-08). Docs 08 y 32.
+- **Decisión:**
+  - **Códigos TOTP** (RFC 6238, 6 dígitos cada 30 segundos) de cualquier aplicación autenticadora. Implementado en `Utils/totp.py` sin librerías nuevas; el QR lo genera `segno`, que ya se usaba para las mesas. Sin SMS ni correo: no hay proveedor y el SMS es el factor más débil.
+  - **Guardado:** el secreto va cifrado con la clave del servidor (como las credenciales de pasarela). Se guarda el último código usado, para que uno visto por encima del hombro no sirva otra vez. De los 10 códigos de respaldo solo se guarda la huella, y cada uno sirve una vez.
+  - **Ingreso en dos llamadas a `/login`:** con la clave correcta y sin código responde `requiere_codigo`, sin sesión; la interfaz pide el código y repite la llamada con él. No hay sesión intermedia que pueda quedar a medias. Los códigos tienen su propio límite de intentos por usuario (5 cada 5 minutos).
+  - **El PIN de las tablets no pide código:** quien tiene la verificación activa no entra con PIN, entra con usuario, clave y código.
+  - **Quién:** cualquiera puede activarla en Mi cuenta (pantalla nueva, que también trae el cambio de clave). A los administradores (superadministrador, de empresa y de restaurante) se les recomienda en Hoy. El administrador de la empresa puede exigirla (`empresa.exigir_2fa`): quien no la tenga, al entrar solo puede ir a activarla, y el backend rechaza todo lo demás con `activar_2fa`. En el servidor real `EXIGIR_2FA_PLATAFORMA=1` la exige al superadministrador (doc 32).
+  - **Perdió el celular y los códigos:** quien gestiona usuarios se la quita (queda en auditoría) y la persona la vuelve a activar. Nadie se la quita a sí mismo por ese camino, y a un administrador de empresa solo se la quita otro administrador de empresa.
+  - Los códigos, secretos y claves no se copian al registro de peticiones.
+- **Consecuencias:** si el superadministrador pierde su celular y sus códigos, solo se recupera desde la base de datos. La guía de instalación pide guardar sus códigos fuera del servidor.
+- **Cuándo revisar:** si se agrega correo como canal de recuperación, o llaves de seguridad (WebAuthn).
+
+## ADR-055: Solo lectura sin botones de guardar
+
+- **Estado:** Aprobada (2026-11-08). Completa ADR-042.
+- **Decisión:**
+  - **Directiva `v-escribe`:** marca lo que guarda datos. Con el restaurante suspendido o cancelado, `<html>` lleva la clase `solo-lectura` y el CSS oculta lo marcado. En un formulario solo se oculta su botón de guardar: la consulta y los filtros siguen funcionando.
+  - **Marcado generado:** el script de marcado lo pone a un botón o formulario cuando su acción llama a una ruta de la API que no está en la lista de solo lectura del backend (`RUTAS_LECTURA`, la misma que aplica el servidor), y a los botones que abren formularios de crear o editar. Los que solo avisan a la pantalla que los contiene (comanda de cocina, movimientos de inventario) se marcaron a mano.
+  - **La API sigue siendo la que decide:** un botón que se escape responde con el aviso de solo lectura, como antes.
+  - Las pantallas públicas y la consola de plataforma no se marcan: nunca están en solo lectura.
+- **Consecuencias:** un botón nuevo que escriba debe llevar `v-escribe`. Si no lo lleva, en solo lectura se ve pero responde con el aviso.
+- **Cuándo revisar:** si se agregan muchas pantallas nuevas, conviene volver a correr el script de marcado y revisar su informe.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

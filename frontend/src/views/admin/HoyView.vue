@@ -80,10 +80,10 @@ onMounted(load)
           {{ vista === 'activas' ? 'Ver toda la jornada' : 'Ver solo pendientes' }}
         </button>
         <template v-if="restaurante && auth.can('restaurante.pausar')">
-          <button v-if="restaurante.estado === 'activo'" class="btn btn-peligro" type="button" :disabled="busy" @click="pausar('pausado')">
+          <button v-escribe v-if="restaurante.estado === 'activo'" class="btn btn-peligro" type="button" :disabled="busy" @click="pausar('pausado')">
             Pausar pedidos por QR
           </button>
-          <button v-else class="btn" type="button" :disabled="busy" @click="pausar('activo')">Reanudar pedidos por QR</button>
+          <button v-escribe v-else class="btn" type="button" :disabled="busy" @click="pausar('activo')">Reanudar pedidos por QR</button>
         </template>
       </div>
     </header>

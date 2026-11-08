@@ -45,7 +45,7 @@ async function cobrar() {
           <input id="vd-nombre" v-model="nombre" class="input" maxlength="100" placeholder="Opcional">
         </div>
         <p v-if="!props.turnoAbierto" class="aviso">Abre el turno de caja para vender.</p>
-        <button class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !props.turnoAbierto"
+        <button v-escribe class="btn btn-grande btn-bloque" type="button" :disabled="busy || !draft.lineas.value.length || !props.turnoAbierto"
                 :aria-busy="busy" @click="cobrar">{{ busy ? 'Registrando…' : 'Cobrar' }}</button>
       </CartPanel>
     </aside>

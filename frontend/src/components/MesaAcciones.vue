@@ -68,7 +68,7 @@ const TITULOS = {
     <button v-if="auth.can('mesas.reasignar')" class="btn btn-secundario btn-sm" type="button" @click="abrir('reasignar')">Cambiar mesero</button>
 
     <AppModal :open="!!accion" :title="accion ? `${TITULOS[accion]}: ${mesaNombre}` : ''" width="30rem" @close="accion = null">
-      <form v-if="accion" @submit.prevent="confirmar">
+      <form v-escribe v-if="accion" @submit.prevent="confirmar">
         <template v-if="accion === 'trasladar'">
           <p class="muted">Las órdenes, la cuenta y lo que está en cocina pasan a la mesa elegida.</p>
           <div class="opciones">

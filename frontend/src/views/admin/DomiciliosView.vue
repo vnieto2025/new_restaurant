@@ -131,7 +131,7 @@ onMounted(load)
     <section v-if="web" class="bloque">
       <div class="titulo">
         <h2>Pedidos por la web</h2>
-        <button class="btn btn-secundario btn-sm" type="button" @click="editarWeb">Configurar</button>
+        <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editarWeb">Configurar</button>
       </div>
       <div class="panel web">
         <div class="web-qr" v-html="web.svg"></div>
@@ -150,7 +150,7 @@ onMounted(load)
             <button class="btn btn-secundario btn-sm" type="button" @click="copiar">{{ copiado ? 'Copiado' : 'Copiar enlace' }}</button>
             <button class="btn btn-secundario btn-sm" type="button" @click="imprimirQr">Imprimir QR</button>
             <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEnlace = true">Generar enlace nuevo</button>
-            <button class="btn btn-sm" type="button" :disabled="busy || (!web.activo && !web.zonas)"
+            <button v-escribe class="btn btn-sm" type="button" :disabled="busy || (!web.activo && !web.zonas)"
                     @click="guardarWeb({ activo: !web.activo })">{{ web.activo ? 'Pausar' : 'Activar' }}</button>
           </div>
         </div>
@@ -160,7 +160,7 @@ onMounted(load)
     <section class="bloque">
       <div class="titulo">
         <h2>Zonas de envío</h2>
-        <button class="btn btn-sm" type="button" @click="nuevaZona">Crear zona</button>
+        <button v-escribe class="btn btn-sm" type="button" @click="nuevaZona">Crear zona</button>
       </div>
       <div class="panel table-wrap">
         <table class="table">
@@ -172,7 +172,7 @@ onMounted(load)
               <td class="num">{{ formatMoney(z.tarifa) }}</td>
               <td class="num">{{ formatMoney(z.pago_domiciliario) }}</td>
               <td class="num">{{ z.pedido_minimo ? formatMoney(z.pedido_minimo) : '—' }}</td>
-              <td class="actions"><button class="btn btn-secundario btn-sm" type="button" @click="zona = { ...z, zona_envio_id: z.id }">Editar</button></td>
+              <td class="actions"><button v-escribe class="btn btn-secundario btn-sm" type="button" @click="zona = { ...z, zona_envio_id: z.id }">Editar</button></td>
             </tr>
           </tbody>
         </table>
@@ -183,7 +183,7 @@ onMounted(load)
     <section class="bloque">
       <div class="titulo">
         <h2>Domiciliarios</h2>
-        <button class="btn btn-sm" type="button" @click="nuevoDomiciliario">Crear domiciliario</button>
+        <button v-escribe class="btn btn-sm" type="button" @click="nuevoDomiciliario">Crear domiciliario</button>
       </div>
       <div class="panel table-wrap">
         <table class="table">
@@ -196,8 +196,8 @@ onMounted(load)
               <td>{{ d.vinculo === 'propio' ? 'Propio' : 'Independiente' }}</td>
               <td>{{ d.usuario ? `Usuario ${d.usuario}` : 'Sin usuario' }}</td>
               <td class="actions">
-                <button class="btn btn-secundario btn-sm" type="button" @click="domiciliario = { ...d, domiciliario_id: d.id, usuario_id: d.usuario_id || '' }">Editar</button>
-                <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(d)">{{ d.activo ? 'Desactivar' : 'Activar' }}</button>
+                <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="domiciliario = { ...d, domiciliario_id: d.id, usuario_id: d.usuario_id || '' }">Editar</button>
+                <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="cambiarEstado(d)">{{ d.activo ? 'Desactivar' : 'Activar' }}</button>
               </td>
             </tr>
           </tbody>
@@ -208,7 +208,7 @@ onMounted(load)
     </section>
 
     <AppModal :open="!!zona" :title="zona?.zona_envio_id ? `Editar ${zona.nombre}` : 'Crear zona de envío'" width="34rem" @close="zona = null">
-      <form v-if="zona" @submit.prevent="guardarZona">
+      <form v-escribe v-if="zona" @submit.prevent="guardarZona">
         <div class="form-grid">
           <div class="field"><label for="ze-nombre">Nombre</label>
             <input id="ze-nombre" v-model="zona.nombre" class="input" required maxlength="60"></div>
@@ -231,7 +231,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!domiciliario" :title="domiciliario?.domiciliario_id ? `Editar ${domiciliario.nombre}` : 'Crear domiciliario'" width="34rem" @close="domiciliario = null">
-      <form v-if="domiciliario" @submit.prevent="guardarDomiciliario">
+      <form v-escribe v-if="domiciliario" @submit.prevent="guardarDomiciliario">
         <div class="form-grid">
           <div class="field"><label for="dm-nombre">Nombre</label>
             <input id="dm-nombre" v-model="domiciliario.nombre" class="input" required maxlength="100"></div>
@@ -261,7 +261,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!webForm" title="Pedidos por la web" width="32rem" @close="webForm = null">
-      <form v-if="webForm" @submit.prevent="guardarWeb()">
+      <form v-escribe v-if="webForm" @submit.prevent="guardarWeb()">
         <label class="check"><input v-model="webForm.activo" type="checkbox"> Recibir pedidos por el enlace y el QR</label>
         <label class="check espacio"><input v-model="webForm.aprobacion" type="checkbox"> Confirmar cada pedido antes de enviarlo a cocina</label>
         <p class="hint">Recomendado: así revisas la dirección y evitas pedidos falsos. Se confirman en Entregas.</p>
@@ -281,7 +281,7 @@ onMounted(load)
       <p>El enlace y el QR que ya publicaste dejarán de funcionar al instante. Úsalo si alguien está enviando pedidos falsos.</p>
       <div class="form-actions">
         <button class="btn btn-secundario" type="button" @click="cambiarEnlace = false">Volver</button>
-        <button class="btn btn-peligro" type="button" :disabled="busy" @click="nuevoEnlace">Generar enlace nuevo</button>
+        <button v-escribe class="btn btn-peligro" type="button" :disabled="busy" @click="nuevoEnlace">Generar enlace nuevo</button>
       </div>
     </AppModal>
   </div>

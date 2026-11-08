@@ -380,6 +380,12 @@ button {
 }
 
 /* La tirilla impresa: todo lo demás se oculta */
+/* Solo lectura (ADR-055): lo marcado con v-escribe no se muestra; en un formulario, solo su botón de guardar */
+html.solo-lectura [data-escribe]:not(form),
+html.solo-lectura form[data-escribe] [type='submit'] {
+  display: none !important;
+}
+
 @media print {
   body {
     background: #fff;

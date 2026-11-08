@@ -278,7 +278,7 @@ onMounted(load)
             <p class="muted">Estimado {{ formatMoney(g.total_estimado) }}
               <template v-if="g.pedido_minimo && g.total_estimado < g.pedido_minimo"> · pedido mínimo {{ formatMoney(g.pedido_minimo) }}</template></p>
           </div>
-          <button class="btn btn-sm" type="button" @click="desdeSugerida(g)">Crear orden</button>
+          <button v-escribe class="btn btn-sm" type="button" @click="desdeSugerida(g)">Crear orden</button>
         </div>
         <div class="table-wrap">
           <table class="table">
@@ -358,8 +358,8 @@ onMounted(load)
 
         <div class="form-actions">
           <button v-if="detalle.puede_anular && auth.can('compras.anular')" class="btn btn-secundario" type="button" @click="abrirAnulacion">Anular</button>
-          <button v-if="detalle.puede_editar && puedeRegistrar" class="btn btn-secundario" type="button" @click="editar">Editar</button>
-          <button v-if="detalle.estado === 'borrador' && puedeRegistrar" class="btn btn-secundario" type="button" :disabled="busy" @click="solicitar">Marcar como solicitada</button>
+          <button v-escribe v-if="detalle.puede_editar && puedeRegistrar" class="btn btn-secundario" type="button" @click="editar">Editar</button>
+          <button v-escribe v-if="detalle.estado === 'borrador' && puedeRegistrar" class="btn btn-secundario" type="button" :disabled="busy" @click="solicitar">Marcar como solicitada</button>
           <button v-if="detalle.puede_cerrar && puedeRegistrar" class="btn btn-secundario" type="button" @click="abrirCierre">Cerrar compra</button>
           <button v-if="detalle.puede_recibir && auth.can('compras.recibir')" class="btn" type="button" @click="recibiendo = detalle">Recibir mercancía</button>
         </div>
@@ -371,7 +371,7 @@ onMounted(load)
     <RecepcionDialog v-if="recibiendo" :compra="recibiendo" @close="recibiendo = null" @done="onRecibida" />
 
     <AppModal :open="!!cerrando" title="Cerrar compra" width="30rem" @close="cerrando = null">
-      <form v-if="cerrando" @submit.prevent="cerrar">
+      <form v-escribe v-if="cerrando" @submit.prevent="cerrar">
         <p class="muted intro">Cierra la compra cuando ya cuadró con la factura del proveedor.</p>
         <div class="field">
           <label for="cc-factura">Factura del proveedor</label>
@@ -392,7 +392,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!anulando" title="Anular compra" width="30rem" @close="anulando = null">
-      <form v-if="anulando" @submit.prevent="anular">
+      <form v-escribe v-if="anulando" @submit.prevent="anular">
         <p class="muted intro">
           {{ detalle?.valor_recibido ? 'Lo que entró al inventario con esta compra se resta con un movimiento contrario.' : 'Aún no entró nada al inventario.' }}
         </p>

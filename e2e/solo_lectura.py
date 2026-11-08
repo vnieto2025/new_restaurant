@@ -29,14 +29,14 @@ try:
         expect(page.get_by_text("Hamburguesa clásica")).to_be_visible()
         shot(page, "l01-admin-suspendido")
 
-        # Intentar un cambio responde con la explicación, no con un error genérico
+        # Lo que guarda datos no se muestra; lo que consulta sigue (ADR-055)
+        expect(page.get_by_role("button", name="Crear producto")).to_be_hidden()
+        expect(page.get_by_role("button", name="Editar").first).to_be_hidden()
         page.goto(f"{APP}/admin/zonas")
-        page.get_by_role("button", name="Crear zona").click()
-        dialogo = page.get_by_role("dialog")
-        dialogo.locator("input").first.fill("Zona nueva")
-        dialogo.get_by_role("button", name="Guardar").click()
-        expect(page.get_by_role("alert").filter(has_text="está suspendido")).to_be_visible()
-        shot(page, "l02-cambio-rechazado")
+        expect(page.get_by_role("button", name="Crear zona")).to_be_hidden()
+        expect(page.get_by_role("button", name="Horario").first).to_be_visible()
+        shot(page, "l02-sin-botones")
+
 
         # Descargar sigue funcionando
         page.goto(f"{APP}/admin/exportar")
@@ -49,6 +49,9 @@ try:
         page = contexto(browser, 390, 844, mobile=True)
         login(page, "mesero.salon")
         expect(page.get_by_text("Solo lectura.")).to_be_visible()
+        page.get_by_role("button", name="Mesa 1").click()
+        page.wait_for_url("**/mesas/**")
+        expect(page.get_by_role("button", name="Enviar a cocina")).to_be_hidden()
         shot(page, "l03-mesero-suspendido")
         page.context.close()
 

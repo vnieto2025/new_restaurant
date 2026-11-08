@@ -104,6 +104,7 @@ const grupos = computed(() =>
           </RouterLink>
         </div>
       </nav>
+      <RouterLink :to="{ name: 'cuenta' }" class="enlace">Mi cuenta</RouterLink>
       <button class="salir" type="button" @click="auth.logout()">Salir ({{ auth.user?.nombre }})</button>
     </aside>
     <main class="contenido">
@@ -114,6 +115,10 @@ const grupos = computed(() =>
       <p v-if="cuenta && $route.name !== 'admin-plan'" class="aviso-cuenta" :class="cuenta.estado" role="status">
         {{ cuenta.estado === 'en_mora' ? 'Tu pago del servicio está pendiente.' : cuenta.texto + '.' }}
         <RouterLink :to="{ name: 'admin-plan' }">Ver mi plan</RouterLink>
+      </p>
+      <p v-if="auth.seguridad.recomendado && $route.name === 'admin'" class="aviso-marcha" role="status">
+        <strong>Protege tu cuenta:</strong> activa la verificación en dos pasos con una aplicación del celular.
+        <RouterLink :to="{ name: 'cuenta' }">Activarla</RouterLink>
       </p>
       <RouterView />
     </main>

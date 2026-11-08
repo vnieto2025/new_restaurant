@@ -140,6 +140,9 @@ class Dispositivo:
                 "pin_fallido", "dispositivo", dispositivo.id)
             raise CustomException("PIN incorrecto o sin acceso a este dispositivo.")
 
+        # El PIN no pide el código: quien tiene verificación en dos pasos entra con usuario, clave y código (ADR-054)
+        if usuario.totp_activo_en:
+            raise CustomException("Tu cuenta tiene verificación en dos pasos: entra con usuario, clave y código.", 409)
         limiter.reset(key)
         dispositivo.ultimo_uso = now()
         self.db.commit()

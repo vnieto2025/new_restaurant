@@ -21,7 +21,7 @@ Visión de seguridad del sistema. Es un SaaS **multi-cliente** con dinero, datos
 |---|---|---|
 | **Cruce de datos entre empresas** | Un error de consulta expone datos ajenos | `empresa_id` + RLS + pruebas automáticas (`02A`, `39`) |
 | **Órdenes falsas por QR** | Foto del QR usada a distancia | Token opaco y revocable, aprobación, límites (`10A`) |
-| **Robo o abuso de cuentas** | Contraseña débil o reutilizada | Contraseñas fuertes, bloqueo por intentos, 2FA para administradores (fase 2) |
+| **Robo o abuso de cuentas** | Contraseña débil o reutilizada | Contraseñas fuertes, bloqueo por intentos, 2FA para administradores (ADR-054) |
 | **Fraude interno** | Cajero anula cuentas y se queda con el dinero | Permisos mínimos, auditoría, alertas, arqueos (`29`, `30`) |
 | **Inyección y fallos web** | SQL injection, XSS, CSRF | Consultas parametrizadas, validación, escape, cabeceras de seguridad |
 | **Webhooks falsos** | Alguien simula "pago aprobado" | Verificación de firma, idempotencia (`20A`, `31`) |
@@ -37,7 +37,7 @@ Visión de seguridad del sistema. Es un SaaS **multi-cliente** con dinero, datos
 - **Bloqueo temporal** tras intentos fallidos y alertas.
 - **Tokens de acceso de vida corta** con renovación; revocables.
 - **PIN de mesero** solo sirve en dispositivos autorizados (`RN-USR-03`).
-- **2FA opcional** para administradores y obligatorio para superadministradores.
+- **2FA** con aplicación autenticadora: opcional para todos, recomendado y exigible a los administradores, obligatorio para el superadministrador en el servidor real (ADR-054).
 - **Cierre automático por inactividad** configurable, **sin** afectar las pantallas de cocina (`18`).
 - **Recuperación de acceso** con verificación segura.
 

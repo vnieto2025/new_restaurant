@@ -191,12 +191,12 @@ onMounted(async () => {
             <button class="btn btn-secundario" type="button" aria-label="Periodo siguiente" @click="moverPeriodo(1)">Siguiente ›</button>
           </template>
           <template v-if="mostrada.estado === 'abierta' && !mostrada.liquidacion_id">
-            <button class="btn" type="button" :disabled="busy" @click="calcular">Calcular liquidación</button>
+            <button v-escribe class="btn" type="button" :disabled="busy" @click="calcular">Calcular liquidación</button>
           </template>
           <template v-if="borrador">
-            <button class="btn btn-secundario" type="button" :disabled="busy" @click="descartar">Descartar</button>
-            <button class="btn btn-secundario" type="button" :disabled="busy" @click="calcular">Recalcular</button>
-            <button class="btn" type="button" :disabled="busy" @click="aprobar">Aprobar</button>
+            <button v-escribe class="btn btn-secundario" type="button" :disabled="busy" @click="descartar">Descartar</button>
+            <button v-escribe class="btn btn-secundario" type="button" :disabled="busy" @click="calcular">Recalcular</button>
+            <button v-escribe class="btn" type="button" :disabled="busy" @click="aprobar">Aprobar</button>
           </template>
         </div>
       </div>
@@ -298,7 +298,7 @@ onMounted(async () => {
       </template>
     </section>
 
-    <form v-else-if="vista === 'reglas' && config" class="panel reglas" @submit.prevent="guardarReglas">
+    <form v-escribe v-else-if="vista === 'reglas' && config" class="panel reglas" @submit.prevent="guardarReglas">
       <p class="aviso">El reparto de propinas, cualquier retención y el pago a domiciliarios tienen implicaciones laborales y
         fiscales. El sistema calcula con las reglas que definas; valídalas con tu abogado laboral y tu contador.</p>
       <template v-if="config.puede_propinas">
@@ -353,7 +353,7 @@ onMounted(async () => {
     </form>
 
     <AppModal :open="!!ajuste" title="Ajuste manual" width="28rem" @close="ajuste = null">
-      <form v-if="ajuste" @submit.prevent="guardarAjuste">
+      <form v-escribe v-if="ajuste" @submit.prevent="guardarAjuste">
         <p>{{ ajuste.linea.nombre }}<template v-if="!borrador">. La liquidación ya está aprobada: el ajuste entra en la siguiente.</template></p>
         <div class="opciones espacio" role="group" aria-label="Tipo de ajuste">
           <button type="button" :aria-pressed="ajuste.signo === '+'" @click="ajuste.signo = '+'">Sumar</button>
@@ -372,7 +372,7 @@ onMounted(async () => {
     </AppModal>
 
     <AppModal :open="!!pago" title="Registrar pago" width="26rem" @close="pago = null">
-      <form v-if="pago" @submit.prevent="registrarPago">
+      <form v-escribe v-if="pago" @submit.prevent="registrarPago">
         <p>{{ pago.linea.nombre }}: <strong>{{ formatMoney(pago.linea.total) }}</strong></p>
         <div class="field espacio"><label for="pg-medio">Cómo se pagó</label>
           <select id="pg-medio" v-model="pago.medio" class="select">

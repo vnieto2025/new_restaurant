@@ -79,7 +79,7 @@ onMounted(load)
         <h1>Impuestos</h1>
         <p>Los precios de la carta ya incluyen el impuesto; la factura lo desglosa. Confirma las tasas con tu contador.</p>
       </div>
-      <button class="btn" type="button" @click="nuevo">Crear impuesto</button>
+      <button v-escribe class="btn" type="button" @click="nuevo">Crear impuesto</button>
     </header>
 
     <p class="explicacion muted">
@@ -108,10 +108,10 @@ onMounted(load)
             </td>
             <td class="actions">
               <button class="btn btn-secundario btn-sm" type="button" @click="programar(impuesto)">Cambiar tasa</button>
-              <button class="btn btn-secundario btn-sm" type="button" @click="editar(impuesto)">Editar</button>
-              <button v-if="!impuesto.por_defecto && impuesto.activo" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+              <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="editar(impuesto)">Editar</button>
+              <button v-escribe v-if="!impuesto.por_defecto && impuesto.activo" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                       @click="porDefecto(impuesto)">Usar por defecto</button>
-              <button v-if="!impuesto.por_defecto" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
+              <button v-escribe v-if="!impuesto.por_defecto" class="btn btn-secundario btn-sm" type="button" :disabled="busy"
                       @click="cambiarEstado(impuesto)">{{ impuesto.activo ? 'Desactivar' : 'Activar' }}</button>
             </td>
           </tr>
@@ -123,7 +123,7 @@ onMounted(load)
     </div>
 
     <AppModal :open="!!form" :title="form?.impuesto_id ? `Editar ${form.nombre}` : 'Crear impuesto'" width="32rem" @close="form = null">
-      <form v-if="form" @submit.prevent="guardar">
+      <form v-escribe v-if="form" @submit.prevent="guardar">
         <div class="form-grid">
           <div class="field"><label for="i-nombre">Nombre</label>
             <input id="i-nombre" v-model="form.nombre" class="input" required maxlength="60" placeholder="Impuesto al consumo"></div>
@@ -150,7 +150,7 @@ onMounted(load)
     </AppModal>
 
     <AppModal :open="!!tarifa" :title="`Cambiar tasa de ${tarifa?.nombre || ''}`" width="28rem" @close="tarifa = null">
-      <form v-if="tarifa" @submit.prevent="guardarTarifa">
+      <form v-escribe v-if="tarifa" @submit.prevent="guardarTarifa">
         <div class="form-grid">
           <div class="field"><label for="t-porc">Nueva tasa (%)</label>
             <input id="t-porc" v-model="tarifa.porcentaje" class="input" type="number" min="0" max="99.999" step="0.001" required inputmode="decimal"></div>

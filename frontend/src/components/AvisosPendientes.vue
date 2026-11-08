@@ -53,7 +53,7 @@ defineExpose({ load })
         <div class="acciones">
           <a class="btn btn-sm" :href="enlaceWhatsapp(a.telefono, a.mensaje)" target="_blank" rel="noopener" @click="enviado(a)">
             Enviar por WhatsApp</a>
-          <button class="btn btn-secundario btn-sm" type="button" @click="descartar(a)">Descartar</button>
+          <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="descartar(a)">Descartar</button>
         </div>
       </li>
     </ul>

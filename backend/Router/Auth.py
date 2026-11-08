@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Auth import Auth
+from Class.DobleFactor import DobleFactor
 from Middleware.jwt_bearer import JWTBearer
 from Config.db import get_db
 from sqlalchemy.orm import Session
@@ -33,4 +34,39 @@ def change_restaurant(request: Request, db: Session = Depends(get_db)):
 def change_password(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Auth(db, request.state.user).change_password(data)
+    return response
+
+@auth_router.post('/auth/2fa/estado', tags=["Auth"], response_model=dict, dependencies=[Depends(JWTBearer())])
+@http_decorator
+def two_factor_status(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).status(data)
+    return response
+
+@auth_router.post('/auth/2fa/iniciar', tags=["Auth"], response_model=dict, dependencies=[Depends(JWTBearer())])
+@http_decorator
+def two_factor_start(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).start(data)
+    return response
+
+@auth_router.post('/auth/2fa/activar', tags=["Auth"], response_model=dict, dependencies=[Depends(JWTBearer())])
+@http_decorator
+def two_factor_activate(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).activate(data)
+    return response
+
+@auth_router.post('/auth/2fa/desactivar', tags=["Auth"], response_model=dict, dependencies=[Depends(JWTBearer())])
+@http_decorator
+def two_factor_disable(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).disable(data)
+    return response
+
+@auth_router.post('/auth/2fa/codigos', tags=["Auth"], response_model=dict, dependencies=[Depends(JWTBearer())])
+@http_decorator
+def two_factor_codes(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = DobleFactor(db, request.state.user).new_backup_codes(data)
     return response

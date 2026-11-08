@@ -66,7 +66,7 @@ onMounted(load)
       </div>
     </template>
     <div v-else class="actions">
-      <button class="btn" type="button" :disabled="busy" :aria-busy="busy" @click="crear">Crear restaurante de práctica</button>
+      <button v-escribe class="btn" type="button" :disabled="busy" :aria-busy="busy" @click="crear">Crear restaurante de práctica</button>
     </div>
 
     <AppModal :open="confirmando" title="¿Reiniciar la práctica?" width="30rem" @close="confirmando = false">
@@ -75,7 +75,7 @@ onMounted(load)
       <p class="muted">El restaurante real no se toca. Quien esté practicando debe salir y volver a entrar a la práctica.</p>
       <div class="form-actions">
         <button class="btn btn-secundario" type="button" @click="confirmando = false">Cancelar</button>
-        <button class="btn" type="button" :disabled="busy" :aria-busy="busy" @click="reiniciar">Reiniciar</button>
+        <button v-escribe class="btn" type="button" :disabled="busy" :aria-busy="busy" @click="reiniciar">Reiniciar</button>
       </div>
     </AppModal>
   </section>

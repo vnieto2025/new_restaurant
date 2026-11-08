@@ -1,3 +1,4 @@
+import os
 from fastapi import HTTPException
 from Config.db import SessionLocal
 from Models.usuario_model import UsuarioModel
@@ -17,7 +18,7 @@ from Models.dispositivo_model import DispositivoModel
 from Models.zona_model import ZonaModel
 from Models.punto_produccion_model import PuntoProduccionModel
 from Utils.tools import jornada
-from Utils.acceso import acceso_de, COMPLETO, LECTURA, EXPORTACION, MENSAJES, PERMISOS_EXPORTACION, RUTAS_POR_MODO
+from Utils.acceso import acceso_de, COMPLETO, LECTURA, EXPORTACION, MENSAJES, PERMISOS_EXPORTACION, RUTAS_POR_MODO, RUTAS_2FA
 
 # Estados de contrato con los que el restaurante opera (doc 02A, sección 3)
 CONTRATO_OPERATIVO = ["prueba", "activo"]
@@ -130,6 +131,9 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
         if any(rol.alcance == "plataforma" for rol in roles):
             ctx["permisos"] = {p.codigo for p in permisos}
             ctx["plataforma"] = True
+            # En el servidor real el superadministrador debe tener verificación en dos pasos (doc 32, ADR-054)
+            if os.getenv("EXIGIR_2FA_PLATAFORMA") == "1" and not usuario.totp_activo_en:
+                ctx["debe_activar_2fa"] = True
             return ctx
 
         empresa = db.query(EmpresaModel).filter(EmpresaModel.id == usuario.empresa_id).first()
@@ -188,6 +192,10 @@ def cargar_contexto(token_data: dict, ip: str = None, dispositivo: str = None, d
             "practica": practica,
             "real_id": real.id,
         })
+        # La empresa exige verificación en dos pasos a sus administradores y esta persona no la tiene (ADR-054)
+        if empresa.exigir_2fa and not usuario.totp_activo_en:
+            from Class.DobleFactor import es_admin
+            ctx["debe_activar_2fa"] = es_admin(roles)
         if modo == EXPORTACION:
             ctx["permisos"] &= PERMISOS_EXPORTACION
             if "datos.exportar" not in ctx["permisos"]:
@@ -221,6 +229,8 @@ def equivalentes(db, model, ids: list, restaurante_id):
 
 def exigir_acceso(ctx: dict, ruta: str):
     """ Suspendido o cancelado: solo pasan las rutas de su lista (doc 02A, sección 3) """
+    if ctx.get("debe_activar_2fa") and ruta not in RUTAS_2FA:
+        raise prohibido("activar_2fa", "Tu empresa exige la verificación en dos pasos. Actívala en Mi cuenta para seguir.")
     modo = ctx.get("acceso", COMPLETO)
     if modo != COMPLETO and ruta not in RUTAS_POR_MODO[modo]:
         raise prohibido("solo_lectura" if modo == LECTURA else "solo_exportacion", MENSAJES[modo])

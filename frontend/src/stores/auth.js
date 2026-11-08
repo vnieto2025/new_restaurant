@@ -58,6 +58,8 @@ export const useAuthStore = defineStore('auth', () => {
   // Restaurante de práctica (ADR-053): { real, practica } y si la sesión actual está en ella
   const practica = computed(() => session.value?.practica || null)
   const enPractica = computed(() => !!session.value?.restaurante?.practica)
+  // Verificación en dos pasos: { doble_factor, debe_activar, recomendado, exigir_empresa? }
+  const seguridad = computed(() => session.value?.seguridad || {})
   const zonas = computed(() => session.value?.zonas || [])
   const dispositivo = computed(() => session.value?.dispositivo || null)
   // completo, lectura (suspendido) o exportacion (cancelado), con su mensaje
@@ -100,9 +102,12 @@ export const useAuthStore = defineStore('auth', () => {
     save(data)
   }
 
-  async function login(usuario, password) {
-    const { data } = await post('/login', { usuario, password })
+  // Con verificación en dos pasos la primera respuesta solo pide el código: se vuelve a llamar con él (ADR-054)
+  async function login(usuario, password, codigo = null) {
+    const { data } = await post('/login', codigo ? { usuario, password, codigo } : { usuario, password })
+    if (data.requiere_codigo) return data
     save(data)
+    return data
   }
 
   // Recarga permisos, zonas y puntos: un cambio de rol aplica sin volver a ingresar
@@ -133,7 +138,7 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   return {
-    token, user, restaurante, restaurantes, practica, enPractica, zonas, puntos, isAuthenticated, apps, modulos, dispositivo, deviceToken, roles, acceso,
+    token, user, restaurante, restaurantes, practica, enPractica, seguridad, zonas, puntos, isAuthenticated, apps, modulos, dispositivo, deviceToken, roles, acceso,
     can, login, loginWithPin, setDeviceToken, refresh, changeRestaurant, logout,
   }
 })

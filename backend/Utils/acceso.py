@@ -15,7 +15,10 @@ MENSAJES = {
     EXPORTACION: "El contrato de este restaurante está cancelado: solo puedes descargar tus datos.",
 }
 
-RUTAS_SESION = {"/auth/sesion", "/auth/cambiar_password", "/auth/cambiar_restaurante"}
+RUTAS_SESION = {"/auth/sesion", "/auth/cambiar_password", "/auth/cambiar_restaurante",
+                "/auth/2fa/estado", "/auth/2fa/iniciar", "/auth/2fa/activar", "/auth/2fa/desactivar", "/auth/2fa/codigos"}
+# Lo único que puede hacer un administrador al que se le exige la verificación en dos pasos y no la tiene
+RUTAS_2FA = RUTAS_SESION
 RUTAS_EXPORTACION = RUTAS_SESION | {"/exportacion/catalogo", "/exportacion/generar"}
 # Lista cerrada: una ruta nueva queda bloqueada en solo lectura hasta que se agregue aquí a propósito
 RUTAS_LECTURA = RUTAS_EXPORTACION | {

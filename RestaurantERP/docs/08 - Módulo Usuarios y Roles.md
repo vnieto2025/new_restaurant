@@ -64,6 +64,6 @@ Nombre, documento (opcional), correo o usuario, rol, restaurantes asignados, zon
 
 ## 7. Preguntas abiertas
 
-- ¿Se pide doble factor de autenticación a los administradores? (Recomiendo ofrecerlo en fase 2.)
+- ~~¿Se pide doble factor de autenticación a los administradores?~~ Resuelto en ADR-054: opcional para todos, recomendado a los administradores y exigible por la empresa.
 - ¿Roles personalizados por el cliente? (Recomiendo roles fijos en el MVP, con permisos granulares por debajo; ver `29`.)
 - ¿Un mesero puede trabajar en dos restaurantes de la misma empresa el mismo día?

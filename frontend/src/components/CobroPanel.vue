@@ -284,10 +284,10 @@ function imprimir() {
     <template v-if="abierta">
       <div class="fila-opciones" role="group" aria-label="Propina">
         <span class="etiqueta">Propina</span>
-        <button type="button" class="opcion" :aria-pressed="propinaOpcion === 'ninguna'" :disabled="busy" @click="propina('ninguna')">Sin propina</button>
-        <button v-if="cuenta.propina_porcentaje" type="button" class="opcion" :aria-pressed="propinaOpcion === 'sugerida'" :disabled="busy"
+        <button v-escribe type="button" class="opcion" :aria-pressed="propinaOpcion === 'ninguna'" :disabled="busy" @click="propina('ninguna')">Sin propina</button>
+        <button v-escribe v-if="cuenta.propina_porcentaje" type="button" class="opcion" :aria-pressed="propinaOpcion === 'sugerida'" :disabled="busy"
                 @click="propina('sugerida')">{{ cuenta.propina_porcentaje }} % · {{ formatMoney(cuenta.propina_sugerida) }}</button>
-        <button type="button" class="opcion" :aria-pressed="propinaOpcion === 'otra'" :disabled="busy" @click="propina('otra')">Otro valor</button>
+        <button v-escribe type="button" class="opcion" :aria-pressed="propinaOpcion === 'otra'" :disabled="busy" @click="propina('otra')">Otro valor</button>
         <button v-if="auth.can('caja.descuento')" type="button" class="opcion" :disabled="busy"
                 @click="descuento = { monto: cuenta.descuento || null, motivo: cuenta.descuento_motivo || '' }">Descuento</button>
       </div>
@@ -310,15 +310,15 @@ function imprimir() {
           </form>
           <ul v-if="buscaCliente.resultados.length" class="clientes">
             <li v-for="cl in buscaCliente.resultados" :key="cl.id">
-              <button type="button" :disabled="cuponBusy" @click="elegirCliente(cl)"><strong>{{ cl.nombre }}</strong>
+              <button v-escribe type="button" :disabled="cuponBusy" @click="elegirCliente(cl)"><strong>{{ cl.nombre }}</strong>
                 <span class="muted">{{ cl.telefono_legible }}</span></button>
             </li>
           </ul>
           <p v-else-if="buscaCliente.buscado" class="muted">No está registrado. Regístralo en Clientes para darle cupones.</p>
-          <button v-if="cuenta.cliente" type="button" class="enlace" @click="elegirCliente(null)">Quitar el cliente de la cuenta</button>
+          <button v-escribe v-if="cuenta.cliente" type="button" class="enlace" @click="elegirCliente(null)">Quitar el cliente de la cuenta</button>
         </div>
 
-        <form class="fila-cupon" @submit.prevent="aplicarCupon()">
+        <form v-escribe class="fila-cupon" @submit.prevent="aplicarCupon()">
           <label class="etiqueta" for="cupon-codigo">Cupón</label>
           <input id="cupon-codigo" v-model="codigo" class="input codigo" maxlength="30" autocomplete="off" placeholder="Código"
                  :aria-invalid="!!cuponError" aria-describedby="cupon-error">
@@ -327,7 +327,7 @@ function imprimir() {
         <p id="cupon-error" class="cupon-error" role="alert">{{ cuponError }}</p>
         <div v-if="cuenta.cupones_cliente?.length" class="sugeridos">
           <span class="muted">Cupones de {{ cuenta.cliente?.nombre?.split(' ')[0] }}:</span>
-          <button v-for="c in cuenta.cupones_cliente" :key="c.codigo" type="button" class="opcion" :disabled="cuponBusy"
+          <button v-escribe v-for="c in cuenta.cupones_cliente" :key="c.codigo" type="button" class="opcion" :disabled="cuponBusy"
                   @click="aplicarCupon(c.codigo)">{{ c.codigo }} · {{ c.descripcion || c.nombre }}</button>
         </div>
         <ul v-if="cuenta.cupones?.length" class="aplicados">
@@ -335,7 +335,7 @@ function imprimir() {
             <span><strong>{{ c.codigo }}</strong> {{ c.nombre }}
               <small v-if="c.nota" class="nota-cupon">No descuenta: {{ c.nota }}</small>
               <small v-else class="muted">−{{ formatMoney(c.valor) }} · aplicó {{ c.aplicado_por }}</small></span>
-            <button type="button" class="enlace" :disabled="cuponBusy" @click="quitarCupon(c)">Quitar</button>
+            <button v-escribe type="button" class="enlace" :disabled="cuponBusy" @click="quitarCupon(c)">Quitar</button>
           </li>
         </ul>
       </section>
@@ -393,7 +393,7 @@ function imprimir() {
         <p v-if="conFactura && porAsignar !== 0" class="muted">La factura se emite al registrar el pago completo.</p>
       </div>
 
-      <button class="btn btn-grande btn-bloque" type="button" :disabled="busy || !listo || (conFactura && porAsignar === 0 && !receptorListo)"
+      <button v-escribe class="btn btn-grande btn-bloque" type="button" :disabled="busy || !listo || (conFactura && porAsignar === 0 && !receptorListo)"
               :aria-busy="busy" @click="cobrar">
         {{ porAsignar === 0 ? `Cobrar ${formatMoney(cuenta.saldo)}` : `Registrar abono de ${formatMoney(cuenta.saldo - porAsignar)}` }}
       </button>
@@ -418,7 +418,7 @@ function imprimir() {
       <template v-if="facturacionActiva && cuenta.estado === 'pagada' && documento?.tipo === 'pos'">
         <button v-if="!facturaPosterior" class="btn btn-secundario btn-sm" type="button" @click="facturaPosterior = true">
           Factura a nombre del cliente</button>
-        <form v-else class="factura" @submit.prevent="facturarDespues">
+        <form v-escribe v-else class="factura" @submit.prevent="facturarDespues">
           <p class="muted">El documento POS se anula con nota crédito y se emite la factura.</p>
           <FacturaReceptor v-model="receptor" />
           <div class="form-actions">
@@ -430,7 +430,7 @@ function imprimir() {
     </div>
     <div v-else-if="facturacionActiva && cuenta.estado === 'pagada' && cuenta.total > cuenta.propina" class="aviso sin-doc">
       <span>Esta cuenta quedó sin documento de venta.</span>
-      <button class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="generarDocumento">Generar documento</button>
+      <button v-escribe class="btn btn-secundario btn-sm" type="button" :disabled="busy" @click="generarDocumento">Generar documento</button>
     </div>
 
     <div class="actions pie">
@@ -443,7 +443,7 @@ function imprimir() {
     </div>
 
     <AppModal :open="propinaLibre !== null" title="Propina" width="24rem" @close="propinaLibre = null">
-      <form @submit.prevent="guardarPropinaLibre">
+      <form v-escribe @submit.prevent="guardarPropinaLibre">
         <div class="field">
           <label for="propina">Valor de la propina</label>
           <input id="propina" v-model.number="propinaLibre" class="input" type="number" min="0" inputmode="numeric">
@@ -455,7 +455,7 @@ function imprimir() {
     </AppModal>
 
     <AppModal :open="!!descuento" title="Descuento" width="26rem" @close="descuento = null">
-      <form v-if="descuento" @submit.prevent="guardarDescuento">
+      <form v-escribe v-if="descuento" @submit.prevent="guardarDescuento">
         <div class="field">
           <label for="desc-monto">Valor</label>
           <input id="desc-monto" v-model.number="descuento.monto" class="input" type="number" min="0" :max="cuenta.subtotal" inputmode="numeric">
