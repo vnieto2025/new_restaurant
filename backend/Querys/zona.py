@@ -52,6 +52,7 @@ class ZonaQuerys(Querys):
             "punto_produccion_id": zona.punto_produccion_id,
             "punto_produccion": punto.nombre if punto else None,
             "modo_qr": zona.modo_qr,
+            "reparto": zona.reparto,
             "es_mostrador": zona.es_mostrador,
             "activo": zona.activo,
             "mesas": self.count_mesas(zona.id),

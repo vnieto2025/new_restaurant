@@ -13,6 +13,12 @@ const puntos = ref([])
 const form = ref(null)
 const horario = ref(null)
 
+// Cómo se reparte un pedido entre cocina, bar... (ADR-056)
+const REPARTOS = {
+  zona: 'Todo el pedido a su punto',
+  producto: 'Cada producto a su punto',
+}
+
 const MODOS = {
   aprobacion: 'Con aprobación del mesero',
   libre: 'Libre: va directo a cocina',
@@ -31,7 +37,7 @@ async function load() {
 
 function nueva() {
   form.value = { nombre: '', codigo: '', orden: zonas.value.length + 1, carta_id: cartas.value[0]?.id || null,
-    punto_produccion_id: puntos.value[0]?.id || null, modo_qr: 'aprobacion' }
+    punto_produccion_id: puntos.value[0]?.id || null, modo_qr: 'aprobacion', reparto: 'zona' }
 }
 
 function editar(zona) {
@@ -70,13 +76,14 @@ onMounted(load)
     <div class="panel table-wrap">
       <table class="table">
         <thead>
-          <tr><th>Zona</th><th>Carta</th><th>Prepara</th><th>Pedidos por QR</th><th class="num">Mesas</th><th></th></tr>
+          <tr><th>Zona</th><th>Carta</th><th>Prepara</th><th>Reparto</th><th>Pedidos por QR</th><th class="num">Mesas</th><th></th></tr>
         </thead>
         <tbody>
           <tr v-for="zona in zonas" :key="zona.id" :class="{ muted: !zona.activo }">
             <td><strong>{{ zona.nombre }}</strong><span v-if="zona.es_mostrador" class="muted"> · mostrador</span><span v-if="!zona.activo"> (inactiva)</span></td>
             <td>{{ zona.carta || 'Sin carta' }}</td>
             <td>{{ zona.punto_produccion || 'Despacho directo' }}</td>
+            <td>{{ REPARTOS[zona.reparto] }}</td>
             <td>{{ MODOS[zona.modo_qr] }}</td>
             <td class="num">{{ zona.es_mostrador ? '—' : zona.mesas }}</td>
             <td class="actions">
@@ -119,12 +126,20 @@ onMounted(load)
             </select>
           </div>
           <div class="field">
-            <label for="z-punto">Prepara por defecto</label>
+            <label for="z-punto">Prepara</label>
             <select id="z-punto" v-model="form.punto_produccion_id" class="select">
               <option :value="null">Nadie (despacho directo)</option>
               <option v-for="punto in puntos" :key="punto.id" :value="punto.id">{{ punto.nombre }}</option>
             </select>
-            <span class="hint">Se usa para los productos que no tienen punto propio.</span>
+            <span class="hint">{{ form.reparto === 'zona' ? 'Recibe todos los pedidos de esta zona.' : 'Se usa para los productos que no tienen punto propio.' }}</span>
+          </div>
+          <div class="field">
+            <label for="z-reparto">Cómo se reparte un pedido</label>
+            <select id="z-reparto" v-model="form.reparto" class="select">
+              <option value="zona">Todo al punto de la zona</option>
+              <option value="producto">Cada producto a su punto</option>
+            </select>
+            <span class="hint">«Todo al punto»: el pedido entero sale de un solo lugar. «Cada producto»: la comida a la cocina y las bebidas al bar.</span>
           </div>
           <div class="field">
             <label for="z-modo">Pedidos por QR de mesa</label>

@@ -758,6 +758,21 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** un botón nuevo que escriba debe llevar `v-escribe`. Si no lo lleva, en solo lectura se ve pero responde con el aviso.
 - **Cuándo revisar:** si se agregan muchas pantallas nuevas, conviene volver a correr el script de marcado y revisar su informe.
 
+## ADR-056: Reparto del pedido por zona
+
+- **Estado:** Aprobada (2026-11-08). Cambia el doc 19, sección 3. Pedido del dueño del producto: un pedido con comida y bebidas no debe partirse entre cocina y bar; lo que distingue cocina de bar son las zonas y sus cartas.
+- **Decisión:**
+  - **Cada zona tiene un reparto** (`zona.reparto`):
+    - `zona` (por defecto): todo el pedido va al punto de la zona.
+    - `producto`: la regla anterior, producto → categoría → zona → despacho directo.
+  - **Zona sin punto, o con su punto inactivo:** se aplica la regla de `producto`, así nunca se pierde un ítem.
+  - **El destino se guarda en el ítem al crearlo,** como antes: cambiar el reparto no mueve lo que ya está en cocina.
+  - **Combos:** sus partes siguen la misma regla, así que en una zona con reparto `zona` todo el combo va al mismo punto.
+  - **Sugerir agotados:** un punto que recibe pedidos enteros de una zona ve las sugerencias de cualquier producto.
+  - **Demo:** el Salón reparte todo a la Cocina y la Terraza muestra el otro modo (comida a Cocina, bebidas a Bar).
+- **Consecuencias:** las zonas existentes pasan a `zona` con la migración. Un restaurante que quiera la división por producto la elige en Administración → Zonas.
+- **Cuándo revisar:** si se necesita un punto distinto para pedidos para llevar o domicilios dentro de una misma zona.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

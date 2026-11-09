@@ -448,7 +448,8 @@ def seed_demo(db):
         },
         zonas=[
             {"nombre": "Salón", "modo_qr": "aprobacion", "mesas": 8, "prefijo": "Mesa", "orden": 1},
-            {"nombre": "Terraza", "modo_qr": "libre", "mesas": 4, "prefijo": "Terraza", "orden": 2},
+            # La Terraza muestra el otro reparto: la cocina hace la comida y el bar las bebidas (ADR-056)
+            {"nombre": "Terraza", "modo_qr": "libre", "mesas": 4, "prefijo": "Terraza", "orden": 2, "reparto": "producto"},
         ],
         puntos_extra=[{"nombre": "Bar", "tipo": "bar"}],
         categorias=[

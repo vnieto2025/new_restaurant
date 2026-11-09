@@ -3,6 +3,7 @@ from Utils.tools import Tools, CustomException
 from Querys.inventario import InventarioQuerys
 from Querys.combo import ComboQuerys
 from Models.punto_produccion_model import PuntoProduccionModel
+from Models.zona_model import ZonaModel
 
 # Desde cuántas porciones se avisa que un plato se está acabando
 POCAS_PORCIONES = 5
@@ -34,9 +35,12 @@ class Disponibilidad:
             if self.ctx.get("puntos") is not None and punto.id not in self.ctx["puntos"]:
                 raise CustomException("No tiene asignado este punto de producción.", 403)
 
-        # Un plato que va al punto de la zona puede llegar a cualquier pantalla: se muestra en todas
+        # Un plato que va al punto de la zona puede llegar a cualquier pantalla: se muestra en todas. Y un punto
+        # que recibe pedidos enteros de una zona (ADR-056) prepara cualquier producto
+        de_zona = {z.punto_produccion_id for z in self.querys.scoped(ZonaModel).filter(
+            ZonaModel.activo.is_(True), ZonaModel.reparto == "zona")}
         alcance = [p for p in self.querys.alcance_productos()
-                   if not punto_id or p["punto_produccion_id"] in (None, int(punto_id))]
+                   if not punto_id or int(punto_id) in de_zona or p["punto_produccion_id"] in (None, int(punto_id))]
         combos = ComboQuerys(self.db, self.ctx)
         for producto in alcance:
             producto["motivo"] = "; ".join(

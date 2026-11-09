@@ -1,5 +1,5 @@
 from Rules.campo import campo
-from Models.zona_model import MODOS_QR
+from Models.zona_model import MODOS_QR, REPARTOS
 
 
 def campos_zona(params):
@@ -10,6 +10,7 @@ def campos_zona(params):
         campo("int", "carta", params.get("carta_id"), False),
         campo("int", "punto de producción", params.get("punto_produccion_id"), False),
         campo("opcion", "modo de QR", params.get("modo_qr"), False, opciones=MODOS_QR),
+        campo("opcion", "reparto del pedido", params.get("reparto"), False, opciones=REPARTOS),
     ]
 
 

@@ -526,8 +526,11 @@ class Orden:
             "precio_extra": opciones[opcion_id][1]["precio_extra"],
         } for opcion_id in ids]
 
-    # Producto -> categoría -> zona -> despacho directo (doc 19, sección 3)
+    # Zona que reparte todo a su punto: ese punto. Si no: producto -> categoría -> zona -> despacho directo
+    # (doc 19, sección 3; ADR-056)
     def resolve_destination(self, producto, categoria, zona, puntos_activos: set):
+        if zona.reparto == "zona" and zona.punto_produccion_id in puntos_activos:
+            return zona.punto_produccion_id
         for punto_id in [producto.punto_produccion_id, categoria.punto_produccion_id, zona.punto_produccion_id]:
             if punto_id and punto_id in puntos_activos:
                 return punto_id

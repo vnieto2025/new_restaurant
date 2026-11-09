@@ -1,6 +1,6 @@
 from Utils.tools import Tools, CustomException, clean_text
 from Querys.zona import ZonaQuerys
-from Models.zona_model import ZonaModel, MODOS_QR
+from Models.zona_model import ZonaModel, MODOS_QR, REPARTOS
 
 
 class Zona:
@@ -72,4 +72,6 @@ class Zona:
             "carta_id": carta.id if carta else None,
             "punto_produccion_id": punto.id if punto else None,
             "modo_qr": modo_qr,
+            # Sin dato se conserva el que tenga (al crear, todo el pedido va al punto de la zona)
+            **({"reparto": data["reparto"]} if data.get("reparto") in REPARTOS else {}),
         }

@@ -74,6 +74,30 @@ def test_envio_duplicado_devuelve_la_misma_orden(esquina):
     assert [o["id"] for o in ordenes] == [primera["id"]]
 
 
+def reparto(admin, zona_nombre, valor):
+    zona = find(admin.data("/zona/list"), nombre=zona_nombre)
+    admin.data("/zona/update", {"zona_id": zona["id"], "nombre": zona["nombre"], "carta_id": zona["carta_id"],
+                                "punto_produccion_id": zona["punto_produccion_id"], "modo_qr": zona["modo_qr"], "reparto": valor})
+
+
+def test_zona_que_reparte_todo_a_su_punto(esquina):
+    """ El Salón manda el pedido entero a su Cocina, aunque las bebidas sean del Bar en otras zonas (ADR-056) """
+    mesero, _ = esquina["mesero.salon"]
+    cocina, _ = esquina["cocina.esquina"]
+    admin, _ = esquina["admin.esquina"]
+    assert find(admin.data("/zona/list"), nombre="Salón")["reparto"] == "zona"
+    orden = mesero.data("/orden/create", {
+        "mesa_id": table(mesero, "Mesa 7")["id"], "clave_idempotencia": key(),
+        "items": [{"producto_id": product_id(admin, "Salchipapa"), "cantidad": 1},
+                  {"producto_id": product_id(admin, "Limonada natural"), "cantidad": 1}],
+    }, expect=201)
+    assert [c["punto_produccion"] for c in orden["comandas"]] == ["Cocina"]
+    [tarjeta] = tarjeta_de(comandas(cocina, "Cocina"), orden["id"])
+    assert sorted(i["nombre"] for i in tarjeta["items"]) == ["Limonada natural", "Salchipapa"]
+    for item in orden["items"]:
+        mesero.data("/orden/cancelar_item", {"orden_item_id": item["id"], "motivo": "Prueba de reparto"})
+
+
 def test_orden_con_varios_puntos_se_divide_en_comandas(esquina):
     mesero, _ = esquina["mesero.salon"]
     cocina, _ = esquina["cocina.esquina"]
@@ -81,14 +105,19 @@ def test_orden_con_varios_puntos_se_divide_en_comandas(esquina):
     admin, _ = esquina["admin.esquina"]
     mesa = table(mesero, "Mesa 3")
 
-    orden = mesero.data("/orden/create", {
-        "mesa_id": mesa["id"], "clave_idempotencia": key(),
-        "items": [
-            {"producto_id": product_id(admin, "Hamburguesa doble"), "cantidad": 1,
-             "modificadores": [option_id(admin, "Término de la carne", "Bien asada")]},
-            {"producto_id": product_id(admin, "Cerveza nacional"), "cantidad": 2},
-        ],
-    }, expect=201)
+    # Con "cada producto a su punto", la comida va a la cocina y la bebida al bar (doc 19, sección 3)
+    reparto(admin, "Salón", "producto")
+    try:
+        orden = mesero.data("/orden/create", {
+            "mesa_id": mesa["id"], "clave_idempotencia": key(),
+            "items": [
+                {"producto_id": product_id(admin, "Hamburguesa doble"), "cantidad": 1,
+                 "modificadores": [option_id(admin, "Término de la carne", "Bien asada")]},
+                {"producto_id": product_id(admin, "Cerveza nacional"), "cantidad": 2},
+            ],
+        }, expect=201)
+    finally:
+        reparto(admin, "Salón", "zona")
     assert sorted(c["punto_produccion"] for c in orden["comandas"]) == ["Bar", "Cocina"]
 
     # Cada punto solo ve lo suyo y trabaja por separado (doc 19)

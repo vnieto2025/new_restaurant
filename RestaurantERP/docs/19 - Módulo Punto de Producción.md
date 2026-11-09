@@ -29,7 +29,12 @@ Tu requisito incluye zonas de bar con solo bebidas, zonas de comida rápida, coc
 
 ## 3. Cómo se decide a dónde va cada ítem
 
-Orden de prioridad:
+Cada zona elige **cómo se reparte un pedido** (ADR-056):
+
+- **Todo el pedido al punto de la zona** (por defecto): lo que se pide en esa zona va completo a su punto de producción, aunque mezcle comida y bebidas. Un pedido no se parte entre cocina y bar; lo que se ofrece en cada zona lo define su carta. Si la zona no tiene punto, se aplica el orden de abajo.
+- **Cada producto a su punto**: se usa el orden de prioridad siguiente, y un pedido con comida y bebidas se divide entre cocina y bar.
+
+Orden de prioridad (zonas con "cada producto a su punto"):
 
 1. **Producto → punto de producción** (configurado en `12`). Cada producto tiene un punto de producción principal.
 2. Si el producto no tiene uno, se usa el **punto de producción por defecto de su categoría** (`13`).

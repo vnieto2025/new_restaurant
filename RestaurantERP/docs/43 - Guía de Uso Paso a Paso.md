@@ -52,7 +52,7 @@ Tiene todos los módulos: pedidos, caja, facturación, inventario, domicilios, p
 | `contador.esquina` | Pedro Contador | Contador (solo lectura) | Reportes y descargas |
 
 **Lo que trae la demo:**
-- **Zonas y mesas:** Salón con Mesa 1 a Mesa 8, donde los pedidos por QR los aprueba el mesero; Terraza con Terraza 1 a 4, donde van directo a cocina; y Mostrador con la mesa "Para llevar".
+- **Zonas y mesas:** Salón con Mesa 1 a Mesa 8, donde los pedidos por QR los aprueba el mesero y todo el pedido va a la Cocina; Terraza con Terraza 1 a 4, donde los pedidos QR van directo y cada producto va a su punto (comida a Cocina, bebidas a Bar); y Mostrador con la mesa "Para llevar".
 - **Puntos de producción:** Cocina y Bar.
 - **Carta:** hamburguesas con término de la carne y adicionales, perros y papas, bebidas y el "Combo clásico".
 - **Inventario:** insumos con existencias y recetas.
@@ -98,7 +98,7 @@ Vende directo desde la caja (POS), sin mesas ni cocina. Además, la demo la deja
    - Si el producto tiene opciones (término de la carne, adicionales), se abre una ventana para elegirlas.
    - Un **combo** se arma eligiendo cada parte, por ejemplo la bebida.
 3. Toca **Enviar a cocina**.
-4. **Lo que pasa:** la hamburguesa llega a la pantalla de Cocina y la bebida a la de Bar. Cada punto recibe solo lo suyo.
+4. **Lo que pasa:** el Salón reparte **todo el pedido a su punto**, así que la comida y la bebida llegan juntas a la Cocina. En la **Terraza** (configurada como "cada producto a su punto"), la comida va a la Cocina y la bebida al Bar. Se cambia en Administración → Zonas.
 
 ### Paso 4 · Preparar y despachar (Pedro en Cocina, Sofía en Bar)
 1. La comanda aparece en **En proceso**. Se toca **Abrir** al empezar; en ese momento se descuenta el inventario.

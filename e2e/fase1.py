@@ -27,7 +27,7 @@ with sync_playwright() as p:
     cliente.wait_for_url("**/pedido/**")
     expect(cliente.get_by_text("El mesero confirmará tu pedido")).to_be_visible()
 
-    # 2. Mesero aprueba; cocina y bar reciben por WebSocket
+    # 2. Mesero aprueba; la cocina lo recibe todo por WebSocket: el Salón reparte el pedido entero a su punto (ADR-056)
     mesero = contexto(browser, 1180, 820)
     login(mesero, "mesero.salon")
     mesero.wait_for_url("**/mesas")
@@ -44,11 +44,11 @@ with sync_playwright() as p:
     expect(cocina.locator(".slip")).to_have_count(1, timeout=8000)
     expect(cocina.get_by_text("+ Queso extra")).to_be_visible()
     expect(cocina.get_by_text("sin cebolla")).to_be_visible()
+    expect(cocina.locator(".slip")).to_contain_text("Cerveza nacional")
     shot(cocina, "05-cocina-con-modificadores")
+    expect(bar.get_by_text("Sin comandas pendientes")).to_be_visible()
     cocina.get_by_role("button", name="Abrir").click()
     cocina.get_by_role("button", name="Despachar").click()
-    bar.get_by_role("button", name="Abrir").click()
-    bar.get_by_role("button", name="Despachar").click()
 
     # 3. Entrega y el mesero pide la cuenta
     mesero.reload()

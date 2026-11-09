@@ -29,6 +29,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `alertas` | Alertas en Hoy (umbral, silenciar), resumen del día con celular del dueño y aviso por enviar al cerrar la jornada |
 | `practica` | Crear la práctica, el mesero entra con la franja y toma una orden que el real no ve, reiniciar y volver |
 | `doble_factor` | Activar la verificación en Mi cuenta, entrar con código, verla en Personal y exigirla a los administradores |
+| `reparto` | El Salón manda el pedido entero a la Cocina (salchipapa y limonada juntas); el Bar no recibe nada |
 | `contador` | Rol de consulta: reportes, descargas y sin acceso a clientes ni a operar |
 | `importar` | Plantilla de productos, errores por fila, importación y actualización de precios |
 | `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |
