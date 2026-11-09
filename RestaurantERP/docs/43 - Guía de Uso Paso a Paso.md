@@ -119,6 +119,7 @@ Vende directo desde la caja (POS), sin mesas ni cocina. Además, la demo la deja
 
 ### Paso 7 · Domicilios
 1. **El cliente pide por la web:** con `admin.esquina`, en **Administración → Domicilios** está el enlace de pedidos web. El cliente pone zona, dirección y celular.
+   > No confundirlo con el QR **"Para llevar"** de Códigos QR: ese es para pedir y **recoger en el local**, no pide dirección y, con el Mostrador en "Libre", va directo a cocina y queda por cobrar en caja.
 2. **Confirmar (Marta):** en **Domicilios**, el pedido aparece por confirmar. Se toca **Confirmar y enviar a cocina**.
 3. **Asignar y despachar:** cuando está listo, se elige el domiciliario, se imprime la tirilla y se toca **Salió**.
 4. **Entregar (Julián, `domi.esquina`):** ve sus entregas y marca **Entregada**. Si no pudo, registra el fallo con el motivo.

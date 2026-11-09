@@ -4,11 +4,13 @@ import { postData } from '@/services/api'
 import { useAction } from '@/composables/useAction'
 import { usePrintStore } from '@/stores/print'
 import AppModal from '@/components/AppModal.vue'
+import { useAuthStore } from '@/stores/auth'
 
 /*
   Códigos QR de las mesas (doc 10A): ver, imprimir y, si alguien abusa de uno, revocarlo y generar otro.
   El QR solo lleva un token opaco; la mesa no se puede cambiar editando el enlace.
 */
+const auth = useAuthStore()
 const { busy, attempt, quiet } = useAction()
 const printer = usePrintStore()
 
@@ -64,6 +66,9 @@ onMounted(load)
         <div class="datos">
           <strong>{{ qr.tipo === 'rapido' ? 'Para llevar' : qr.mesa }}</strong>
           <span class="muted">{{ qr.zona }}</span>
+          <!-- Se confunde con el enlace de domicilios: este es para recoger en el local -->
+          <span v-if="qr.tipo === 'rapido'" class="nota">Para pedir y <b>recoger en el local</b>. No pide dirección.
+            <RouterLink v-if="auth.can('domicilios.gestionar')" :to="{ name: 'admin-domicilios' }">El enlace de domicilios está en Domicilios</RouterLink></span>
           <a :href="qr.url" target="_blank" rel="noopener" class="enlace">Abrir la carta</a>
         </div>
         <div class="actions">
@@ -110,6 +115,10 @@ onMounted(load)
 .datos {
   display: flex;
   flex-direction: column;
+}
+
+.nota {
+  font-size: var(--text-sm);
 }
 
 .datos strong {
