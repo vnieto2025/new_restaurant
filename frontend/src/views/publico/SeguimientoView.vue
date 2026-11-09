@@ -65,6 +65,8 @@ const mensaje = computed(() => (entrega.value ? MENSAJES_DOMICILIO : MENSAJES)[e
 const envio = computed(() => (entrega.value && entrega.value.estado !== 'fallida' ? entrega.value.tarifa : 0))
 
 const terminado = computed(() => ['entregada', 'cancelada'].includes(estado.value))
+// Un domicilio que ya salió no admite más: lo que falte va en un domicilio nuevo
+const puedePedirMas = computed(() => !(entrega.value && ['en_camino', 'entregada', 'cancelada'].includes(estado.value)))
 
 async function load() {
   try {
@@ -135,7 +137,7 @@ onBeforeUnmount(() => {
 
         <RouterLink v-if="pedido.pago_en_linea && estado !== 'cancelada'" class="btn btn-bloque"
                     :to="{ name: 'pagar', query: { seguimiento } }">Pagar en línea</RouterLink>
-        <RouterLink v-if="$route.query.q" class="btn btn-secundario btn-bloque" :to="{ name: 'carta', params: { token: $route.query.q } }">
+        <RouterLink v-if="$route.query.q && puedePedirMas" class="btn btn-secundario btn-bloque" :to="{ name: 'carta', params: { token: $route.query.q } }">
           Pedir algo más
         </RouterLink>
       </template>

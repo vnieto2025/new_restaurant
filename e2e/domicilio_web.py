@@ -65,6 +65,8 @@ with sync_playwright() as p:
     expect(cel.get_by_text("El restaurante confirmará tu pedido")).to_be_visible()
     expect(cel.get_by_text("Calle 10 # 5-21")).to_be_visible()
     expect(cel.get_by_role("link", name="Pagar en línea")).to_have_count(0)
+    expect(cel.get_by_role("link", name="Pedir algo más")).to_be_visible()
+    seguimiento = cel.url
     shot(cel, "w06-seguimiento-por-confirmar")
 
     # Quien despacha lo ve primero, marcado como web y por confirmar
@@ -89,6 +91,23 @@ with sync_playwright() as p:
     cel.wait_for_url("**/pagar**")
     expect(cel.get_by_text("Domicilio")).to_be_visible()
     shot(cel, "w09-pagar-con-domicilio")
+
+    # Cocina despacha y el domiciliario sale: con el domicilio en camino ya no se agrega nada más
+    cocina = api("/login", {"usuario": "cocina.esquina", "password": "demo1234"})
+    punto = next(x["id"] for x in cocina["puntos"] if x["nombre"] == "Cocina")
+    datos = api("/entrega/list", {}, caja_token)
+    entrega = next(e for e in datos["activas"] if cliente in str(e))
+    for comanda in api("/cocina/comandas", {"punto_produccion_id": punto}, cocina["token"])["en_proceso"]:
+        if comanda["orden_id"] == entrega["orden_id"]:
+            api("/cocina/abrir", {"comanda_id": comanda["id"]}, cocina["token"])
+            api("/cocina/despachar", {"comanda_id": comanda["id"]}, cocina["token"])
+    d01 = next(d for d in datos["domiciliarios"] if d["codigo"] == "D01")
+    api("/entrega/asignar", {"entrega_id": entrega["id"], "domiciliario_id": d01["id"]}, caja_token)
+    api("/entrega/salir", {"entrega_id": entrega["id"]}, caja_token)
+    cel.goto(seguimiento)
+    expect(cel.get_by_text("Tu pedido va en camino.")).to_be_visible()
+    expect(cel.get_by_role("link", name="Pedir algo más")).to_have_count(0)
+    shot(cel, "w09b-en-camino-sin-pedir-mas")
 
     # Otro pedido web que el restaurante rechaza: el cliente ve el motivo y no se cobra
     segundo = api("/publico/orden/create", {
