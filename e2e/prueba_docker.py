@@ -3,6 +3,7 @@ de tamaño de nginx y que un respaldo se pueda restaurar. Los flujos de la aplic
 import base64
 import io
 import json
+import time
 import os
 import subprocess
 import sys
@@ -79,7 +80,14 @@ estado, _ = pedir("/api/producto/create", {"nombre": "Creado después del respal
 comprobar("cambio posterior al respaldo", estado == 201 and total_productos() == antes + 1)
 
 correr("sh", "ops/restaurar.sh", "--si", f"respaldos/{archivos[-1]}")
-sesion = json.loads(pedir("/api/login", {"usuario": "admin.esquina", "password": "demo1234"})[1])["data"]
+# El backend se reinicia al restaurar: se espera a que vuelva a responder antes de seguir
+for _ in range(60):
+    estado, cuerpo = pedir("/api/login", {"usuario": "admin.esquina", "password": "demo1234"})
+    if estado == 200 and cuerpo.startswith(b"{"):
+        break
+    time.sleep(2)
+comprobar("el backend volvió después de restaurar", estado == 200, f"estado {estado}")
+sesion = json.loads(cuerpo)["data"]
 token = sesion["token"]
 comprobar("volvió al estado del respaldo", total_productos() == antes)
 comprobar("el respaldo trae las fotos", pedir(f"/api/media/{imagen}")[0] == 200)
