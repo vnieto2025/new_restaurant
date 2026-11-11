@@ -22,8 +22,10 @@ def qr_url(token: str):
     return f"{PUBLIC_URL}/q/{token}"
 
 
-def qr_svg(url: str):
-    return segno.make(url, error="m").svg_inline(scale=8, border=2)
+def qr_svg(url: str, scale=8):
+    """ SVG del QR que se escala completo a cualquier tamaño (viewBox, sin ancho fijo: con ancho fijo el navegador
+        lo recortaba y no se podía leer), con el margen blanco de 4 módulos que piden los lectores """
+    return segno.make(url, error="m").svg_inline(scale=scale, border=4, omitsize=True, light="#fff")
 
 
 class Qr:

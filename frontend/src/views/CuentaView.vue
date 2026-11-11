@@ -281,6 +281,7 @@ h3 {
 
 .qr :deep(svg) {
   display: block;
+  width: 12rem;
   max-width: 100%;
   height: auto;
 }

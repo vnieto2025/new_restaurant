@@ -398,3 +398,13 @@ def test_reabrir_comanda_queda_auditado(esquina):
     cocina.data("/cocina/tirilla", {"comanda_id": tarjeta["id"]})
     acciones = [r["accion"] for r in admin.data("/auditoria/list")]
     assert "comanda_reabierta" in acciones and "tirilla_reimpresa" in acciones
+
+
+def test_imagen_del_qr_se_escala_completa(esquina):
+    """ El QR trae viewBox y no ancho fijo: con ancho fijo el navegador lo recortaba y ningún celular lo leía.
+        Lleva el margen blanco de 4 módulos que piden los lectores. """
+    admin, _ = esquina["admin.esquina"]
+    for svg in [admin.data("/qr/list", {"con_imagen": True})[0]["svg"], admin.data("/domicilio/web/get")["svg"]]:
+        cabeza = svg[:svg.index(">")]
+        assert "viewBox" in cabeza and "width=" not in cabeza and "height=" not in cabeza
+        assert 'fill="#fff"' in svg

@@ -1,9 +1,9 @@
-import segno
 from werkzeug.security import check_password_hash
 from Utils.tools import Tools, CustomException, now
 from Utils.cifrado import cifrar, descifrar
 from Utils.limiter import limiter
 from Utils import totp
+from Class.Qr import qr_svg
 from Querys.base import Querys
 from Models.usuario_model import UsuarioModel
 from Models.empresa_model import EmpresaModel
@@ -94,7 +94,7 @@ class DobleFactor:
         return self.tools.output(200, "Escanea el código con la aplicación.", {
             "secreto": " ".join(secreto[i:i + 4] for i in range(0, len(secreto), 4)),
             "uri": enlace,
-            "qr_svg": segno.make(enlace, error="m").svg_inline(scale=5, border=2),
+            "qr_svg": qr_svg(enlace, scale=5),
         })
 
     def activate(self, data: dict):
