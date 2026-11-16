@@ -804,6 +804,19 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** la carta pública del cliente no escanea. Leer con la cámara del celular queda por fuera: es menos confiable en iPhone.
 - **Cuándo revisar:** si se pide leer con la cámara, o códigos por presentación (por ejemplo, unidad y paca).
 
+## ADR-059: Vistas de la carta al vender
+
+- **Estado:** Aprobada (2026-11-15). Pedido del dueño del producto: ver los productos como en el explorador de archivos.
+- **Decisión:**
+  - **Cuatro vistas en el selector de carta,** el que comparten la mesa del mesero, el Mostrador y la venta directa de la Caja:
+    - **cuadrícula:** la de siempre;
+    - **lista:** solo texto, una fila por producto con el precio a la derecha;
+    - **fotos medianas** y **fotos grandes:** la foto del producto, o su inicial si no tiene.
+  - **Se recuerda por equipo** (almacenamiento del navegador): cada tablet o computador queda con la vista que más le sirva. Es una preferencia de pantalla, no un dato del restaurante.
+  - Las fotos se cargan solo al acercarse a la pantalla (`loading="lazy"`). Son las mismas, ya comprimidas, de la carta digital (ADR-049).
+  - Agregar, escanear con lector y los avisos de agotado funcionan igual en las cuatro vistas.
+- **Cuándo revisar:** si se pide la misma opción en la carta del cliente o en la lista de Productos de administración.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

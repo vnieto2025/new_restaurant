@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { formatMoney } from '@/utils/format'
+import { formatMoney, mediaUrl } from '@/utils/format'
 import OpcionesProducto from '@/components/OpcionesProducto.vue'
 import OpcionesCombo from '@/components/OpcionesCombo.vue'
 import { useEscaner } from '@/composables/useEscaner'
@@ -20,6 +20,33 @@ const categoriaId = ref(null)
 const conOpciones = ref(null)
 const combo = ref(null)
 const buscar = ref('')
+
+// Cómo se ven los productos, como en el explorador de archivos; cada equipo recuerda la suya (ADR-059)
+const VISTAS = [
+  { valor: 'cuadricula', titulo: 'Cuadrícula' },
+  { valor: 'lista', titulo: 'Lista' },
+  { valor: 'mediana', titulo: 'Fotos medianas' },
+  { valor: 'grande', titulo: 'Fotos grandes' },
+]
+const CLAVE_VISTA = 'carta.vista'
+function leerVista() {
+  try {
+    const guardada = localStorage.getItem(CLAVE_VISTA)
+    return VISTAS.some((v) => v.valor === guardada) ? guardada : 'cuadricula'
+  } catch {
+    return 'cuadricula'
+  }
+}
+const vista = ref(leerVista())
+function cambiarVista(valor) {
+  vista.value = valor
+  try {
+    localStorage.setItem(CLAVE_VISTA, valor)
+  } catch {
+    // Sin almacenamiento la vista dura hasta recargar
+  }
+}
+const conFoto = computed(() => ['mediana', 'grande'].includes(vista.value))
 const toast = useToastStore()
 const escaneado = ref(null)
 
@@ -96,7 +123,32 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
 <template>
   <section class="picker">
     <div class="buscar">
-      <input v-model="buscar" class="input" type="search" placeholder="Buscar producto o escanear código" aria-label="Buscar producto">
+      <div class="barra">
+        <input v-model="buscar" class="input" type="search" placeholder="Buscar producto o escanear código" aria-label="Buscar producto">
+        <div class="vistas" role="group" aria-label="Ver productos como">
+          <button v-for="v in VISTAS" :key="v.valor" type="button" class="vista" :aria-pressed="vista === v.valor"
+                  :title="v.titulo" :aria-label="v.titulo" @click="cambiarVista(v.valor)">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <template v-if="v.valor === 'cuadricula'">
+                <rect x="2" y="2" width="7" height="7" rx="1" /><rect x="11" y="2" width="7" height="7" rx="1" />
+                <rect x="2" y="11" width="7" height="7" rx="1" /><rect x="11" y="11" width="7" height="7" rx="1" />
+              </template>
+              <template v-else-if="v.valor === 'lista'">
+                <rect x="2" y="3" width="16" height="2.5" rx="1" /><rect x="2" y="8.75" width="16" height="2.5" rx="1" />
+                <rect x="2" y="14.5" width="16" height="2.5" rx="1" />
+              </template>
+              <template v-else-if="v.valor === 'mediana'">
+                <rect x="2" y="2" width="7" height="5" rx="1" /><rect x="11" y="2" width="7" height="5" rx="1" />
+                <rect x="2" y="8.5" width="7" height="1.5" rx=".5" /><rect x="11" y="8.5" width="7" height="1.5" rx=".5" />
+                <rect x="2" y="11" width="7" height="5" rx="1" /><rect x="11" y="11" width="7" height="5" rx="1" />
+              </template>
+              <template v-else>
+                <rect x="2" y="2" width="16" height="11" rx="1.5" /><rect x="2" y="15" width="11" height="2.5" rx="1" />
+              </template>
+            </svg>
+          </button>
+        </div>
+      </div>
       <p v-if="escaneado" class="escaneado" role="status">Escaneado: {{ escaneado }}</p>
     </div>
 
@@ -107,9 +159,13 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
       </button>
     </div>
 
-    <div class="productos">
+    <div class="productos" :class="`vista-${vista}`">
       <button v-for="producto in productos" :key="producto.id" type="button" class="producto"
               :disabled="producto.agotado" @click="elegir(producto)">
+        <span v-if="conFoto" class="foto" aria-hidden="true">
+          <img v-if="producto.imagen" :src="mediaUrl(producto.imagen)" alt="" loading="lazy">
+          <span v-else class="inicial">{{ producto.nombre.charAt(0) }}</span>
+        </span>
         <span class="nombre">{{ producto.nombre }}</span>
         <span class="precio">{{ producto.agotado ? 'Agotado' : formatMoney(producto.precio) }}<template v-if="producto.grupos?.length && !producto.agotado"> · con opciones</template></span>
         <span v-if="cantidades[producto.id]" class="en-carrito" :aria-label="`${cantidades[producto.id]} en la orden`">
@@ -132,6 +188,54 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
   gap: var(--space-3);
   min-width: 0;
   min-height: 0;
+}
+
+/* En pantallas angostas el buscador va en su propio renglón y las vistas debajo */
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.barra .input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.vistas {
+  flex: none;
+  display: flex;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.vista {
+  display: grid;
+  place-items: center;
+  width: var(--toque);
+  min-height: var(--toque);
+  border: 0;
+  border-left: 1px solid var(--linea);
+  background: transparent;
+  color: var(--acero);
+  cursor: pointer;
+}
+
+.vista:first-child {
+  border-left: 0;
+}
+
+.vista svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: currentColor;
+}
+
+.vista[aria-pressed='true'] {
+  background: var(--tinta);
+  color: #fff;
 }
 
 .escaneado {
@@ -225,5 +329,107 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
 
 .empty {
   grid-column: 1 / -1;
+}
+
+/* Lista: solo texto, una fila por producto con el precio a la derecha */
+.vista-lista {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.vista-lista .producto {
+  flex-direction: row;
+  align-items: center;
+  min-height: var(--toque);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-top: 1px solid var(--linea);
+  border-radius: 0;
+}
+
+.vista-lista .producto:first-child {
+  border-top: 0;
+}
+
+.vista-lista .nombre {
+  flex: 1 1 auto;
+}
+
+.vista-lista .precio {
+  flex: none;
+  text-align: right;
+}
+
+.vista-lista .en-carrito {
+  position: static;
+  flex: none;
+}
+
+/* Fotos: la imagen del producto arriba, en dos tamaños */
+.vista-mediana {
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+}
+
+.vista-grande {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-3);
+}
+
+.vista-mediana .producto,
+.vista-grande .producto {
+  justify-content: flex-start;
+  padding: 0 0 var(--space-3);
+  overflow: hidden;
+}
+
+.vista-mediana .producto > :not(.foto, .en-carrito),
+.vista-grande .producto > :not(.foto, .en-carrito) {
+  padding: 0 var(--space-3);
+}
+
+.foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--fondo);
+  border-bottom: 1px solid var(--linea);
+}
+
+.foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inicial {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--acero);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  font-stretch: 70%;
+}
+
+.vista-grande .inicial {
+  font-size: var(--text-3xl);
+}
+
+.vista-grande .nombre {
+  font-size: var(--text-lg);
+}
+
+.producto:disabled .foto {
+  opacity: 0.5;
+}
+
+.vista-mediana .en-carrito,
+.vista-grande .en-carrito {
+  top: var(--space-2);
+  right: var(--space-2);
 }
 </style>

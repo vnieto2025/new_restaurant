@@ -217,4 +217,5 @@ Vende directo desde la caja (POS), sin mesas ni cocina. Además, la demo la deja
 | Dos pasos | Mi cuenta → activar; salir y volver a entrar con el código del celular |
 | Solo lectura | Con `soporte`, suspender La Esquina y entrar con `admin.esquina` |
 | Exportar | Exportar datos → descargar productos o ventas en Excel |
+| Vistas de la carta | En Caja → Venta directa, Mostrador o una mesa, los botones junto al buscador cambian entre cuadrícula, lista, fotos medianas y fotos grandes. Cada equipo recuerda la suya |
 | Código de barras | En Productos, ponle a la Gaseosa su código (escaneándolo o escribiéndolo). En Caja → Venta directa, en Mostrador o en una mesa, pasa el lector: se agrega solo |

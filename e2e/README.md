@@ -32,6 +32,7 @@ Complementan las pruebas del backend (`backend/tests`, pytest), que validan las 
 | `reparto` | El Salón manda el pedido entero a la Cocina (salchipapa y limonada juntas); el Bar no recibe nada |
 | `cuenta_sencilla` | En Napoli (sin caja), el mesero y la cocina imprimen la cuenta de la mesa con IVA y propina sugerida |
 | `escaneo` | Código de barras: se escanea en el producto y, en la venta directa de caja y en la mesa, pasar el lector agrega el producto |
+| `vistas` | Vistas de la carta en caja y mesa: cuadrícula, lista, fotos medianas y grandes; se recuerda la elegida |
 | `contador` | Rol de consulta: reportes, descargas y sin acceso a clientes ni a operar |
 | `importar` | Plantilla de productos, errores por fila, importación y actualización de precios |
 | `exportar` | Descarga de datos en Excel y CSV, datos de personas, auditoría y permisos |
