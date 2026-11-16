@@ -11,17 +11,17 @@ productos = {p["nombre"]: p["id"] for p in api("/producto/list", {}, admin)}
 mesa = next(m for m in api("/mesa/list", {}, admin) if m["nombre"] == "Mesa 5")
 
 
-def foto(color):
-    lienzo = Image.new("RGB", (800, 600), color)
-    ImageDraw.Draw(lienzo).ellipse((250, 150, 550, 450), fill="white")
+def foto(color, ancho, alto):
+    lienzo = Image.new("RGB", (ancho, alto), color)
+    ImageDraw.Draw(lienzo).ellipse((ancho // 2 - 100, alto // 2 - 100, ancho // 2 + 100, alto // 2 + 100), fill="white")
     salida = io.BytesIO()
     lienzo.save(salida, "JPEG")
     return base64.b64encode(salida.getvalue()).decode()
 
 
-# Dos productos de la carta con foto; el resto queda sin ella para ver la inicial
-for nombre, color in [("Hamburguesa clásica", "#b5651d"), ("Hamburguesa doble", "#8b3a1a")]:
-    api("/producto/imagen", {"producto_id": productos[nombre], "archivo": foto(color)}, admin)
+# Dos productos con foto de formas distintas (horizontal y vertical); el resto sin foto, para ver la inicial
+for nombre, color, ancho, alto in [("Hamburguesa clásica", "#b5651d", 900, 500), ("Hamburguesa doble", "#8b3a1a", 500, 900)]:
+    api("/producto/imagen", {"producto_id": productos[nombre], "archivo": foto(color, ancho, alto)}, admin)
 
 with sync_playwright() as p:
     browser = abrir_navegador(p)
@@ -44,6 +44,10 @@ with sync_playwright() as p:
     vistas.get_by_role("button", name="Fotos medianas").click()
     expect(page.locator(".producto", has_text="Hamburguesa clásica").locator("img")).to_be_visible()
     expect(page.locator(".producto", has_text="Hamburguesa de pollo").locator(".inicial")).to_have_text("H")
+    # Sin importar la forma de la foto, los marcos y las tarjetas quedan del mismo tamaño
+    marcos = [page.locator(".producto", has_text=n).locator(".foto").bounding_box()["height"]
+              for n in ("Hamburguesa clásica", "Hamburguesa doble", "Hamburguesa de pollo")]
+    assert max(marcos) - min(marcos) < 1, marcos
     shot(page, "v03-medianas")
 
     vistas.get_by_role("button", name="Fotos grandes").click()

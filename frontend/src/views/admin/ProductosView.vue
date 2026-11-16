@@ -349,13 +349,14 @@ onMounted(load)
               <input v-model.number="c.cantidad" class="input cantidad" type="number" min="1" max="10" :aria-label="`Cantidad de ${c.nombre || 'la parte'}`">
               <button class="btn btn-secundario btn-sm" type="button" :aria-label="`Quitar ${c.nombre || 'parte'}`" @click="form.componentes.splice(ci, 1)">Quitar</button>
             </div>
+            <div class="opcion-combo titulos-combo" aria-hidden="true"><span>Producto</span><span class="extra">Valor extra ($)</span></div>
             <div v-for="(o, oi) in c.opciones" :key="oi" class="opcion-combo">
               <select v-model="o.producto_id" class="select" required :aria-label="`Opción ${oi + 1} de ${c.nombre || 'la parte'}`">
                 <option :value="null" disabled>Elige un producto</option>
                 <option v-for="p in simples" :key="p.id" :value="p.id">{{ p.nombre }}</option>
               </select>
               <input v-model.number="o.precio_extra" class="input extra" type="number" min="0" step="100" inputmode="numeric"
-                     :aria-label="`Valor extra de la opción ${oi + 1}`" placeholder="Extra">
+                     :aria-label="`Valor extra de la opción ${oi + 1}`" placeholder="0">
               <button v-if="c.opciones.length > 1" class="btn btn-secundario btn-sm" type="button" :aria-label="`Quitar opción ${oi + 1}`"
                       @click="c.opciones.splice(oi, 1)">×</button>
             </div>
@@ -434,6 +435,16 @@ onMounted(load)
 }
 
 .componente-cabeza,
+.titulos-combo {
+  color: var(--acero);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.titulos-combo span:first-child {
+  flex: 1 1 auto;
+}
+
 .opcion-combo {
   display: flex;
   gap: var(--space-2);

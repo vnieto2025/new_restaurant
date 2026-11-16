@@ -390,16 +390,22 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
   padding: 0 var(--space-3);
 }
 
+/* El marco tiene siempre la misma proporción y la foto se recorta para llenarlo: con cualquier tamaño o
+   forma de imagen, las tarjetas quedan parejas y el nombre y el precio a la misma altura */
 .foto {
+  position: relative;
+  flex: none;
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
+  overflow: hidden;
   background: var(--fondo);
   border-bottom: 1px solid var(--linea);
 }
 
 .foto img {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

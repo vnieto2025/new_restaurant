@@ -115,6 +115,7 @@ onMounted(load)
 
         <fieldset class="opciones">
           <legend>Opciones</legend>
+          <div class="opcion titulos" aria-hidden="true"><span>Opción</span><span>Valor extra ($)</span></div>
           <div v-for="(opcion, index) in form.opciones" :key="index" class="opcion">
             <input v-model="opcion.nombre" class="input" maxlength="60" placeholder="Nombre" :aria-label="`Opción ${index + 1}`">
             <input v-model.number="opcion.precio_extra" class="input precio" type="number" min="0" step="100"
@@ -123,7 +124,8 @@ onMounted(load)
                     :aria-label="`Quitar opción ${index + 1}`" @click="quitarOpcion(index)">Quitar</button>
           </div>
           <button v-escribe class="btn btn-secundario btn-sm" type="button" @click="agregarOpcion">Agregar opción</button>
-          <p class="hint">El precio extra se suma al del producto. Déjalo en 0 si no cambia el precio.</p>
+          <p class="hint">El valor extra se suma al precio del producto, también dentro de un combo. Por ejemplo, «Agrandar papas» 2000.
+            Déjalo en 0 si no cambia el precio.</p>
         </fieldset>
 
         <div class="form-actions">
@@ -156,6 +158,12 @@ onMounted(load)
   grid-template-columns: minmax(0, 1fr) 7rem auto;
   gap: var(--space-2);
   align-items: center;
+}
+
+.titulos {
+  color: var(--acero);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .opciones > .btn {

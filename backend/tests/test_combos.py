@@ -195,3 +195,18 @@ def test_qr_con_aprobacion_y_rechazo(client, esquina):
     # La mesa queda libre para las demás pruebas
     mesero.data("/orden/cancelar_item", {"orden_item_id": find(aprobada["items"], nombre=COMBO)["id"], "motivo": "Fin de la prueba"})
     mesero.data("/mesa/cerrar", {"mesa_id": table(mesero, "Mesa 8")["id"]})
+
+
+def test_modificador_con_precio_dentro_del_combo(esquina):
+    """ Un adicional pagado en una parte del combo (queso extra en la hamburguesa) se suma al precio del combo """
+    admin, _ = esquina["admin.esquina"]
+    mesero, _ = esquina["mesero.terraza"]
+    combo, componentes = eleccion(admin, bebida="Gaseosa 400 ml")
+    componentes[0]["modificadores"].append(option_id(admin, "Adicionales", "Queso extra"))
+    orden = mesero.data("/orden/create", {"mesa_id": table(mesero, "Terraza 4")["id"], "clave_idempotencia": key(),
+                                          "items": [{"producto_id": combo["id"], "cantidad": 2, "componentes": componentes}]}, expect=201)
+    linea = next(i for i in orden["items"] if i["es_combo"])
+    assert linea["precio_unitario"] == combo["precio"] + 3000 and linea["total"] == 2 * (combo["precio"] + 3000)
+    for item in orden["items"]:
+        if item["es_combo"]:
+            mesero.data("/orden/cancelar_item", {"orden_item_id": item["id"], "motivo": "Prueba de adicional"})
