@@ -31,6 +31,11 @@ with sync_playwright() as p:
     login(page, "caja.esquina")
     page.goto(f"{APP}/caja")
     page.get_by_role("tab", name="Venta directa").click()
+    # Abre en "Todos": la carta completa, de todas las categorías
+    expect(page.get_by_role("tab", name="Todos")).to_have_attribute("aria-selected", "true")
+    expect(page.locator(".productos")).to_contain_text("Combo clásico")
+    expect(page.locator(".productos")).to_contain_text("Gaseosa 400 ml")
+    shot(page, "v00-todos")
     page.get_by_role("tab", name="Hamburguesas").click()
     vistas = page.get_by_role("group", name="Ver productos como")
     expect(vistas.get_by_role("button", name="Cuadrícula")).to_have_attribute("aria-pressed", "true")

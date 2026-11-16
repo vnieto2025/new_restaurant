@@ -16,7 +16,9 @@ const props = defineProps({
 })
 const emit = defineEmits(['add'])
 
-const categoriaId = ref(null)
+// 'todos' muestra la carta completa en el orden de sus categorías; es la vista con la que abre
+const TODOS = 'todos'
+const categoriaId = ref(TODOS)
 const conOpciones = ref(null)
 const combo = ref(null)
 const buscar = ref('')
@@ -113,11 +115,16 @@ const productos = computed(() => {
     return props.categorias.flatMap((c) => c.productos)
       .filter((p) => normalize(p.nombre).includes(texto) || (p.codigo_barras && p.codigo_barras.includes(texto)))
   }
+  if (categoriaId.value === TODOS) return props.categorias.flatMap((c) => c.productos)
   const categoria = props.categorias.find((c) => c.id === categoriaId.value) || props.categorias[0]
   return categoria ? categoria.productos : []
 })
 
-const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ?? props.categorias[0]?.id))
+// Con una sola categoría no hay pestaña "Todos": queda marcada esa categoría
+const activa = computed(() => {
+  if (buscar.value.trim()) return null
+  return categoriaId.value === TODOS && props.categorias.length <= 1 ? props.categorias[0]?.id : categoriaId.value
+})
 </script>
 
 <template>
@@ -153,6 +160,8 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
     </div>
 
     <div class="categorias" role="tablist" aria-label="Categorías">
+      <button v-if="categorias.length > 1" role="tab" type="button" class="categoria" :aria-selected="activa === TODOS"
+              @click="categoriaId = TODOS; buscar = ''">Todos</button>
       <button v-for="categoria in categorias" :key="categoria.id" role="tab" type="button" class="categoria"
               :aria-selected="activa === categoria.id" @click="categoriaId = categoria.id; buscar = ''">
         {{ categoria.nombre }}
