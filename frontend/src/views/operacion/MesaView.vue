@@ -112,6 +112,12 @@ async function pedirCuenta() {
   if (cuenta) printer.print('cuenta', cuenta)
 }
 
+// Sin caja la cuenta no se cobra en el sistema: se imprime para el cliente con IVA y propina sugerida (ADR-057)
+async function imprimirCuenta() {
+  const data = await attempt(() => postData('/orden/cuenta', { mesa_id: Number(props.mesaId) }))
+  if (data) printer.print('cuenta', data)
+}
+
 async function cerrarMesa() {
   const ok = await attempt(() => postData('/mesa/cerrar', { mesa_id: Number(props.mesaId) }), { success: 'Mesa cerrada. Queda libre.' })
   if (ok !== undefined) router.push({ name: 'mesero' })
@@ -191,6 +197,9 @@ onMounted(async () => {
           <button v-escribe v-if="conCaja && ordenes.length && auth.can('ordenes.pedir_cuenta')" class="btn btn-bloque" type="button"
                   :disabled="busy" @click="pedirCuenta">
             Pedir la cuenta e imprimir precuenta ({{ formatMoney(totalMesa) }})
+          </button>
+          <button v-if="!conCaja && ordenes.length" class="btn btn-bloque" type="button" :disabled="busy" @click="imprimirCuenta">
+            Imprimir cuenta ({{ formatMoney(totalMesa) }})
           </button>
           <button v-escribe v-if="puedeCerrar" class="btn btn-secundario btn-bloque" type="button" :disabled="busy" @click="cerrarMesa">
             Cerrar mesa ({{ formatMoney(totalMesa) }})

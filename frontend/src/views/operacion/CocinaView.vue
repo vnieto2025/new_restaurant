@@ -4,6 +4,7 @@ import { postData } from '@/services/api'
 import { useRealtime } from '@/composables/useRealtime'
 import { useAction } from '@/composables/useAction'
 import { usePrintStore } from '@/stores/print'
+import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import ComandaSlip from '@/components/ComandaSlip.vue'
 import ConnectionBanner from '@/components/ConnectionBanner.vue'
@@ -17,6 +18,7 @@ import SugerirAgotados from '@/components/SugerirAgotados.vue'
 const props = defineProps({ puntoId: { type: String, required: true } })
 
 const toast = useToastStore()
+const auth = useAuthStore()
 const printer = usePrintStore()
 const { busy, attempt } = useAction()
 
@@ -152,6 +154,12 @@ async function despachar(comanda, ids) {
   else load()
 }
 
+// Cuenta de toda la mesa para el cliente, cuando el restaurante no cobra en el sistema (ADR-057)
+async function cuenta(comanda) {
+  const data = await attempt(() => postData('/orden/cuenta', { orden_id: comanda.orden_id }))
+  if (data) printer.print('cuenta', data)
+}
+
 async function imprimir(comanda) {
   const tirilla = await attempt(() => postData('/cocina/tirilla', { comanda_id: comanda.id }))
   if (tirilla) printer.print('comanda', tirilla)
@@ -223,6 +231,7 @@ onBeforeUnmount(() => clearInterval(reloj))
         <ComandaSlip v-for="comanda in visibles" :key="comanda.id" :comanda="comanda" :ahora="ahora"
                      :tiempo-objetivo="punto?.tiempo_objetivo" :salta-en-proceso="punto?.salta_en_proceso" :busy="busy"
                      @abrir="abrir(comanda)" @despachar="(ids) => despachar(comanda, ids)"
+                     :con-cuenta="!auth.modulos.has('caja')" @cuenta="cuenta(comanda)"
                      @reabrir="pedirMotivo('reabrir', comanda)" @imprimir="imprimir(comanda)"
                      @agotado="(item) => pedirMotivo('agotado', comanda, item)" />
       </div>

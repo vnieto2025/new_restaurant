@@ -198,6 +198,7 @@ Vende directo desde la caja (POS), sin mesas ni cocina. Además, la demo la deja
 
 ### Pizzería Napoli (`napoli`, `mesero.napoli`, `cocina.napoli`)
 - El mesero toma la orden y la cocina la despacha. No hay caja: el mesero cierra la mesa cuando el cliente paga por fuera del sistema.
+- Si el cliente pide la cuenta, el mesero toca **Imprimir cuenta** en la mesa, o la cocina toca **Cuenta** en la comanda. Sale toda la mesa, el IVA incluido (si hay un impuesto configurado en Administración → Impuestos) y la propina sugerida. No es factura electrónica: para eso hay que contratar Caja y Facturación.
 
 ### Panadería Dulce Trigo (`trigo`, `caja.trigo`)
 - `caja.trigo` abre turno y vende directo con la **venta directa (POS)**: toca los productos y cobra, sin mesas ni cocina.

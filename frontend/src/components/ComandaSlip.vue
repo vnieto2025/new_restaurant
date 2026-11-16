@@ -13,8 +13,10 @@ const props = defineProps({
   tiempoObjetivo: { type: Number, default: null },
   saltaEnProceso: { type: Boolean, default: false },
   busy: { type: Boolean, default: false },
+  // Restaurante sin caja: la cocina también imprime la cuenta de la mesa para el cliente (ADR-057)
+  conCuenta: { type: Boolean, default: false },
 })
-const emit = defineEmits(['abrir', 'despachar', 'reabrir', 'imprimir', 'agotado'])
+const emit = defineEmits(['abrir', 'despachar', 'reabrir', 'imprimir', 'agotado', 'cuenta'])
 
 const seleccion = ref(new Set())
 
@@ -108,6 +110,7 @@ function despachar() {
         <span v-if="demorada" class="demora-texto">demorada</span>
       </span>
       <button class="btn-icono" type="button" :disabled="busy" @click="emit('imprimir')">Imprimir</button>
+      <button v-if="conCuenta" class="btn-icono" type="button" :disabled="busy" @click="emit('cuenta')">Cuenta</button>
     </footer>
 
     <button v-if="accion === 'abrir'" v-escribe class="accion abrir" type="button" :disabled="busy" @click="emit('abrir')">

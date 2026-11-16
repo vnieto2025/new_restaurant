@@ -82,7 +82,7 @@ const documento = computed(() => {
         <p v-if="documento.receptor_documento">{{ documento.receptor_tipo_documento }} {{ documento.receptor_documento }}</p>
         <p>Comprobante interno {{ ticket.data.numero_texto }}</p>
       </template>
-      <p v-else class="grande">{{ ticket.data.estado === 'pagada' ? `Comprobante ${ticket.data.numero_texto}` : 'Precuenta' }}</p>
+      <p v-else class="grande">{{ ticket.data.sencilla ? 'Cuenta' : ticket.data.estado === 'pagada' ? `Comprobante ${ticket.data.numero_texto}` : 'Precuenta' }}</p>
       <p>{{ ticket.data.mesa_tipo === 'externa' ? ticket.data.cliente_nombre || ticket.data.mesa : `${ticket.data.zona} · ${ticket.data.mesa}` }}</p>
       <p v-if="ticket.data.mesero">Mesero: {{ ticket.data.mesero }}</p>
       <p>{{ formatTime(ticket.data.pagada_local || new Date()) }}</p>
@@ -103,6 +103,17 @@ const documento = computed(() => {
         <span>Propina sugerida {{ ticket.data.propina_porcentaje }} %</span><span>{{ formatMoney(ticket.data.propina_sugerida) }}</span>
       </p>
       <p class="fila grande"><span>Total</span><span>{{ formatMoney(ticket.data.total) }}</span></p>
+      <template v-if="ticket.data.sencilla">
+        <!-- Cuenta sin caja (ADR-057): el precio ya incluye el impuesto; la propina sugerida es aparte -->
+        <p v-if="ticket.data.propina_sugerida" class="fila"><span>Total con propina sugerida</span><span>{{ formatMoney(ticket.data.total_con_propina) }}</span></p>
+        <template v-if="ticket.data.desglose.impuestos.length">
+          <hr>
+          <p class="fila"><span>Base</span><span>{{ formatMoney(ticket.data.desglose.base) }}</span></p>
+          <p v-for="imp in ticket.data.desglose.impuestos" :key="imp.impuesto + imp.porcentaje_texto" class="fila">
+            <span>{{ imp.impuesto }} {{ imp.porcentaje_texto }} %</span><span>{{ formatMoney(imp.valor) }}</span>
+          </p>
+        </template>
+      </template>
       <template v-if="documento">
         <!-- Desglose: el precio ya incluye el impuesto; la propina no hace parte de la base -->
         <hr>

@@ -379,6 +379,77 @@ class Orden:
         detalle["entrega"] = caja.format_entrega_corta(caja.entrega_de_sesion(orden.sesion_mesa_id)) if orden.canal == "domicilio" else None
         return self.tools.output(200, "Tirilla de la orden.", detalle)
 
+    # Cuenta de la mesa para el cliente cuando el restaurante no cobra en el sistema (sin caja): todo lo
+    # consumido, el IVA incluido y la propina sugerida. Es informativa: no es factura electrónica (ADR-057)
+    def bill(self, data: dict):
+        from Querys.mesa import MesaQuerys
+        from Models.impuesto_model import ImpuestoModel
+        from Utils.impuestos import desglosar, porcentaje_texto
+        if data.get("orden_id"):
+            orden = self.querys.get_own(OrdenModel, data["orden_id"], "orden")
+            self.check_bill_scope(orden)
+            sesion_id = orden.sesion_mesa_id
+        elif data.get("mesa_id"):
+            mesa = self.get_table(data["mesa_id"])
+            sesion = MesaQuerys(self.db, self.ctx).get_open_session(mesa.id)
+            if not sesion:
+                raise CustomException("La mesa no tiene consumo abierto.", 409)
+            sesion_id = sesion.id
+        else:
+            raise CustomException("Indica la mesa o la orden.")
+
+        ordenes = self.querys.scoped(OrdenModel).filter(OrdenModel.sesion_mesa_id == sesion_id).order_by(OrdenModel.id).all()
+        nombres_impuesto = {i.id: i.nombre for i in self.querys.scoped(ImpuestoModel).all()}
+        lineas, impuestos = {}, {}
+        for orden in ordenes:
+            detalle = self.querys.format_orden(orden)
+            vivos = [i for i in detalle["items"] if i["estado"] != CANCELADO]
+            crudos = {i.id: i for i in self.querys.items_of(orden.id)}
+            for item in (i for i in vivos if not i["combo_item_id"]):
+                # Las partes de un combo valen 0: van como detalle de su línea
+                detalles = [m["nombre"] for m in item["modificadores"]] + [p["nombre"] for p in vivos if p["combo_item_id"] == item["id"]]
+                clave = (item["nombre"], item["precio_unitario"], tuple(detalles))
+                linea = lineas.setdefault(clave, {"id": item["id"], "nombre": item["nombre"], "cantidad": 0, "total": 0,
+                                                  "modificadores": [{"nombre": d} for d in detalles]})
+                linea["cantidad"] += item["cantidad"]
+                linea["total"] += item["total"]
+                crudo = crudos[item["id"]]
+                base, valor = desglosar(item["total"], crudo.impuesto_porcentaje)
+                if valor:
+                    llave = (nombres_impuesto.get(crudo.impuesto_id, "Impuesto"), porcentaje_texto(crudo.impuesto_porcentaje))
+                    impuestos[llave] = impuestos.get(llave, 0) + valor
+
+        subtotal = sum(l["total"] for l in lineas.values())
+        restaurante = self.querys.restaurante()
+        propina = round(subtotal * (restaurante.propina_sugerida or 0) / 100)
+        primera = self.querys.format_orden(ordenes[0]) if ordenes else {}
+        return self.tools.output(200, "Cuenta de la mesa.", {
+            "sencilla": True,
+            "estado": "abierta",
+            "restaurante": {"nombre": restaurante.nombre, "direccion": restaurante.direccion, "telefono": restaurante.telefono},
+            "mesa": primera.get("mesa"), "mesa_tipo": primera.get("mesa_tipo"), "zona": primera.get("zona"),
+            "cliente_nombre": primera.get("cliente_nombre"), "mesero": primera.get("mesero"),
+            "ordenes": [f"#{o.numero:03d}" for o in ordenes],
+            "lineas": list(lineas.values()),
+            "subtotal": subtotal,
+            "total": subtotal,
+            "propina_porcentaje": restaurante.propina_sugerida,
+            "propina_sugerida": propina,
+            "total_con_propina": subtotal + propina,
+            "desglose": {"base": subtotal - sum(impuestos.values()),
+                         "impuestos": [{"impuesto": n, "porcentaje_texto": p, "valor": v} for (n, p), v in impuestos.items()]},
+        })
+
+    def check_bill_scope(self, orden):
+        """ El mesero, de sus zonas; la cocina, de las órdenes que pasaron por su punto """
+        permisos = self.ctx.get("permisos", set())
+        if "ordenes.ver" in permisos:
+            check_zone_scope(self.ctx, orden.zona_id)
+            return
+        puntos = self.ctx.get("puntos")
+        if puntos is not None and not any(c.punto_produccion_id in puntos for c in self.querys.comandas_of(orden.id)):
+            raise CustomException("Esa orden no pasó por tu punto de producción.", 403)
+
     def get_table(self, mesa_id, lock=False):
         mesa = self.querys.get_own(MesaModel, mesa_id, "mesa", lock=lock)
         if mesa.tipo == "externa":

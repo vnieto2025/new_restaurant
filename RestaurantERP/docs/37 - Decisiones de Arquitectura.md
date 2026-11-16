@@ -773,6 +773,20 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** las zonas existentes pasan a `zona` con la migración. Un restaurante que quiera la división por producto la elige en Administración → Zonas.
 - **Cuándo revisar:** si se necesita un punto distinto para pedidos para llevar o domicilios dentro de una misma zona.
 
+## ADR-057: Cuenta sencilla en restaurantes sin caja
+
+- **Estado:** Aprobada (2026-11-15). Pedido del dueño del producto: en el plan de solo pedidos, el mesero o la cocina deben poder darle al cliente una cuenta impresa si la pide.
+- **Decisión:**
+  - **`/orden/cuenta`,** por mesa (desde la mesa) o por orden (desde la comanda de cocina), arma la cuenta de toda la mesa:
+    - lo consumido sin cancelados, con las líneas iguales juntas y los combos como una línea;
+    - subtotal y propina sugerida del restaurante;
+    - el **detalle del IVA** (base más impuesto por tarifa), calculado con el porcentaje guardado en cada ítem al pedirlo.
+  - **Botones solo en restaurantes sin caja:** "Imprimir cuenta" en la mesa del mesero y "Cuenta" en la comanda de la cocina. Con caja, la precuenta y el cobro siguen en caja.
+  - **Permisos:** el mesero imprime la cuenta de sus zonas; la cocina, la de las órdenes que pasaron por su punto. Es una consulta: no cambia nada y funciona en solo lectura.
+  - **No es factura:** sale con "Documento no válido como factura". La factura electrónica sigue necesitando los módulos de Caja y Facturación (DIAN).
+- **Consecuencias:** el IVA solo aparece en los ítems pedidos cuando ya había un impuesto configurado. Lo pedido antes de configurarlo sale sin detalle de impuesto.
+- **Cuándo revisar:** si un restaurante sin caja necesita registrar cómo le pagaron o la propina que dejó el cliente.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

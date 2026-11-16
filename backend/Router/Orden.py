@@ -76,3 +76,10 @@ def ticket(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = Orden(db, request.state.user).ticket(data)
     return response
+
+@orden_router.post('/orden/cuenta', tags=["Orden"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["ordenes.ver", "cocina.operar"], modulo="pedidos"))])
+@http_decorator
+def bill(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = Orden(db, request.state.user).bill(data)
+    return response

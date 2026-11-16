@@ -59,6 +59,7 @@ def val_deliver(params):
 
 
 RULES = {
+    "/orden/cuenta": lambda p: [campo("int", "mesa", p.get("mesa_id"), False), campo("int", "orden", p.get("orden_id"), False)],
     "/orden/carta": val_menu,
     "/orden/create": val_create,
     "/orden/agregar_items": val_add_items,
