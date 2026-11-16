@@ -17,6 +17,8 @@ import EntregaCaptura from '@/components/EntregaCaptura.vue'
 import AvisosPendientes from '@/components/AvisosPendientes.vue'
 import EnlacePago from '@/components/EnlacePago.vue'
 import StatusChip from '@/components/StatusChip.vue'
+import AppModal from '@/components/AppModal.vue'
+import BilleterasPago from '@/components/BilleterasPago.vue'
 
 /*
   Mostrador (doc 17, flujo C): órdenes de la mesa externa, identificadas por número y nombre del cliente.
@@ -25,6 +27,9 @@ import StatusChip from '@/components/StatusChip.vue'
 */
 const toast = useToastStore()
 const auth = useAuthStore()
+// Billeteras para mostrarle al cliente que quiere pagar así (ADR-060)
+const billeteras = computed(() => auth.restaurante?.billeteras || [])
+const verBilleteras = ref(false)
 const printer = usePrintStore()
 const { busy, attempt } = useAction()
 const draft = useDraft('mostrador')
@@ -148,7 +153,12 @@ onMounted(load)
 
 <template>
   <div class="mostrador">
-    <OpsBar title="Mostrador" />
+    <OpsBar title="Mostrador">
+      <button v-if="billeteras.length" class="billeteras-boton" type="button" @click="verBilleteras = true">Billeteras</button>
+    </OpsBar>
+    <AppModal :open="verBilleteras" title="Pagar por billetera" width="34rem" @close="verBilleteras = false">
+      <BilleterasPago :billeteras="billeteras" titulo="Muéstrale al cliente cómo pagar" />
+    </AppModal>
     <ConnectionBanner :status="status" :online="online" />
 
     <div class="vistas" role="tablist">
@@ -371,4 +381,17 @@ onMounted(load)
     position: static;
   }
 }
+.billeteras-boton {
+  margin-left: auto;
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radio);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 </style>

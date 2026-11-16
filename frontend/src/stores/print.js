@@ -12,6 +12,12 @@ export const usePrintStore = defineStore('print', () => {
   async function print(kind, data) {
     ticket.value = { kind, data }
     await nextTick()
+    // Las imágenes de la tirilla (logo, QR de billeteras) deben haber cargado; si alguna falla, se imprime sin ella
+    const imagenes = [...document.querySelectorAll('.print-root img')].filter((img) => !img.complete)
+    await Promise.race([
+      Promise.all(imagenes.map((img) => new Promise((resolve) => { img.onload = img.onerror = resolve }))),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ])
     // Deja que el navegador pinte la tirilla antes de abrir el diálogo
     await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)))
     window.print()

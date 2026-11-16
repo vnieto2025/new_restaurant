@@ -13,6 +13,7 @@ from Models.sesion_mesa_model import SesionMesaModel
 from Models.restaurante_model import RestauranteModel
 from Class.PagoLinea import PagoLinea, ESTADOS_TEXTO, registrar_webhook
 from Class.Cupon import Cupon
+from Class.Billetera import billeteras_publicas
 
 CONSULTAS_POR_IP = 120
 INTENTOS_POR_IP = 10
@@ -51,6 +52,8 @@ class PagoPublico:
         por_confirmar = self.awaiting_confirmation(data)
         return {
             "restaurante": restaurante.nombre,
+            "logo": restaurante.logo,
+            "billeteras": billeteras_publicas(self.db, restaurante.id),
             "disponible": disponible and bool(cuenta) and cuenta.estado == "abierta" and not por_confirmar,
             "mensaje": "El restaurante aún no confirma tu pedido. Podrás pagar cuando lo confirme." if por_confirmar
             else None if disponible else "Este restaurante no recibe pagos en línea. Paga en caja.",

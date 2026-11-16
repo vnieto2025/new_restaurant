@@ -2,7 +2,8 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { postData } from '@/services/api'
-import { formatMoney, newKey } from '@/utils/format'
+import { formatMoney, newKey, mediaUrl } from '@/utils/format'
+import BilleterasPago from '@/components/BilleterasPago.vue'
 
 /*
   Pago desde el celular (doc 20A). Se llega con el QR de la mesa (?token), con el enlace del pedido
@@ -105,6 +106,7 @@ onBeforeUnmount(() => clearInterval(timer))
 <template>
   <div class="pagar">
     <header class="cabecera">
+      <img v-if="cuenta?.logo" :src="mediaUrl(cuenta.logo)" :alt="cuenta.restaurante" class="logo">
       <p class="lugar">{{ cuenta?.titulo || 'Tu cuenta' }}</p>
       <h1>{{ cuenta?.restaurante || pago?.restaurante || 'Pagar' }}</h1>
     </header>
@@ -181,6 +183,7 @@ onBeforeUnmount(() => clearInterval(timer))
         </template>
         <p v-if="cuenta.ultimo_pago?.estado === 'pendiente'" class="muted">Tienes un pago en curso. Si ya lo terminaste, espera la confirmación.</p>
       </template>
+      <BilleterasPago v-if="cuenta && cuenta.estado === 'abierta'" :billeteras="cuenta.billeteras || []" class="billeteras" />
     </main>
   </div>
 </template>
@@ -354,5 +357,17 @@ onBeforeUnmount(() => clearInterval(timer))
 
 .ok {
   color: var(--estado-entregado);
+}
+
+.logo {
+  display: block;
+  max-width: 12rem;
+  max-height: 4rem;
+  margin-bottom: var(--space-2);
+  object-fit: contain;
+}
+
+.billeteras {
+  margin-top: var(--space-5);
 }
 </style>

@@ -5,12 +5,15 @@ import { useAuthStore } from '@/stores/auth'
 import { useAction } from '@/composables/useAction'
 import { formatMoney, formatDate, isoDate } from '@/utils/format'
 import AppModal from '@/components/AppModal.vue'
+import LogoEditor from '@/components/LogoEditor.vue'
 
 /*
   Consola del proveedor del software (doc 06): alta manual de empresas, sus restaurantes y contratos,
   con planes comerciales y el cobro manual del servicio (doc 42). Una empresa nueva queda lista para operar.
 */
 const auth = useAuthStore()
+// Logo de un restaurante, que soporte puede subir por el cliente (ADR-060)
+const logoDe = ref(null)
 const { busy, attempt, quiet } = useAction()
 
 const empresas = ref([])
@@ -148,6 +151,7 @@ onMounted(load)
               <td><div class="actions">
                 <button class="btn btn-secundario btn-sm" type="button" @click="editarContrato(restaurante)">Contrato</button>
                 <button class="btn btn-secundario btn-sm" type="button" @click="verCobros(restaurante)">Pagos</button>
+                <button class="btn btn-secundario btn-sm" type="button" @click="logoDe = restaurante">Logo</button>
               </div></td>
             </tr>
           </tbody>
@@ -155,6 +159,10 @@ onMounted(load)
       </div>
     </article>
     <p v-if="!empresas.length" class="empty">Todavía no hay empresas.</p>
+
+    <AppModal :open="!!logoDe" :title="`Logo de ${logoDe?.nombre}`" width="36rem" @close="logoDe = null">
+      <LogoEditor v-if="logoDe" :logo="logoDe.logo" :restaurante-id="logoDe.id" @change="(logo) => (logoDe.logo = logo)" />
+    </AppModal>
 
     <AppModal :open="!!alta" title="Dar de alta una empresa" width="44rem" @close="alta = null">
       <form v-if="alta" @submit.prevent="crear">

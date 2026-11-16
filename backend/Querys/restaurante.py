@@ -68,6 +68,7 @@ class RestauranteQuerys(Querys):
             "aviso_datos": record.aviso_datos,
             "aviso_version": record.aviso_version,
             "politica_url": record.politica_url,
+            "logo": record.logo,
             "contrato": {
                 "id": contrato.id,
                 "estado": contrato.estado,

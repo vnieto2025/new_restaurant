@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { postData } from '@/services/api'
-import { formatMoney, formatTime } from '@/utils/format'
+import { formatMoney, formatTime, mediaUrl } from '@/utils/format'
 import StatusChip from '@/components/StatusChip.vue'
+import BilleterasPago from '@/components/BilleterasPago.vue'
 
 /*
   Seguimiento del pedido del cliente (doc 17, flujo B). Sondeo corto con límite:
@@ -97,6 +98,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="seguimiento">
     <header class="cabecera">
+      <img v-if="pedido?.logo" :src="mediaUrl(pedido.logo)" :alt="pedido.restaurante" class="logo">
       <p v-if="pedido" class="lugar">{{ entrega ? `Domicilio · ${pedido.cliente_nombre}` : pedido.mesa_tipo === 'externa' ? pedido.cliente_nombre || pedido.mesa : `${pedido.zona} · ${pedido.mesa}` }}</p>
       <h1>{{ pedido?.restaurante || 'Tu pedido' }}</h1>
     </header>
@@ -137,6 +139,7 @@ onBeforeUnmount(() => {
 
         <RouterLink v-if="pedido.pago_en_linea && estado !== 'cancelada'" class="btn btn-bloque"
                     :to="{ name: 'pagar', query: { seguimiento } }">Pagar en línea</RouterLink>
+        <BilleterasPago v-if="estado !== 'cancelada' && estado !== 'entregada'" :billeteras="pedido.billeteras || []" class="billeteras" />
         <RouterLink v-if="$route.query.q && puedePedirMas" class="btn btn-secundario btn-bloque" :to="{ name: 'carta', params: { token: $route.query.q } }">
           Pedir algo más
         </RouterLink>
@@ -273,5 +276,17 @@ onBeforeUnmount(() => {
   border-radius: var(--radio);
   background: var(--superficie);
   text-align: center;
+}
+
+.logo {
+  display: block;
+  max-width: 12rem;
+  max-height: 4rem;
+  margin-bottom: var(--space-2);
+  object-fit: contain;
+}
+
+.billeteras {
+  margin: var(--space-4) 0;
 }
 </style>

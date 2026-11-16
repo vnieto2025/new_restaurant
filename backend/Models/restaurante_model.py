@@ -35,5 +35,7 @@ class RestauranteModel(DeEmpresa, BASE):
     alertas = Column(JSON, nullable=True)
     # Resumen del día al cerrar la jornada: {"activo": bool, "telefono": digitos, "nombre": texto} (doc 31B)
     resumen_diario = Column(JSON, nullable=True)
+    # Logo horizontal del restaurante: carta, seguimiento, pago y tirillas (ADR-060)
+    logo = Column(String(200), nullable=True)
     # Restaurante de práctica: copia del real para entrenar al personal sin tocar su operación (ADR-053)
     practica_de = Column(BigInteger, ForeignKey("restaurante.id", name="fk_restaurante_practica"), nullable=True, unique=True)

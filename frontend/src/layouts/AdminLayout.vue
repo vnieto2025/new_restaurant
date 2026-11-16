@@ -3,6 +3,7 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { postData } from '@/services/api'
+import { mediaUrl } from '@/utils/format'
 
 const auth = useAuthStore()
 
@@ -92,6 +93,7 @@ const grupos = computed(() =>
   <div class="admin">
     <aside class="menu no-print">
       <RouterLink :to="{ name: 'inicio', query: { menu: 1 } }" class="marca">
+        <img v-if="auth.restaurante?.logo" :src="mediaUrl(auth.restaurante.logo)" alt="" class="logo">
         <strong>{{ auth.restaurante?.nombre }}</strong>
         <span>Cambiar de pantalla</span>
       </RouterLink>
@@ -279,5 +281,17 @@ const grupos = computed(() =>
 .aviso-cuenta.prueba_vencida {
   border-left-color: var(--estado-cancelado);
   background: var(--estado-cancelado-suave);
+}
+
+/* Fondo claro detrás del logo: muchos logos son oscuros y el menú es oscuro */
+.logo {
+  display: block;
+  max-width: 100%;
+  max-height: 3.5rem;
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radio-sm);
+  background: #fff;
+  object-fit: contain;
 }
 </style>

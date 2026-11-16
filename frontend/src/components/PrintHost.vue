@@ -1,9 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 import { usePrintStore } from '@/stores/print'
-import { formatMoney, formatTime, formatDate, CANALES } from '@/utils/format'
+import { useAuthStore } from '@/stores/auth'
+import { formatMoney, formatTime, formatDate, mediaUrl, CANALES } from '@/utils/format'
 
 const printer = usePrintStore()
+const auth = useAuthStore()
+// Logo y billeteras del restaurante en la cuenta impresa (ADR-060)
+const logo = computed(() => auth.restaurante?.logo)
+const billeteras = computed(() => auth.restaurante?.billeteras || [])
 const ticket = computed(() => printer.ticket)
 
 // Documento de venta vigente de una cuenta pagada: el más reciente que no esté anulado (doc 21)
@@ -71,6 +76,7 @@ const documento = computed(() => {
 
     <article v-else-if="ticket?.kind === 'cuenta'" class="tirilla">
       <!-- Precuenta (abierta) o comprobante de pago (pagada), doc 19A sección 3. No es factura. -->
+      <img v-if="logo" :src="mediaUrl(logo)" alt="" class="logo">
       <p class="centro grande">{{ ticket.data.restaurante.nombre }}</p>
       <p v-if="ticket.data.restaurante.direccion" class="centro">{{ ticket.data.restaurante.direccion }}</p>
       <p v-if="ticket.data.restaurante.telefono" class="centro">Tel. {{ ticket.data.restaurante.telefono }}</p>
@@ -132,6 +138,15 @@ const documento = computed(() => {
         <p v-for="pago in ticket.data.pagos.filter((p) => p.cambio)" :key="`c${pago.id}`" class="fila">
           <span>Cambio</span><span>{{ formatMoney(pago.cambio) }}</span>
         </p>
+      </template>
+      <template v-if="ticket.data.estado !== 'pagada' && billeteras.length">
+        <hr>
+        <p class="centro">También puedes pagar por billetera</p>
+        <div v-for="b in billeteras" :key="b.nombre" class="billetera">
+          <p class="fila"><span>{{ b.nombre }}</span><span>{{ b.telefono }}</span></p>
+          <p v-if="b.titular" class="pie">A nombre de {{ b.titular }}</p>
+          <img v-if="b.qr" :src="mediaUrl(b.qr)" alt="" class="qr-billetera">
+        </div>
       </template>
       <p v-if="ticket.data.estado !== 'pagada'" class="centro pie">La propina es voluntaria</p>
       <template v-if="documento">
@@ -339,5 +354,21 @@ const documento = computed(() => {
     border-top: 1px dashed #000;
     margin: 2mm 0;
   }
+}
+
+.logo {
+  display: block;
+  max-width: 60%;
+  max-height: 18mm;
+  margin: 0 auto 2mm;
+  object-fit: contain;
+}
+
+.qr-billetera {
+  display: block;
+  width: 28mm;
+  height: 28mm;
+  margin: 1mm auto 2mm;
+  image-rendering: pixelated;
 }
 </style>

@@ -15,6 +15,7 @@ from Models.domicilio_web_model import DomicilioWebModel
 from Models.entrega_model import EntregaModel
 from Querys.entrega import EntregaQuerys
 from Class.Orden import Orden
+from Class.Billetera import billeteras_publicas
 
 # Límites de uso de lo público (doc 10A, sección 4): por token del QR y por IP
 ORDENES_POR_TOKEN = 6
@@ -66,6 +67,7 @@ class Publico:
         web = self.web_config(restaurante) if es_domicilio else None
         result = {
             "restaurante": restaurante.nombre,
+            "logo": restaurante.logo,
             "zona": zona.nombre,
             "mesa": mesa.nombre,
             "tipo": contexto["qr"].tipo,
@@ -252,6 +254,9 @@ class Publico:
             "estado": detalle["estado"],
             "estado_etiqueta": ESTADOS_ORDEN.get(detalle["estado"], detalle["estado"]),
             "restaurante": querys.restaurante().nombre,
+            "logo": querys.restaurante().logo,
+            # Cómo pagar por billetera (ADR-060): informativo
+            "billeteras": billeteras_publicas(self.db, orden.restaurante_id),
             "mesa": detalle["mesa"],
             "mesa_tipo": detalle["mesa_tipo"],
             "zona": detalle["zona"],

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, Depends
+from Class.LogoRestaurante import LogoRestaurante
 from Utils.decorator import http_decorator
 from Class.Plataforma import Plataforma
 from Class.Suscripcion import Suscripcion
@@ -67,3 +68,17 @@ def subscription_payments(request: Request, db: Session = Depends(get_db)):
 def register_subscription_payment(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     return Suscripcion(db, request.state.user).register_payment(data)
+
+@plataforma_router.post('/plataforma/restaurante/logo', tags=["Restaurante"], response_model=dict, dependencies=[Depends(PLATAFORMA)])
+@http_decorator
+def platform_upload_logo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = LogoRestaurante(db, request.state.user).upload(data)
+    return response
+
+@plataforma_router.post('/plataforma/restaurante/logo/quitar', tags=["Restaurante"], response_model=dict, dependencies=[Depends(PLATAFORMA)])
+@http_decorator
+def platform_remove_logo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = LogoRestaurante(db, request.state.user).remove(data)
+    return response

@@ -9,6 +9,7 @@ from Querys.auth import AuthQuerys
 from Models.dispositivo_model import DispositivoModel
 from Class.TurnoMesero import TurnoMesero
 from Class.DobleFactor import comprobar, es_admin
+from Class.Billetera import billeteras_publicas
 
 MIN_PASSWORD_LENGTH = 8
 
@@ -172,6 +173,9 @@ class Auth:
                 "moneda": restaurante.moneda,
                 "contrato_estado": ctx.get("contrato_estado"),
                 "practica": bool(ctx.get("practica")),
+                # Logo y billeteras: las tirillas y el cobro los muestran (ADR-060)
+                "logo": restaurante.logo,
+                "billeteras": billeteras_publicas(self.db, restaurante.id),
             },
             # Restaurante de práctica (ADR-053): a cuál volver desde ella, o a cuál entrar desde el real
             "practica": self.practice_of(ctx),

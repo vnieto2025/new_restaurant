@@ -26,6 +26,14 @@ def val_change_status(params):
 
 
 RULES = {
+    "/restaurante/logo": lambda p: [campo("string", "archivo", p["archivo"])],
+    "/billetera/save": lambda p: [
+        campo("int", "billetera", p.get("billetera_id"), False),
+        campo("string", "nombre", p["nombre"], limite={"min": 2, "max": 40}),
+        campo("string", "teléfono", p.get("telefono"), False, limite={"min": 7, "max": 20}),
+        campo("string", "titular", p.get("titular"), False, limite={"min": 2, "max": 80}),
+        campo("bool", "activa", p.get("activo"), False)],
+    "/billetera/delete": lambda p: [campo("int", "billetera", p["billetera_id"])],
     "/restaurante/update": campos_restaurante,
     "/restaurante/change_status": val_change_status,
     "/restaurante/puesta_en_marcha/marcar": lambda p: [campo("string", "paso", p["paso"], limite={"min": 2, "max": 20}),

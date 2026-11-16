@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useAction } from '@/composables/useAction'
 import AppModal from '@/components/AppModal.vue'
 import HorarioEditor from '@/components/HorarioEditor.vue'
+import LogoEditor from '@/components/LogoEditor.vue'
+import BilleterasEditor from '@/components/BilleterasEditor.vue'
 
 const auth = useAuthStore()
 const { busy, attempt, quiet } = useAction()
@@ -125,6 +127,17 @@ onMounted(load)
         <button class="btn" type="submit" :disabled="busy" :aria-busy="busy">Guardar</button>
       </div>
     </form>
+
+    <section v-if="auth.can('restaurante.configurar')" class="panel bloque">
+      <h2>Logo</h2>
+      <p class="muted espacio">Sale en la carta del cliente, el seguimiento de su pedido, el pago desde el celular y la cuenta impresa.</p>
+      <LogoEditor :logo="restaurante.logo" @change="(logo) => { restaurante.logo = logo; auth.refresh() }" />
+    </section>
+
+    <section v-if="auth.can('restaurante.configurar')" class="panel bloque">
+      <h2>Billeteras para pagar</h2>
+      <BilleterasEditor />
+    </section>
 
     <section v-if="auth.can('restaurante.configurar')" class="panel bloque">
       <h2>Horario de atención</h2>

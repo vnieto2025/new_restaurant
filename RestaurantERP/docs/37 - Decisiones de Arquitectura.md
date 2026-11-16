@@ -817,6 +817,28 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
   - Agregar, escanear con lector y los avisos de agotado funcionan igual en las cuatro vistas.
 - **Cuándo revisar:** si se pide la misma opción en la carta del cliente o en la lista de Productos de administración.
 
+## ADR-060: Logo del restaurante y billeteras para pagar
+
+- **Estado:** Aprobada (2026-11-16). Pedido del dueño del producto.
+- **Decisión:**
+  - **Logo (`restaurante.logo`):**
+    - Lo sube el administrador del restaurante (Configuración) o soporte desde la consola de plataforma.
+    - Debe ser **horizontal**: más ancho que alto. Se sugiere 600 × 200 px (3:1); la pantalla lo avisa antes de subir y el servidor lo vuelve a revisar.
+    - Se guarda comprimido en WebP, con transparencia, en `restaurantes/<id>-<nombre>/logo/`.
+    - **Dónde sale:** la carta del cliente, el seguimiento, el pago desde el celular, el menú de administración y la cuenta impresa.
+  - **Billeteras (tabla `billetera`):** nombre, teléfono, titular, imagen del QR, orden y si se muestra.
+    - Son **informativas**: el cobro se sigue registrando en caja con su medio de pago ("Nequi", "Daviplata").
+    - Son configuración del restaurante y no dependen del módulo de Caja, así que también las ve un restaurante sin caja en su cuenta sencilla.
+    - El QR se guarda **sin pérdida**, para que siga nítido y se pueda leer.
+    - **Dónde salen:**
+      - el seguimiento del pedido y la página de pago del cliente;
+      - el botón "Billeteras" del cobro en caja y del mostrador;
+      - la precuenta y la cuenta impresas, con el QR.
+    - Llegan al personal en su sesión. Si se cambian, una pantalla ya abierta las ve al recargar.
+  - **Impresión:** espera a que carguen el logo y los QR (hasta 3 s) antes de abrir el diálogo, para que no salgan en blanco.
+  - **Restaurante de práctica:** usa el mismo logo y copia las billeteras. Cambiar las imágenes se hace solo en el real (ADR-053).
+- **Cuándo revisar:** si se quiere que un pago por billetera se confirme solo, con la integración de la billetera.
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.

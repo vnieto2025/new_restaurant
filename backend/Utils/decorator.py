@@ -13,7 +13,7 @@ tool = Tools()
 
 # Campos que nunca se deben guardar en texto plano en los logs
 SENSITIVE_FIELDS = ["password", "current_password", "new_password", "password_actual", "password_nueva", "token", "pin",
-                    "archivo", "codigo", "codigos_respaldo", "secreto", "uri", "qr_svg"]
+                    "archivo", "qr_archivo", "codigo", "codigos_respaldo", "secreto", "uri", "qr_svg"]
 
 # Reemplaza los valores sensibles antes de guardar el log
 def mask_sensitive_data(obj):

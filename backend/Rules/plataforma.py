@@ -47,6 +47,8 @@ def val_update_contrato(params):
 
 
 RULES = {
+    "/plataforma/restaurante/logo": lambda p: [campo("int", "restaurante", p["restaurante_id"]), campo("string", "archivo", p["archivo"])],
+    "/plataforma/restaurante/logo/quitar": lambda p: [campo("int", "restaurante", p["restaurante_id"])],
     "/plataforma/empresa/create": val_create_empresa,
     "/plataforma/empresa/change_status": val_change_status_empresa,
     "/plataforma/restaurante/create": val_create_restaurante,

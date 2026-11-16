@@ -1,3 +1,5 @@
+import base64
+import binascii
 import io
 import os
 import re
@@ -20,9 +22,21 @@ PESO_OBJETIVO = 150 * 1024
 CALIDADES = [80, 70, 60, 50]
 
 
-def comprimir(contenido: bytes):
+def decodificar(archivo) -> bytes:
+    """ El archivo llega en base64 dentro del JSON (ADR-049) """
+    archivo = str(archivo or "")
+    if len(archivo) > MAX_ARCHIVO * 4 / 3 + 4:
+        raise CustomException("La imagen pesa más de 6 MB.")
+    try:
+        return base64.b64decode(archivo, validate=True)
+    except (binascii.Error, ValueError):
+        raise CustomException("El archivo no es una imagen válida.")
+
+
+def comprimir(contenido: bytes, lado_maximo=LADO_MAXIMO, sin_perdida=False, horizontal=False):
     """ Valida que sea una foto de verdad y la deja en WebP, liviana para el celular de quien mira la carta.
-        Volver a generarla descarta lo que traía el archivo original, como la ubicación GPS. """
+        Volver a generarla descarta lo que traía el archivo original, como la ubicación GPS.
+        sin_perdida: para códigos QR, que deben seguir nítidos para leerse. horizontal: para el logo (ADR-060). """
     if len(contenido) > MAX_ARCHIVO:
         raise CustomException("La foto pesa más de 6 MB.")
     try:
@@ -33,10 +47,16 @@ def comprimir(contenido: bytes):
             raise CustomException("La foto es demasiado grande.")
         # La cámara guarda la orientación aparte: sin esto, algunas fotos quedarían de lado
         imagen = ImageOps.exif_transpose(imagen)
-        imagen.thumbnail((LADO_MAXIMO, LADO_MAXIMO))
+        if horizontal and imagen.width < imagen.height * 1.2:
+            raise CustomException("El logo debe ser horizontal, más ancho que alto. Tamaño sugerido: 600 × 200 px.")
+        imagen.thumbnail((lado_maximo, lado_maximo))
         imagen = imagen.convert("RGBA" if imagen.mode in ("RGBA", "LA", "P") else "RGB")
     except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
         raise CustomException("El archivo no es una imagen válida.")
+    if sin_perdida:
+        salida = io.BytesIO()
+        imagen.save(salida, "WEBP", lossless=True, quality=100, method=6)
+        return salida.getvalue()
     resultado = b""
     for calidad in CALIDADES:
         salida = io.BytesIO()

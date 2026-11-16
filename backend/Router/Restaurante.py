@@ -1,4 +1,5 @@
 from Class.PuestaEnMarcha import PuestaEnMarcha
+from Class.LogoRestaurante import LogoRestaurante
 from fastapi import APIRouter, Request, Depends
 from Utils.decorator import http_decorator
 from Class.Restaurante import Restaurante
@@ -62,4 +63,18 @@ def setup_status(request: Request, db: Session = Depends(get_db)):
 def setup_mark(request: Request, db: Session = Depends(get_db)):
     data = getattr(request.state, "json_data", {})
     response = PuestaEnMarcha(db, request.state.user).mark(data)
+    return response
+
+@restaurante_router.post('/restaurante/logo', tags=["Restaurante"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def upload_logo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = LogoRestaurante(db, request.state.user).upload(data)
+    return response
+
+@restaurante_router.post('/restaurante/logo/quitar', tags=["Restaurante"], response_model=dict, dependencies=[Depends(JWTBearer(permisos=["restaurante.configurar"]))])
+@http_decorator
+def remove_logo(request: Request, db: Session = Depends(get_db)):
+    data = getattr(request.state, "json_data", {})
+    response = LogoRestaurante(db, request.state.user).remove(data)
     return response

@@ -18,7 +18,7 @@ SIN_MODULOS = {"facturacion", "pagos_linea"}
 # Configuración que se copia. Lo que pasa en la operación (órdenes, turnos, compras, avisos, auditoría)
 # empieza vacío; la configuración de facturación, pagos en línea, avisos y domicilio web no se copia.
 COPIAR = {
-    "caja", "carta", "impuesto", "impuesto_tarifa", "punto_produccion", "medio_pago", "liquidacion_config",
+    "caja", "carta", "billetera", "impuesto", "impuesto_tarifa", "punto_produccion", "medio_pago", "liquidacion_config",
     "zona", "zona_envio", "mesa", "qr_acceso", "horario", "domiciliario", "resolucion",
     "categoria", "producto", "carta_producto", "grupo_modificador", "opcion_modificador", "producto_grupo",
     "combo_componente", "combo_opcion",

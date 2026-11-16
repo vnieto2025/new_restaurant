@@ -11,6 +11,7 @@ import ReasonDialog from '@/components/ReasonDialog.vue'
 import FacturaReceptor from '@/components/FacturaReceptor.vue'
 import StatusChip from '@/components/StatusChip.vue'
 import EnlacePago from '@/components/EnlacePago.vue'
+import BilleterasPago from '@/components/BilleterasPago.vue'
 
 /*
   Cobro de una cuenta (doc 20, secciones 3 y 4): propina aparte, descuento con permiso,
@@ -233,6 +234,9 @@ async function elegirCliente(cliente) {
 function imprimir() {
   printer.print('cuenta', props.cuenta)
 }
+// Billeteras del restaurante: se le muestran al cliente que quiere pagar así (ADR-060)
+const billeteras = computed(() => auth.restaurante?.billeteras || [])
+const verBilleteras = ref(false)
 </script>
 
 <template>
@@ -242,6 +246,7 @@ function imprimir() {
         <h2>{{ cuenta.mesa_tipo === 'externa' ? cuenta.cliente_nombre || (cuenta.venta_directa ? 'Venta directa' : 'Para llevar') : cuenta.mesa }}</h2>
         <p class="muted">{{ cuenta.mesa_tipo === 'externa' ? (cuenta.venta_directa ? 'Venta directa' : cuenta.entrega ? 'Domicilio' : 'Para llevar') : cuenta.zona }} · {{ cuenta.ordenes.join(', ') }}<template v-if="cuenta.mesero"> · {{ cuenta.mesero }}</template></p>
       </div>
+      <button v-if="billeteras.length" class="btn btn-secundario btn-sm" type="button" @click="verBilleteras = true">Billeteras</button>
       <button class="cerrar" type="button" aria-label="Cerrar cobro" @click="emit('close')">×</button>
     </header>
 
@@ -479,6 +484,10 @@ function imprimir() {
                   :description="anular.cuenta ? 'Se anulan la cuenta y todos sus pagos. Queda en la auditoría.' : 'El valor vuelve a quedar pendiente en la cuenta.'"
                   :options="['Cobro duplicado', 'Error de digitación']" confirm-label="Anular"
                   @close="anular.open = false" @confirm="confirmarAnulacion" />
+    <AppModal :open="verBilleteras" title="Pagar por billetera" width="34rem" @close="verBilleteras = false">
+    <BilleterasPago :billeteras="billeteras" titulo="Muéstrale al cliente cómo pagar" />
+    <p class="muted">Cuando pague, registra el cobro con el medio de pago de esa billetera.</p>
+  </AppModal>
   </section>
 </template>
 

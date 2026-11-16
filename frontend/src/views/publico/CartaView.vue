@@ -176,6 +176,7 @@ onMounted(() => {
 <template>
   <div class="carta">
     <header class="cabecera">
+      <img v-if="carta?.logo" :src="mediaUrl(carta.logo)" :alt="carta.restaurante" class="logo">
       <p v-if="carta" class="lugar">{{ carta.tipo === 'mesa' ? `${carta.zona} · ${carta.mesa}` : carta.tipo === 'domicilio' ? 'Domicilios' : carta.mesa }}</p>
       <h1>{{ carta?.restaurante || 'Carta' }}</h1>
       <p v-if="carta?.domicilio?.mensaje" class="aviso-domicilio">{{ carta.domicilio.mensaje }}</p>
@@ -645,5 +646,13 @@ onMounted(() => {
   border-radius: var(--radio-sm);
   background: var(--estado-cancelado-suave);
   color: #7a1f19;
+}
+
+.logo {
+  display: block;
+  max-width: 12rem;
+  max-height: 4rem;
+  margin-bottom: var(--space-2);
+  object-fit: contain;
 }
 </style>

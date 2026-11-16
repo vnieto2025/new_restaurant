@@ -7,7 +7,7 @@ from Models.orden_model import OrdenModel
 
 # Lo que el restaurante de práctica toma del real; el resto (alertas, resumen, asistente) arranca vacío
 CAMPOS = ["tipo", "direccion", "telefono", "zona_horaria", "hora_inicio_jornada", "moneda", "mensaje_carta",
-          "propina_sugerida", "reiniciar_agotados", "aviso_datos", "aviso_version", "politica_url"]
+          "propina_sugerida", "reiniciar_agotados", "aviso_datos", "aviso_version", "politica_url", "logo"]
 
 
 class Practica:

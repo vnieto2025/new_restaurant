@@ -84,3 +84,4 @@ from Models.pago_suscripcion_model import PagoSuscripcionModel  # noqa: F401
 from Models.domicilio_web_model import DomicilioWebModel  # noqa: F401
 from Models.combo_componente_model import ComboComponenteModel  # noqa: F401
 from Models.combo_opcion_model import ComboOpcionModel  # noqa: F401
+from Models.billetera_model import BilleteraModel  # noqa: F401
