@@ -8,15 +8,15 @@ from Models.producto_model import ProductoModel
 from Models.categoria_model import CategoriaModel
 from Models.punto_produccion_model import PuntoProduccionModel
 from Models.impuesto_model import ImpuestoModel
-from Class.Producto import MAX_PRECIO
+from Class.Producto import MAX_PRECIO, normalizar_codigo
 
 MAX_ARCHIVO = 2 * 1024 * 1024
 MAX_FILAS = 1000
 COLUMNAS = {"producto": "Producto", "categoria": "Categoría", "precio": "Precio", "descripcion": "Descripción",
-            "punto": "Punto de producción", "impuesto": "Impuesto", "alergenos": "Alérgenos"}
+            "punto": "Punto de producción", "impuesto": "Impuesto", "alergenos": "Alérgenos", "codigo_barras": "Código de barras"}
 OBLIGATORIAS = ["producto", "categoria", "precio"]
-EJEMPLO = [["Hamburguesa clásica", "Hamburguesas", 18000, "Carne de res, queso, lechuga y tomate", "Cocina", "", "Gluten, lácteos"],
-           ["Limonada natural", "Bebidas", 6000, "", "Bar", "", ""]]
+EJEMPLO = [["Hamburguesa clásica", "Hamburguesas", 18000, "Carne de res, queso, lechuga y tomate", "Cocina", "", "Gluten, lácteos", ""],
+           ["Gaseosa 400 ml", "Bebidas", 4000, "", "Bar", "", "", "7702004003409"]]
 
 
 def leer_precio(valor):
@@ -64,7 +64,8 @@ class ImportarProductos:
         cartas = [carta.id for carta in self.querys.get_cartas()]
         for fila in revision["filas"]:
             campos = {"categoria_id": categorias[fila["categoria"].lower()], "precio": fila["precio"], "nombre": fila["producto"]}
-            campos.update({k: fila[k] for k in ("descripcion", "alergenos", "punto_produccion_id", "impuesto_id") if fila.get(k)})
+            campos.update({k: fila[k] for k in ("descripcion", "alergenos", "punto_produccion_id", "impuesto_id", "codigo_barras")
+                           if fila.get(k)})
             if fila["accion"] == "crear":
                 producto_id = self.querys.insert_data(ProductoModel, campos, commit=False)
                 self.querys.set_cartas_producto(producto_id, cartas)
@@ -90,7 +91,9 @@ class ImportarProductos:
         puntos = {p.nombre.lower(): p.id for p in self.querys.scoped(PuntoProduccionModel).all()}
         impuestos = {i.nombre.lower(): i.id for i in self.querys.scoped(ImpuestoModel).all()}
 
-        filas, vistos, nuevas = [], set(), {}
+        # Códigos de barras de los productos vigentes: uno solo por producto (ADR-058)
+        codigos = {p.codigo_barras: p.nombre.lower() for p in self.querys.scoped(ProductoModel).all() if p.codigo_barras}
+        filas, vistos, nuevas, codigos_archivo = [], set(), {}, set()
         for numero, valores in filas_archivo:
             fila = {"fila": numero, "errores": [], "accion": "crear"}
             nombre = clean_text(valores.get("producto"))
@@ -116,6 +119,15 @@ class ImportarProductos:
                 fila["errores"].append("Los alérgenos pueden tener máximo 200 caracteres.")
             fila["punto_produccion_id"] = self.lookup(valores.get("punto"), puntos, "punto de producción", fila)
             fila["impuesto_id"] = self.lookup(valores.get("impuesto"), impuestos, "impuesto", fila)
+            fila["codigo_barras"] = normalizar_codigo(valores.get("codigo_barras"))
+            if fila["codigo_barras"]:
+                if not re.fullmatch(r"[A-Za-z0-9\-]{3,40}", fila["codigo_barras"]):
+                    fila["errores"].append("El código de barras solo lleva letras, números o guiones (de 3 a 40).")
+                elif fila["codigo_barras"] in codigos_archivo:
+                    fila["errores"].append("Este código de barras ya aparece en una fila anterior.")
+                elif codigos.get(fila["codigo_barras"], (nombre or "").lower()) != (nombre or "").lower():
+                    fila["errores"].append("Ese código de barras ya lo tiene otro producto.")
+                codigos_archivo.add(fila["codigo_barras"])
 
             existente = productos.get(nombre.lower()) if nombre else None
             if existente is not None:

@@ -61,6 +61,7 @@ class ProductoQuerys(Querys):
             "imagen": producto.imagen,
             "alergenos": producto.alergenos,
             "precio": producto.precio,
+            "codigo_barras": producto.codigo_barras,
             "punto_produccion_id": producto.punto_produccion_id,
             "punto_produccion": punto.nombre if punto else None,
             "impuesto_id": producto.impuesto_id,

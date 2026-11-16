@@ -60,7 +60,7 @@ CONJUNTOS = {
     "productos": {
         "titulo": "Productos", "grupo": "Catálogo",
         "descripcion": "Catálogo con categoría, precio y estado.",
-        "columnas": ["Producto", "Categoría", "Descripción", "Precio", "Agotado", "Activo"],
+        "columnas": ["Producto", "Categoría", "Descripción", "Precio", "Código de barras", "Agotado", "Activo"],
     },
     "clientes": {
         "titulo": "Clientes", "grupo": "Personas", "permiso": "clientes.exportar", "personal": True,
@@ -196,7 +196,8 @@ class Exportacion:
 
     def rows_productos(self):
         categorias = self.nombres("categorias")
-        return [[p.nombre, categorias.get(p.categoria_id), p.descripcion, p.precio, p.agotado, p.activo] for p in self.querys.productos()]
+        return [[p.nombre, categorias.get(p.categoria_id), p.descripcion, p.precio, p.codigo_barras, p.agotado, p.activo]
+                for p in self.querys.productos()]
 
     def rows_clientes(self):
         return [[c.nombre, c.telefono, c.correo, c.tipo_documento, c.documento, c.estado, self.local(c.datos_aceptado_en),

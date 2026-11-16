@@ -94,7 +94,7 @@ function normalize(text) {
 
 const visibles = computed(() => productos.value.filter((p) =>
   (!categoriaId.value || p.categoria_id === Number(categoriaId.value)) &&
-  (!buscar.value || normalize(p.nombre).includes(normalize(buscar.value)))))
+  (!buscar.value || normalize(p.nombre).includes(normalize(buscar.value)) || p.codigo_barras?.includes(buscar.value.trim()))))
 
 async function load() {
   const [p, c, pp, ca, g, imp] = await Promise.all([
@@ -152,7 +152,7 @@ async function copiarASede() {
 
 async function guardar() {
   const editando = !!form.value.producto_id
-  const cuerpo = { ...form.value, alergenos: form.value.alergenos?.trim() || null }
+  const cuerpo = { ...form.value, alergenos: form.value.alergenos?.trim() || null, codigo_barras: form.value.codigo_barras?.trim() || null }
   if (cuerpo.tipo === 'combo') {
     cuerpo.componentes = cuerpo.componentes.map((c) => ({
       nombre: c.nombre.trim(), cantidad: Number(c.cantidad) || 1,
@@ -326,6 +326,11 @@ onMounted(load)
           <label for="p-alergenos">Contiene (alérgenos)</label>
           <input id="p-alergenos" v-model="form.alergenos" class="input" maxlength="200" placeholder="Gluten, lácteos, maní…">
           <span class="hint">El cliente lo ve en la carta. Déjalo vacío si no aplica; revísalo con quien cocina.</span>
+          <label for="p-codigo">Código de barras</label>
+          <!-- El lector termina con Enter: aquí no debe guardar el formulario -->
+          <input id="p-codigo" v-model="form.codigo_barras" class="input" maxlength="40" autocomplete="off" spellcheck="false"
+                 placeholder="Escanéalo o escríbelo" @keydown.enter.prevent>
+          <span class="hint">Opcional. Con un lector, en caja, mostrador y mesa se agrega al pasarlo.</span>
           <label for="p-desc">Descripción</label>
           <textarea id="p-desc" v-model="form.descripcion" class="textarea" maxlength="500" placeholder="Opcional: ingredientes, tamaño…"></textarea>
         </div>

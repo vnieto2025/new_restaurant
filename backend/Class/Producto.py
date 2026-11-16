@@ -1,3 +1,4 @@
+import re
 from Utils.tools import Tools, CustomException, clean_text
 from Utils.realtime import realtime
 from Querys.producto import ProductoQuerys
@@ -12,6 +13,17 @@ MAX_PRECIO = 100_000_000
 MAX_COMPONENTES = 10
 MAX_OPCIONES = 20
 TIPOS_PRODUCTO = ["simple", "combo"]
+
+
+def normalizar_codigo(valor):
+    """ Lo que llega del lector o de una celda de Excel: sin espacios, y un número entero sin ".0" ni notación
+        científica (Excel guarda 7702004003409 como número) """
+    if valor in (None, ""):
+        return None
+    if isinstance(valor, float) and valor.is_integer():
+        valor = int(valor)
+    codigo = "".join(str(valor).split())
+    return codigo or None
 
 
 class Producto:
@@ -129,11 +141,24 @@ class Producto:
         }
         if "alergenos" in data:
             fields["alergenos"] = clean_text(data.get("alergenos"))
+        if "codigo_barras" in data:
+            fields["codigo_barras"] = self.clean_barcode(data.get("codigo_barras"), data.get("producto_id"))
         # Vacío = el de la categoría o el impuesto por defecto (doc 21A, sección 2)
         if "impuesto_id" in data:
             impuesto_id = data.get("impuesto_id")
             fields["impuesto_id"] = self.querys.get_own(ImpuestoModel, impuesto_id, "impuesto").id if impuesto_id else None
         return fields
+
+    def clean_barcode(self, valor, producto_id=None):
+        codigo = normalizar_codigo(valor)
+        if codigo is None:
+            return None
+        if not re.fullmatch(r"[A-Za-z0-9\-]{3,40}", codigo):
+            raise CustomException("El código de barras solo lleva letras, números o guiones (de 3 a 40).")
+        otro = self.querys.scoped(ProductoModel).filter(ProductoModel.codigo_barras == codigo).first()
+        if otro and otro.id != (int(producto_id) if producto_id else None):
+            raise CustomException(f"Ese código de barras ya lo tiene {otro.nombre}.")
+        return codigo
 
     # Grupos de modificadores que se ofrecen con el producto, en el orden indicado
     def set_groups(self, producto_id, data: dict):

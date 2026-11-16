@@ -7,6 +7,7 @@ def campos_producto(params):
         campo("string", "nombre", params["nombre"], limite={"min": 2, "max": 100}),
         campo("string", "descripción", params.get("descripcion"), False, limite={"min": 1, "max": 500}),
         campo("string", "alérgenos", params.get("alergenos"), False, limite={"min": 1, "max": 200}),
+        campo("string", "código de barras", params.get("codigo_barras"), False, limite={"min": 1, "max": 40}),
         campo("int", "precio", params["precio"]),
         campo("int", "punto de producción", params.get("punto_produccion_id"), False),
         campo("int", "orden", params.get("orden"), False),

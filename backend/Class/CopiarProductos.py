@@ -109,7 +109,8 @@ class CopiarProductos:
                 categorias_nuevas += 1
             nuevo_id = allá.insert_data(ProductoModel, {
                 "categoria_id": categoria_id, "nombre": producto.nombre, "descripcion": producto.descripcion, "precio": producto.precio,
-                "alergenos": producto.alergenos, "imagen": imagenes.copiar(producto.imagen, destino),
+                "alergenos": producto.alergenos, "codigo_barras": producto.codigo_barras,
+                "imagen": imagenes.copiar(producto.imagen, destino),
                 "orden": producto.orden, "activo": producto.activo,
                 # Se enlaza con el punto y el impuesto del mismo nombre; si allá no existen, usa los de su categoría o el de defecto
                 "punto_produccion_id": self.same_name(PuntoProduccionModel, producto.punto_produccion_id, puntos),

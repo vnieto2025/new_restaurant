@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { formatMoney } from '@/utils/format'
 import OpcionesProducto from '@/components/OpcionesProducto.vue'
 import OpcionesCombo from '@/components/OpcionesCombo.vue'
+import { useEscaner } from '@/composables/useEscaner'
+import { useToastStore } from '@/stores/toast'
 
 /*
   Selector de productos para tomar órdenes (doc 34): categorías, búsqueda y botones grandes.
@@ -18,6 +20,44 @@ const categoriaId = ref(null)
 const conOpciones = ref(null)
 const combo = ref(null)
 const buscar = ref('')
+const toast = useToastStore()
+const escaneado = ref(null)
+
+// Código de barras -> producto, de toda la carta (ADR-058)
+const porCodigo = computed(() => new Map(props.categorias.flatMap((c) => c.productos)
+  .filter((p) => p.codigo_barras).map((p) => [p.codigo_barras, p])))
+
+function pitido() {
+  try {
+    const audio = new AudioContext()
+    const osc = audio.createOscillator()
+    osc.frequency.value = 220
+    osc.connect(audio.destination)
+    osc.start()
+    osc.stop(audio.currentTime + 0.25)
+  } catch {
+    // Navegador sin audio
+  }
+}
+
+useEscaner((codigo, campo) => {
+  // Si el lector escribió en el buscador, se limpia: no era una búsqueda
+  if (campo?.closest?.('.buscar')) buscar.value = ''
+  if (conOpciones.value || combo.value) return
+  const producto = porCodigo.value.get(codigo)
+  if (!producto) {
+    pitido()
+    toast.error(`El código ${codigo} no está registrado en ningún producto de esta carta.`)
+    return
+  }
+  if (producto.agotado) {
+    pitido()
+    toast.error(`${producto.nombre} está agotado.`)
+    return
+  }
+  escaneado.value = producto.nombre
+  elegir(producto)
+})
 
 // Un toque agrega; si el producto tiene modificadores, primero se eligen
 function elegir(producto) {
@@ -43,7 +83,8 @@ function normalize(text) {
 const productos = computed(() => {
   const texto = normalize(buscar.value.trim())
   if (texto) {
-    return props.categorias.flatMap((c) => c.productos).filter((p) => normalize(p.nombre).includes(texto))
+    return props.categorias.flatMap((c) => c.productos)
+      .filter((p) => normalize(p.nombre).includes(texto) || (p.codigo_barras && p.codigo_barras.includes(texto)))
   }
   const categoria = props.categorias.find((c) => c.id === categoriaId.value) || props.categorias[0]
   return categoria ? categoria.productos : []
@@ -55,7 +96,8 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
 <template>
   <section class="picker">
     <div class="buscar">
-      <input v-model="buscar" class="input" type="search" placeholder="Buscar producto" aria-label="Buscar producto">
+      <input v-model="buscar" class="input" type="search" placeholder="Buscar producto o escanear código" aria-label="Buscar producto">
+      <p v-if="escaneado" class="escaneado" role="status">Escaneado: {{ escaneado }}</p>
     </div>
 
     <div class="categorias" role="tablist" aria-label="Categorías">
@@ -90,6 +132,12 @@ const activa = computed(() => (buscar.value.trim() ? null : categoriaId.value ??
   gap: var(--space-3);
   min-width: 0;
   min-height: 0;
+}
+
+.escaneado {
+  margin-top: var(--space-1);
+  color: var(--acero);
+  font-size: var(--text-sm);
 }
 
 .categorias {

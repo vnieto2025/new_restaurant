@@ -77,6 +77,7 @@ class CartaQuerys(Querys):
                 "imagen": producto.imagen,
                 "alergenos": producto.alergenos,
                 "precio": producto.precio,
+                "codigo_barras": producto.codigo_barras,
                 # Un combo sin opción disponible en algún componente no se puede pedir
                 "agotado": producto.agotado or (producto.tipo == "combo" and any(not c["opciones"] for c in componentes.get(producto.id, [{"opciones": []}]))),
                 "grupos": grupos.get(producto.id, []) if producto.tipo != "combo" else [],

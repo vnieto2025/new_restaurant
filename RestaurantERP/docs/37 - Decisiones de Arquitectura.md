@@ -787,6 +787,23 @@ Registro de decisiones importantes. Cada una tiene su contexto, alternativas y c
 - **Consecuencias:** el IVA solo aparece en los ítems pedidos cuando ya había un impuesto configurado. Lo pedido antes de configurarlo sale sin detalle de impuesto.
 - **Cuándo revisar:** si un restaurante sin caja necesita registrar cómo le pagaron o la propina que dejó el cliente.
 
+## ADR-058: Código de barras de los productos
+
+- **Estado:** Aprobada (2026-11-15). Pedido del dueño del producto: escanear productos donde se busca en la carta, como en la caja y la mesa.
+- **Decisión:**
+  - **`producto.codigo_barras`:** opcional y único entre los productos vigentes del restaurante (índice parcial).
+    - Se normaliza al guardar: sin espacios, y un número de Excel (`7702004003409.0`) queda como texto.
+    - Solo letras, números o guiones, de 3 a 40 caracteres.
+  - **Carga:** en el formulario del producto (el Enter del lector no guarda el formulario) y como columna opcional "Código de barras" al importar desde Excel, validando que no se repita en el archivo ni lo tenga otro producto. Viaja al copiar a otra sede; al duplicar no, porque no puede repetirse.
+  - **Lector como teclado:** los lectores USB o Bluetooth escriben el código y un Enter. `useEscaner` los distingue de una persona por el tiempo entre teclas (menos de 50 ms), así se escanea sin tocar ningún campo; si el lector escribe en el buscador, igual se reconoce y el buscador se limpia.
+  - **Dónde:** en el selector de carta, que comparten la mesa del mesero, el Mostrador y la venta directa de la Caja.
+    - El código agrega el producto como un toque; si tiene opciones o es combo, abre su ventana.
+    - Agotado o no registrado: aviso y un pitido.
+    - El buscador también encuentra por código.
+  - Sin integración de hardware ni librerías: funciona con cualquier lector que emule teclado.
+- **Consecuencias:** la carta pública del cliente no escanea. Leer con la cámara del celular queda por fuera: es menos confiable en iPhone.
+- **Cuándo revisar:** si se pide leer con la cámara, o códigos por presentación (por ejemplo, unidad y paca).
+
 ## ADR-005 (avance): impresión desde el navegador
 
 En la fase 0 se implementó la opción A: tirilla de comanda sin precios (80 mm), tirilla de orden con precios y hoja de QR por mesa, todas con `window.print` y estilos de impresión. La decisión definitiva sigue **pendiente** de las pruebas con impresoras reales.
